@@ -178,12 +178,12 @@
         document.getElementById('current-date').textContent = dateStr;
     }
     
-    // 變更日期
-    function changeDate(days) {
+    // 變更日期（修正：確保這個函數在全局作用域中定義）
+    window.changeDate = function(days) {
         currentDate.setDate(currentDate.getDate() + days);
         updateDateDisplay();
         loadTasks();
-    }
+    };
     
     // 檢查並創建資料表（如果不存在）
     async function checkAndCreateTables() {
@@ -458,7 +458,7 @@
     }
     
     // 切換任務完成狀態
-    async function toggleTask(taskId) {
+    window.toggleTask = async function(taskId) {
         const task = dailyTasks.find(t => t.id === taskId);
         if (!task) return;
         
@@ -540,7 +540,7 @@
             console.error('更新任務狀態錯誤:', error);
             alert('更新失敗: ' + error.message);
         }
-    }
+    };
     
     // 計算每日積分（簡化版本）
     function calculateDailyPoints(data) {
@@ -562,7 +562,7 @@
     }
     
     // 報告轉介紹
-    function reportReferral() {
+    window.reportReferral = function() {
         const friendName = prompt('請輸入您介紹的朋友姓名:');
         const friendContact = prompt('請輸入朋友的聯絡方式 (電話/Email):');
         
@@ -570,10 +570,10 @@
             alert(`已記錄轉介紹: ${friendName}\n我們會聯繫您的朋友，成功加入後您將獲得積分！`);
             // 這裡應該發送到後端記錄轉介紹
         }
-    }
+    };
     
     // 社交分享
-    function shareToSocial() {
+    window.shareToSocial = function() {
         const shareText = encodeURIComponent('我正在參加馬拉松健康挑戰！每天完成任務獲得積分，一起來參加吧！');
         const shareUrl = encodeURIComponent(window.location.origin);
         
@@ -592,8 +592,7 @@
         if (socialTask && !socialTask.isCompleted) {
             toggleTask('social_share');
         }
-    }
-    // 這行是為了確保沒有遺漏的語法錯誤
+    };
 </script>
 </body>
 </html>
