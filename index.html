@@ -55,9 +55,13 @@
 </div>
 
 <script>
-    const SUPABASE_URL = '你的URL';
-    const SUPABASE_KEY = '你的KEY';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 請確保這兩行填入你正確的 Supabase 資訊，不要留空或放「你的URL」
+const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+
+// 確保 sb 的宣告在所有 function 使用它之前
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 
     // 1. 初始化檢查 (確保在 async 內)
     window.onload = async () => {
