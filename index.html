@@ -23,7 +23,7 @@
    <div id="auth-section">
     <h2>🔑 登入馬拉松</h2>
     <div class="card">
-        <form id="login-form">
+        <form onsubmit="return false;">
             <input type="email" id="email" placeholder="電子信箱" autocomplete="email">
             <input type="password" id="password" placeholder="密碼" autocomplete="current-password">
             <button type="button" style="background:var(--primary)" onclick="signUp()">快速註冊</button>
@@ -32,69 +32,35 @@
     </div>
 </div>
 
-    <div id="profile-section" class="hidden">
-        <div class="ticket-stats">
-            <div><span>目前積分</span><b id="ticket-count">0</b></div>
-            <div><span>當前進度</span><b id="day-progress">Day 0</b></div>
-        </div>
-
-        <div class="card" style="border-left: 5px solid var(--warning);">
-            <div style="font-weight:bold; margin-bottom:10px;">⚖️ 每日數據報到 (賺積分)</div>
-            <p id="today-mission-tip" style="font-size: 12px; color: #666;"></p>
-            <input type="number" id="weight" step="0.1" placeholder="今日體重 (kg)">
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0;">
-                <label><input type="checkbox" id="check_diet"> 完成打卡飲食</label>
-                <label><input type="checkbox" id="check_shake"> 拍奶昔 (Shake)</label>
-                <label><input type="checkbox" id="check_live"> 已直播</label>
-            </div>
-            <p style="font-size:11px; color: var(--danger);">* 需全選（完成一圈）才可獲得 1 積分</p>
-            <button style="background:var(--warning)" onclick="saveDailyData()">送出報到</button>
-        </div>
-
-        <button style="background:var(--danger); opacity:0.6;" onclick="signOut()">安全登出</button>
-    </div>
-</div>
-
 <script>
-    // 請確保這兩行填入你正確的 Supabase 資訊，不要留空或放「你的URL」
-const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co'; 
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    // 1. 初始化 Supabase (請更換為你的正確 Key)
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 確保 sb 的宣告在所有 function 使用它之前
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-
-    // 1. 初始化檢查 (確保在 async 內)
-    window.onload = async () => {
-    try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) {
-            showProfile();
-            loadFullProfile(session.user);
-        }
-    } catch (e) {
-        console.error("初始化失敗:", e);
-    }
-
-    function showProfile() {
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('profile-section').classList.remove('hidden');
-    }
-
-    // 2. 登入/註冊函數 (一定要加上 async)
+    // 2. 登入與註冊函數 (確保 async 語法正確)
     async function signIn() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else location.reload();
+        try {
+            const { error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            location.reload();
+        } catch (err) {
+            alert("登入失敗: " + err.message);
+        }
     }
 
     async function signUp() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("註冊成功！");
+        try {
+            const { error } = await sb.auth.signUp({ email, password });
+            if (error) throw error;
+            alert("註冊成功，請前往信箱驗證或直接登入！");
+        } catch (err) {
+            alert("註冊失敗: " + err.message);
+        }
     }
 
     async function signOut() {
@@ -102,13 +68,27 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         location.reload();
     }
 
-    // 3. 積分計算與載入
+    // 3. 核心載入邏輯
+    window.onload = async () => {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('profile-section').classList.remove('hidden');
+            loadFullProfile(session.user);
+        }
+    };
+
     async function loadFullProfile(user) {
+        // 抓取個人檔案與積分
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         if (profile) {
-            // 計算天數
-            const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
+            // 計算開賽天數
+            const startDate = new Date(profile.created_at);
+            const today = new Date();
+            const dayNum = Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24));
             document.getElementById('day-progress').innerText = `Day ${dayNum}`;
+            
+            // 執行積分計算
             calculateTotalPoints(user.id);
         }
     }
@@ -119,13 +99,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let points = 0;
 
-        // 續跑與介紹分 (圖片內容)
+        // 積分條件：續跑積分
         if (profile.renewal_type === '100') points += 1;
         else if (profile.renewal_type === '150') points += 2;
         else if (profile.renewal_type === '250') points += 4;
+
+        // 積分條件：介紹好友
         points += (profile.referral_count || 0) * 15;
 
-        // 每日記錄積分：磅磅 + 打卡 + shake + 直播 = 1分
+        // 積分條件：每日「一圈」 (磅磅+飲食+奶昔+直播)
         if (records) {
             records.forEach(rec => {
                 if (rec.weight && rec.has_diet && rec.has_shake && rec.has_live) {
@@ -147,22 +129,21 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         if (!weight) return alert("請輸入體重！");
 
-      // 核心修正：確保使用的是 .upsert()
-const { error } = await sb.from('weight_records').upsert({
-    user_id: user.id,
-    date: new Date().toISOString().split('T')[0], // 今天的日期
-    weight: parseFloat(weight),
-    has_diet: hasDiet,
-    has_shake: hasShake,
-    has_live: hasLive
-}, { 
-    onConflict: 'user_id, date' // 告訴資料庫：如果這兩個欄位衝突，就執行更新
-})
+        // 使用 upsert 避免重複鍵值錯誤
+        const { error } = await sb.from('weight_records').upsert({
+            user_id: user.id,
+            date: new Date().toISOString().split('T')[0],
+            weight: parseFloat(weight),
+            has_diet: hasDiet,
+            has_shake: hasShake,
+            has_live: hasLive
+        });
 
-        if (error) alert(error.message);
-        else {
-            alert("✅ 報到成功！若四項全能則獲得 1 分");
-            location.reload();
+        if (error) {
+            alert("儲存錯誤: " + error.message);
+        } else {
+            alert("✅ 今日報到成功！");
+            calculateTotalPoints(user.id); // 即時更新積分顯示
         }
     }
 </script>
