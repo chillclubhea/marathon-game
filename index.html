@@ -21,24 +21,23 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <div id="auth-section">
-        <h2 style="text-align:center;">🎮 進入馬拉松遊戲</h2>
+        <h2>🔑 登入馬拉松</h2>
         <div class="card">
             <form onsubmit="return false;">
-                <input type="email" id="email" placeholder="電子信箱" autocomplete="email">
-                <input type="password" id="password" placeholder="密碼" autocomplete="current-password">
+                <input type="email" id="email" placeholder="電子信箱">
+                <input type="password" id="password" placeholder="密碼">
                 <button type="button" style="background:var(--primary)" onclick="signUp()">快速註冊</button>
                 <button type="button" style="background:var(--success)" onclick="signIn()">立即登入</button>
             </form>
         </div>
     </div>
 
-    <div id="profile-section" class="hidden">
+<div id="profile-section" class="hidden">
         <div class="ticket-stats">
             <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
-            <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
+            <div><span>進度</span><b id="day-progress">Day 0</b></div>
         </div>
 
         <div class="card">
@@ -62,9 +61,12 @@
                 <label><input type="checkbox" id="check_live"> 🎥 已直播</label>
                 <label><input type="checkbox" id="check_mission"> 🎯 今日挑戰</label>
             </div>
-            <button type="button" style="background:var(--warning)" onclick="saveDailyData()">送出報到</button>
+          <button type="button" style="background:var(--warning)" onclick="saveDailyData()">送出報到</button>
         </div>
-
+        
+        <button type="button" style="background:var(--danger); opacity:0.6;" onclick="signOut()">登出</button>
+    </div>
+</div>
         <div class="card" style="font-size: 13px; background: #f0f7ff;">
             <b>🚀 快速拿分秘訣：</b><br>
             • 介紹 1 位好友參加：<b>+15 分</b><br>
