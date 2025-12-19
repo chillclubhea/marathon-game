@@ -24,6 +24,15 @@
 <div class="container">
     <div id="auth-section">
         <h2>🔑 登入馬拉松</h2>
+<div id="renewal-card" class="card hidden">
+    <div style="font-weight:bold; margin-bottom:8px;">💎 我的續跑套餐 (第9天開啟)</div>
+    <select id="renewal_select" onchange="updateRenewal()">
+        <option value="0">尚未選擇套餐</option>
+        <option value="100">續購 100 分產品套餐 (1分)</option>
+        <option value="150">續購 150 分產品套餐 (2分)</option>
+        <option value="250">續購 250 分產品套餐 (4分)</option>
+    </select>
+</div>        
         <div class="card">
             <form onsubmit="return false;">
                 <input type="email" id="email" placeholder="電子信箱">
@@ -92,19 +101,32 @@
         }
     };
 
-    async function loadFullProfile(user) {
-        const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        if (profile) {
-            // 計算天數 (以註冊日期為 Day 1)
-            const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
-            document.getElementById('day-progress').innerText = `Day ${dayNum}`;
-            
-            // 同步下拉選單狀態
-            if(profile.renewal_type) document.getElementById('renewal_select').value = profile.renewal_type;
-            
-            calculateTotalPoints(user.id);
+  async function loadFullProfile(user) {
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if (profile) {
+        // 計算天數
+        const startDate = new Date(profile.created_at);
+        const today = new Date();
+        const diffTime = Math.abs(today - startDate);
+        const dayNum = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        document.getElementById('day-progress').innerText = `Day ${dayNum}`;
+
+        // --- 核心邏輯：判斷是否為第 9 天或之後 ---
+        const renewalCard = document.getElementById('renewal-card');
+        if (dayNum >= 9) {
+            renewalCard.classList.remove('hidden'); // 顯示套餐選擇
+            if(profile.renewal_type) {
+                document.getElementById('renewal_select').value = profile.renewal_type;
+            }
+        } else {
+            renewalCard.classList.add('hidden'); // 確保第 9 天前是隱藏的
         }
+        
+        // 執行積分計算
+        calculateTotalPoints(user.id);
     }
+}
 
     // --- 積分計算邏輯 (根據您的積分整理表) ---
     async function calculateTotalPoints(userId) {
