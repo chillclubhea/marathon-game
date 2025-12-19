@@ -6,6 +6,29 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        .mission-list { margin-top: 10px; }
+.mission-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+.mission-item.locked {
+    color: #bdc3c7;
+    background: #f9f9f9;
+    filter: grayscale(1);
+}
+.mission-item.active {
+    background: #fff9e6;
+    border-left: 4px solid #f1c40f;
+    font-weight: bold;
+    color: #2c3e50;
+}
+.day-label { width: 50px; font-weight: bold; color: #e67e22; }
+.mission-item.locked .day-label { color: #bdc3c7; }
+.lock-icon { margin-left: auto; font-size: 12px; }
         :root {
             --primary: #3498db;
             --success: #2ecc71;
@@ -131,16 +154,8 @@
             </div>
             <h4>📅 第三步：10 天關卡</h4>
             <table class="rules-table">
-                <tr><td>D1</td><td>開賽打卡</td><td>D6</td><td>聰明吃油</td></tr>
-                <tr><td>D2</td><td>彩虹午餐</td><td>D7</td><td>社交分享</td></tr>
-                <tr><td>D3</td><td>分享愛</td><td>D8</td><td>誇誇隊友</td></tr>
-                <tr><td>D4</td><td>飲水大王</td><td>D9</td><td>變身見證</td></tr>
-                <tr><td>D5</td><td>動起來</td><td>D10</td><td>帶好朋友</td></tr>
-            </table>
-            <h4>🎟️ 獎勵</h4>
-            <div style="font-size: 12px; margin-top: 10px; color: #666;">
-                報榜 +1張 | 任務 +2張 | 推薦好友 +10張
-            </div>
+              <div id="mission-container" class="mission-list">
+    </div>
         </div>
     </div>
 </div>
@@ -238,6 +253,84 @@
         });
         location.reload();
     }
+    // 1. 定義 10 天的關卡內容
+const missions = [
+    "開賽打卡：曬燃料與初始體重",
+    "彩虹午餐：3種顏色蔬菜",
+    "分享愛：邀家人喝奶昔/運動",
+    "飲水大王：喝完第3瓶水",
+    "動起來：10分鐘運動流汗照",
+    "聰明吃油：攝取堅果或好魚",
+    "小小網紅：發FB/IG限動",
+    "誇誇隊友：給隊友一句鼓勵",
+    "變身見證：分享身體正向變化",
+    "帶好朋友：邀好友測脂或參賽"
+];
+
+// 2. 核心函數：計算並渲染關卡
+function renderMissions(createdAt) {
+    const container = document.getElementById('mission-container');
+    container.innerHTML = ""; // 清空
+
+    // 計算今天是第幾天 (Day 1, Day 2...)
+    const startDate = new Date(createdAt);
+    const today = new Date();
+    const diffTime = Math.abs(today - startDate);
+    const currentDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // 無條件進位
+
+    missions.forEach((content, index) => {
+        const dayNum = index + 1;
+        const item = document.createElement('div');
+        item.className = 'mission-item';
+
+        if (dayNum < currentDay) {
+            // 已過的關卡
+            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>${content}</span> <span class="lock-icon">✅</span>`;
+        } else if (dayNum === currentDay) {
+            // 今天的關卡
+            item.classList.add('active');
+            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>🔥 ${content}</span> <span class="lock-icon">📍 今日任務</span>`;
+        } else {
+            // 尚未解鎖的關卡
+            item.classList.add('locked');
+            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>🔒 內容尚未解鎖</span>`;
+        }
+        
+        container.appendChild(item);
+    });
+}
+
+// 3. 在 loadFullProfile 裡面呼叫
+async function loadFullProfile(user) {
+    document.getElementById('user-display').innerText = `帳號: ${user.email}`;
+    
+    // 這裡我們需要取得 user 的創建時間
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    
+    if (profile) {
+        // ... 原本的欄位填充邏輯 ...
+
+        // 呼叫關卡渲染 (使用 profile 的 created_at 或 user 的 created_at)
+        renderMissions(profile.created_at || user.created_at);
+        
+        // 額外驚喜：如果是今天，把今日任務顯示在首頁
+        showTodayTip(profile.created_at || user.created_at);
+    }
+}
+
+// 在首頁顯示今日溫馨提示
+function showTodayTip(createdAt) {
+    const startDate = new Date(createdAt);
+    const today = new Date();
+    const currentDay = Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24));
+    
+    if(currentDay <= 10) {
+        const tipMsg = `🌟 今日 Day ${currentDay} 挑戰：${missions[currentDay-1]}`;
+        const statusMsg = document.getElementById('status-msg');
+        statusMsg.style.color = "#3498db";
+        statusMsg.innerText = tipMsg;
+    }
+}
 </script>
 </body>
 </html>
