@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬拉松遊戲 - 玩家中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
+        h2, h3 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; color: #444; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 14px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
+        button:hover { background-color: #2980b9; opacity: 0.9; }
+        .weight-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #eee; }
+        .hidden { display: none; }
+        .logout-btn { background-color: #e74c3c; margin-top: 25px; }
+        .success-text { color: #27ae60; font-size: 0.9em; text-align: center; margin-top: 10px; font-weight: bold; }
+        #user-display { background: #f9f9f9; padding: 10px; border-radius: 8px; text-align: center; color: #666; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏃 馬拉松玩家中心</h2>
+
+    <div id="auth-section">
+        <div class="form-group">
+            <label for="email">電子信箱</label>
+            <input type="email" id="email" placeholder="請輸入 Email" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="password">密碼</label>
+            <input type="password" id="password" placeholder="至少 6 位數" autocomplete="current-password">
+        </div>
+        <button onclick="signUp()">註冊新帳號</button>
+        <button onclick="signIn()" style="background-color: #2ecc71;">登入系統</button>
+    </div>
+
+    <div id="profile-section" class="hidden">
+        <div id="user-display"></div>
+        
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="full_name">真實姓名</label>
+            <input type="text" id="full_name" placeholder="隊友該如何稱呼你">
+        </div>
+        <div class="form-group">
+            <label for="role">我的身分</label>
+            <select id="role">
+                <option value="member">學員</option>
+                <option value="captain">隊長</option>
+                <option value="deputy">副隊長</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="plan">選擇計畫</label>
+            <select id="plan">
+                <option value="slow_run">慢跑計畫</option>
+                <option value="fast_run">快跑計畫</option>
+                <option value="vip">VIP 計畫</option>
+            </select>
+        </div>
+        <button onclick="updateProfile()">儲存個人設定</button>
+
+        <div class="weight-section">
+            <h3>⚖️ 每日體重報到</h3>
+            <div class="form-group">
+                <label for="daily_weight">今日體重 (kg)</label>
+                <input type="number" id="daily_weight" step="0.1" placeholder="例如: 65.5">
+            </div>
+            <button onclick="saveWeight()" style="background-color: #f39c12;">送出今日數據</button>
+            <p id="weight-status" class="success-text"></p>
+        </div>
+
+        <button class="logout-btn" onclick="signOut()">安全登出</button>
+    </div>
+</div>
+
+<script>
+    // 檢查 Supabase 是否載入
+    console.log("系統啟動中...");
+
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    
+    // 初始化 Client
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 頁面載入檢查登入狀態
+    window.onload = async function() {
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+            console.log("已偵測到登入狀態");
+            showProfile(user);
+        }
+    };
+
+    // 註冊
+    async function signUp() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if (!email || !password) return alert("請輸入信箱與密碼");
+
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) alert("註冊出錯: " + error.message);
+        else alert("註冊成功！現在可以直接點擊登入。");
+    }
+
+    // 登入
+    async function signIn() {
+        console.log("正在嘗試登入...");
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        if (!email || !password) return alert("請輸入信箱與密碼");
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) alert("登入失敗: " + error.message);
+        else showProfile(data.user);
+    }
+
+    // 顯示個人介面
+    async function showProfile(user) {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('profile-section').classList.remove('hidden');
+        document.getElementById('user-display').innerText = `帳號：${user.email}`;
+
+        // 撈取 profiles
+        const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        if (data) {
+            document.getElementById('full_name').value = data.full_name || '';
+            document.getElementById('role').value = data.role || 'member';
+            document.getElementById('plan').value = data.plan || 'slow_run';
+        }
+    }
+
+    // 更新 Profile
+    async function updateProfile() {
+        const { data: { user } } = await sb.auth.getUser();
+        const full_name = document.getElementById('full_name').value;
+        const role = document.getElementById('role').value;
+        const plan = document.getElementById('plan').value;
+
+        const { error } = await sb.from('profiles').upsert({
+            id: user.id,
+            full_name: full_name,
+            role: role,
+            plan: plan,
+            updated_at: new Date()
+        });
+
+        if (error) alert("儲存失敗: " + error.message);
+        else alert("設定更新成功！");
+    }
+
+    // 儲存體重
+    async function saveWeight() {
+        const { data: { user } } = await sb.auth.getUser();
+        const weight = document.getElementById('daily_weight').value;
+        if (!weight) return alert("請輸入體重數字");
+
+        const today = new Date().toISOString().split('T')[0];
+
+        const { error } = await sb.from('weight_records').upsert({
+            user_id: user.id,
+            weight: parseFloat(weight),
+            date: today
+        });
+
+        if (error) alert("今日體重可能已記錄過囉！");
+        else {
+            document.getElementById('weight-status').innerText = `✅ 今日體重 ${weight}kg 已紀錄！`;
+            document.getElementById('daily_weight').value = '';
+        }
+    }
+
+    // 登出
+    async function signOut() {
+        await sb.auth.signOut();
+        location.reload();
+    }
+</script>
+
+</body>
+</html>
