@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬拉松排行榜</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .subtitle { color: #7f8c8d; margin-top: 8px; font-size: 14px; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .nav-btn { padding: 12px 24px; background: white; border: 2px solid #e0e0e0; border-radius: 50px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .ranking-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .ranking-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .ranking-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+        .ranking-item:last-child { border-bottom: none; }
+        .rank { width: 40px; text-align: center; font-weight: bold; font-size: 20px; }
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; margin: 0 15px; object-fit: cover; }
+        .user-info { flex: 1; }
+        .user-name { font-weight: bold; color: #2c3e50; }
+        .user-detail { font-size: 12px; color: #7f8c8d; }
+        .score { font-size: 24px; font-weight: bold; color: var(--primary); min-width: 80px; text-align: right; }
+        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .team-item { background: #f8f9fa; border-radius: 10px; padding: 15px; text-align: center; }
+        .team-rank { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .team-name { font-weight: bold; margin: 10px 0; }
+        .team-score { color: #7f8c8d; font-size: 14px; }
+        .medal { font-size: 24px; margin-right: 5px; }
+        .refresh-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; margin: 20px auto; display: block; }
+        .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .hidden { display: none; }
+        @media (max-width: 768px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .team-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🏆 馬拉松排行榜</h1>
+            <div class="subtitle">每小時自動更新 • 最後更新: <span id="last-update">--:--</span></div>
+        </div>
+        
+        <div class="nav">
+            <button class="nav-btn active" onclick="showTab('individual')">個人積分榜</button>
+            <button class="nav-btn" onclick="showTab('team')">團隊積分榜</button>
+            <button class="nav-btn" onclick="showTab('weight')">減重排行榜</button>
+        </div>
+        
+        <!-- 個人排行榜 -->
+        <div id="individual-ranking" class="ranking-card">
+            <div class="ranking-title">🥇 個人積分排行榜</div>
+            <div id="individual-list">
+                <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <div style="font-size: 48px;">📊</div>
+                    <div>載入中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 團隊排行榜 -->
+        <div id="team-ranking" class="ranking-card hidden">
+            <div class="ranking-title">👥 團隊積分排行榜</div>
+            <div id="team-list" class="team-grid">
+                <div style="text-align: center; padding: 40px; color: #7f8c8d; grid-column: 1 / -1;">
+                    <div style="font-size: 48px;">🏆</div>
+                    <div>載入中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 減重排行榜 -->
+        <div id="weight-ranking" class="ranking-card hidden">
+            <div class="ranking-title">⚖️ 減重排行榜</div>
+            <div id="weight-list">
+                <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <div style="font-size: 48px;">📉</div>
+                    <div>載入中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="refresh-btn" onclick="loadAllRankings()">🔄 重新整理</button>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 全局變數
+    let currentUser = null;
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            alert('請先登入');
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = session.user;
+        
+        // 載入排行榜
+        loadAllRankings();
+        
+        // 更新時間顯示
+        updateTime();
+        setInterval(updateTime, 60000); // 每分鐘更新一次時間
+    };
+    
+    // 更新時間顯示
+    function updateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('zh-TW', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
+        document.getElementById('last-update').textContent = timeStr;
+    }
+    
+    // 切換頁籤
+    function showTab(tabName) {
+        // 更新按鈕狀態
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 顯示對應的內容
+        document.getElementById('individual-ranking').classList.add('hidden');
+        document.getElementById('team-ranking').classList.add('hidden');
+        document.getElementById('weight-ranking').classList.add('hidden');
+        document.getElementById(tabName + '-ranking').classList.remove('hidden');
+    }
+    
+    // 載入所有排行榜
+    async function loadAllRankings() {
+        await loadIndividualRanking();
+        await loadTeamRanking();
+        await loadWeightRanking();
+    }
+    
+    // 載入個人積分排行榜
+    async function loadIndividualRanking() {
+        const container = document.getElementById('individual-list');
+        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
+        
+        try {
+            // 獲取所有用戶，按積分排序
+            const { data: users, error } = await sb
+                .from('profiles')
+                .select('id, full_name, avatar_url, points, role, plan')
+                .order('points', { ascending: false })
+                .limit(50);
+            
+            if (error) throw error;
+            
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無數據</div>';
+                return;
+            }
+            
+            let html = '';
+            users.forEach((user, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                const isCurrentUser = currentUser && user.id === currentUser.id;
+                
+                html += `
+                <div class="ranking-item" style="${isCurrentUser ? 'background: #e8f4fc; border-left: 4px solid var(--primary);' : ''}">
+                    <div class="rank ${rankClass}">
+                        ${medal} ${index + 1}
+                    </div>
+                    <img class="avatar" src="${user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User') + '&background=random'}" alt="${user.full_name}">
+                    <div class="user-info">
+                        <div class="user-name">
+                            ${user.full_name || '未設定姓名'}
+                            ${isCurrentUser ? ' (您)' : ''}
+                        </div>
+                        <div class="user-detail">
+                            ${user.role === 'captain' ? '👑 隊長' : user.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
+                            ${user.plan === 'slow_run' ? '慢跑' : user.plan === 'fast_run' ? '快跑' : 'VIP'}
+                        </div>
+                    </div>
+                    <div class="score">${user.points || 0} 分</div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('載入個人排行榜錯誤:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
+        }
+    }
+    
+    // 載入團隊積分排行榜
+    async function loadTeamRanking() {
+        const container = document.getElementById('team-list');
+        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
+        
+        try {
+            // 獲取所有團隊及其成員
+            const { data: teams, error } = await sb
+                .from('teams')
+                .select(`
+                    id,
+                    team_name,
+                    captain:profiles!teams_captain_id_fkey(full_name, avatar_url),
+                    members:team_members(
+                        member:profiles(points)
+                    )
+                `)
+                .order('created_at', { ascending: true });
+            
+            if (error) throw error;
+            
+            if (!teams || teams.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無團隊數據</div>';
+                return;
+            }
+            
+            // 計算每個團隊的平均分數
+            const teamsWithScore = teams.map(team => {
+                const totalPoints = team.members.reduce((sum, member) => {
+                    return sum + (member.member?.points || 0);
+                }, 0);
+                
+                const avgPoints = team.members.length > 0 ? Math.round(totalPoints / team.members.length) : 0;
+                
+                return {
+                    ...team,
+                    avg_points: avgPoints,
+                    member_count: team.members.length
+                };
+            });
+            
+            // 按平均分數排序
+            teamsWithScore.sort((a, b) => b.avg_points - a.avg_points);
+            
+            // 生成 HTML
+            let html = '';
+            teamsWithScore.forEach((team, index) => {
+                const medal = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                
+                html += `
+                <div class="team-item">
+                    <div class="team-rank">${medal} ${index + 1}</div>
+                    <div class="team-name">${team.team_name || '未命名團隊'}</div>
+                    <div class="team-score">
+                        隊長: ${team.captain?.full_name || '未設定'}<br>
+                        平均積分: <strong>${team.avg_points} 分</strong><br>
+                        成員: ${team.member_count}/9 人
+                    </div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('載入團隊排行榜錯誤:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
+        }
+    }
+    
+    // 載入減重排行榜
+    async function loadWeightRanking() {
+        const container = document.getElementById('weight-list');
+        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
+        
+        try {
+            // 獲取所有用戶的體重記錄
+            const { data: profiles, error } = await sb
+                .from('profiles')
+                .select(`
+                    id,
+                    full_name,
+                    avatar_url,
+                    total_weight_lost,
+                    role,
+                    plan,
+                    weight_records(weight, date)
+                `)
+                .not('total_weight_lost', 'is', null)
+                .order('total_weight_lost', { ascending: false })
+                .limit(20);
+            
+            if (error) throw error;
+            
+            if (!profiles || profiles.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無減重數據</div>';
+                return;
+            }
+            
+            let html = '';
+            profiles.forEach((user, index) => {
+                const weightLost = user.total_weight_lost || 0;
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
+                const isCurrentUser = currentUser && user.id === currentUser.id;
+                
+                // 獲取最新體重記錄
+                let latestWeight = null;
+                let latestDate = null;
+                if (user.weight_records && user.weight_records.length > 0) {
+                    const latestRecord = user.weight_records.reduce((latest, record) => {
+                        return new Date(record.date) > new Date(latest.date) ? record : latest;
+                    }, user.weight_records[0]);
+                    
+                    latestWeight = latestRecord.weight;
+                    latestDate = new Date(latestRecord.date).toLocaleDateString('zh-TW');
+                }
+                
+                html += `
+                <div class="ranking-item" style="${isCurrentUser ? 'background: #e8f4fc; border-left: 4px solid var(--success);' : ''}">
+                    <div class="rank ${rankClass}">
+                        ${medal} ${index + 1}
+                    </div>
+                    <img class="avatar" src="${user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User') + '&background=random'}" alt="${user.full_name}">
+                    <div class="user-info">
+                        <div class="user-name">
+                            ${user.full_name || '未設定姓名'}
+                            ${isCurrentUser ? ' (您)' : ''}
+                        </div>
+                        <div class="user-detail">
+                            ${user.role === 'captain' ? '👑 隊長' : user.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
+                            累計減重: <strong>${weightLost.toFixed(1)} kg</strong>
+                            ${latestWeight ? ` • 最新體重: ${latestWeight} kg` : ''}
+                            ${latestDate ? ` (${latestDate})` : ''}
+                        </div>
+                    </div>
+                    <div class="score" style="color: var(--success);">-${weightLost.toFixed(1)} kg</div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        } catch (error) {
+            console.error('載入減重排行榜錯誤:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
+        }
+    }
+</script>
+</body>
+</html>
