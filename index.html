@@ -6,45 +6,15 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; --gold: #ffd700;
-        }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
-        h2 { color: #2c3e50; margin: 0; font-size: 24px; text-align: center; }
-        
-        /* 抽獎券看板 */
-        .ticket-stats { display: flex; justify-content: space-around; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; padding: 15px; border-radius: 15px; margin: 15px 0; text-align: center; }
-        .ticket-stats div b { font-size: 24px; display: block; }
-
-        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .card-title { font-weight: bold; color: #2d3748; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-
-        /* 輸入與按鈕 */
-        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
-        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .btn-info { background: #f39c12; box-shadow: 0 4px 0 #d35400; margin-bottom: 15px; }
-        .btn-warning { background: var(--warning); }
-        
-        /* 推薦獎勵 */
-        .referral-box { background: #fff9e6; border: 2px dashed #f1c40f; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; }
-        .referral-box b { color: #e67e22; }
-
-        /* 攻略手冊彈窗 */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .rules-card { background: white; width: 90%; max-width: 420px; max-height: 85vh; border-radius: 20px; overflow-y: auto; }
-        .rules-header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; }
-        .rules-content { padding: 20px; line-height: 1.6; }
-        .rules-content h4 { color: var(--primary); margin: 20px 0 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-        .step-tag { background: #e1f5fe; color: #01579b; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; }
-        
-        .mission-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .mission-item.locked { color: #bdc3c7; background: #f9f9f9; }
-        .mission-item.active { background: #fff9e6; border-left: 5px solid #f1c40f; font-weight: bold; }
-        
+        /* 這裡保留你之前的 CSS 樣式，包含 .mission-item, .card, .ticket-stats 等 */
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; }
+        .card { border: 1px solid #edf2f7; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
         .hidden { display: none !important; }
-        .fade-in { animation: fadeInUp 0.5s ease-out; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .ticket-stats { display: flex; justify-content: space-around; background: #6e8efb; color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
+        input, select { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        button { width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; border: none; font-weight: bold; color: white; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -52,231 +22,137 @@
 <div class="container">
     <div id="auth-section">
         <h2>🔑 登入馬拉松</h2>
-        <div class="card" style="margin-top: 20px;">
+        <div class="card">
             <input type="email" id="email" placeholder="電子信箱">
             <input type="password" id="password" placeholder="密碼">
-            <button class="btn-primary" style="background:var(--primary)" onclick="signUp()">快速註冊</button>
-            <button class="btn-success" style="background:var(--success)" onclick="signIn()">立即登入</button>
+            <button style="background:var(--primary)" onclick="signUp()">快速註冊</button>
+            <button style="background:var(--success)" onclick="signIn()">立即登入</button>
         </div>
     </div>
 
     <div id="profile-section" class="hidden">
-        <div class="header">
-            <h2>🏃 玩家中心</h2>
-            <div id="user-display" style="text-align: center; font-size: 12px; color: #999;"></div>
-        </div>
-
         <div class="ticket-stats">
-            <div><span style="font-size:12px">目前獎券</span><b id="ticket-count">0</b></div>
-            <div><span style="font-size:12px">當前進度</span><b id="day-progress">Day 0</b></div>
-            <div><span style="font-size:12px">抵用券</span><b>$0</b></div>
-        </div>
-
-        <button class="btn-info" onclick="toggleRules()">📜 10天健康馬拉松攻略手冊</button>
-
-        <button id="edit-profile-btn" class="hidden" onclick="toggleProfileEdit()" style="background: #edf2f7; color: #4a5568; font-size: 13px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">⚙️ 修改設定</button>
-
-        <div id="setup-card" class="card">
-            <div class="card-title">👤 新手設定</div>
-            <img id="avatar-img" class="avatar-preview" style="width:60px; height:60px; border-radius:50%; margin: 0 auto 10px; display:block; background:#eee;" src="">
-            <input type="text" id="full_name" placeholder="隊友如何稱呼你">
-            <input type="text" id="team_id_input" placeholder="小隊邀請碼 (Team ID)">
-            <button class="btn-primary" style="background:var(--primary)" onclick="updateProfile()">存檔並開始遊戲</button>
+            <div><span>目前積分</span><b id="ticket-count">0</b></div>
+            <div><span>當前進度</span><b id="day-progress">Day 0</b></div>
         </div>
 
         <div class="card" style="border-left: 5px solid var(--warning);">
-            <div class="card-title">⚖️ 每日數據報到</div>
-            <p id="today-mission-tip" style="font-size: 13px; color: var(--primary); background: #e1f5fe; padding: 8px; border-radius: 8px; margin-bottom: 10px;"></p>
+            <div style="font-weight:bold; margin-bottom:10px;">⚖️ 每日數據報到 (賺積分)</div>
+            <p id="today-mission-tip" style="font-size: 12px; color: #666;"></p>
             <input type="number" id="weight" step="0.1" placeholder="今日體重 (kg)">
-            <button class="btn-warning" onclick="saveDailyData()">送出報到 (拿 1 張券 🎟️)</button>
-        </div>
-
-        <div class="referral-box">
-            <b>🎁 推薦朋友獎勵</b><br>
-            <span style="font-size: 12px;">帶好友參加，立拿 10 張券 + <br><b>$100 產品抵用券！</b></span>
-            <button onclick="copyReferral()" style="font-size:12px; padding:5px; margin-top:5px; background:#f1c40f; color:#333;">點我複製推薦碼</button>
-        </div>
-
-        <button class="btn-success" style="background:var(--success); margin-top:20px;" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
-        <button class="btn-danger" style="background:var(--danger); opacity:0.5; margin-top:15px;" onclick="signOut()">安全登出</button>
-    </div>
-</div>
-
-<div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
-    <div class="rules-card" onclick="event.stopPropagation()">
-        <div class="rules-header">
-            <h3>🏆 馬拉松全攻略</h3>
-            <span style="cursor:pointer" onclick="toggleRules()">✕</span>
-        </div>
-        <div class="rules-content">
-            <p style="background:#fff9e6; padding:10px; border-radius:8px; font-size:13px;">這不是跑 42 公里，而是「10天變健康、變漂亮、還能拿禮物」的線上遊戲！</p>
             
-            <h4>🎮 第 0 步：進入遊戲前</h4>
-            <ul>
-                <li><b>買好燃料：</b>找教練準備 10 天份營養奶昔。</li>
-                <li><b>加入公會：</b>進入【小隊群】(9人互助) 與 【大任務區】(300人交功課)。</li>
-            </ul>
-
-            <h4>⚔️ 每日固定任務 (拿獎券)</h4>
-            <div class="task-grid">
-                <span>📸 拍體重數據</span><span>📸 奶昔美照</span>
-                <span>📸 健康午餐</span><span>🎯 完成今日挑戰</span>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0;">
+                <label><input type="checkbox" id="check_diet"> 完成打卡飲食</label>
+                <label><input type="checkbox" id="check_shake"> 拍奶昔 (Shake)</label>
+                <label><input type="checkbox" id="check_live"> 已直播</label>
             </div>
-
-            <h4>📅 10 天專屬關卡</h4>
-            <div id="mission-container"></div>
-
-            <h4>🎟️ 獎勵制度</h4>
-            <ul style="font-size: 13px; background: #f4f7f6; padding: 10px; border-radius: 8px; list-style:none;">
-                <li>✅ 天天報榜：1 張 / 天</li>
-                <li>🎯 完成挑戰：2 張 / 天</li>
-                <li>💻 Zoom 派對：5 張 / 次</li>
-                <li>👥 推薦好友：10 張 + $100 抵用券</li>
-            </ul>
+            <p style="font-size:11px; color: var(--danger);">* 需全選（完成一圈）才可獲得 1 積分</p>
+            <button style="background:var(--warning)" onclick="saveDailyData()">送出報到</button>
         </div>
+
+        <button style="background:var(--danger); opacity:0.6;" onclick="signOut()">安全登出</button>
     </div>
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const SUPABASE_URL = '你的URL';
+    const SUPABASE_KEY = '你的KEY';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const missions = [
-        "開賽打卡：拍燃料與體重，大喊我準備好了！",
-        "彩虹午餐：午餐要有 3 種顏色的蔬菜。",
-        "分享愛：請家人喝一口奶昔或一起運動。",
-        "飲水大王：拍下今天喝完的第 3 瓶水。",
-        "動起來：做 10 分鐘運動拍流汗照。",
-        "聰明吃油：拍下餐盤裡的堅果或魚類。",
-        "小小網紅：將健康餐發到 FB/IG 限動。",
-        "誇誇隊友：在群組對隊友說一句鼓勵的話。",
-        "變身見證：分享 10 天來身體精神的變化。",
-        "帶好朋友：邀一位朋友測脂或參加下場比賽。"
-    ];
-
+    // 1. 初始化檢查 (確保在 async 內)
     window.onload = async () => {
         const { data: { session } } = await sb.auth.getSession();
         if (session) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('profile-section').classList.remove('hidden');
+            showProfile();
             loadFullProfile(session.user);
         }
     };
 
+    function showProfile() {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('profile-section').classList.remove('hidden');
+    }
+
+    // 2. 登入/註冊函數 (一定要加上 async)
+    async function signIn() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message); else location.reload();
+    }
+
+    async function signUp() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const { error } = await sb.auth.signUp({ email, password });
+        if (error) alert(error.message); else alert("註冊成功！");
+    }
+
+    async function signOut() {
+        await sb.auth.signOut();
+        location.reload();
+    }
+
+    // 3. 積分計算與載入
     async function loadFullProfile(user) {
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         if (profile) {
-            document.getElementById('user-display').innerText = user.email;
-            document.getElementById('full_name').value = profile.full_name || '';
-            document.getElementById('team_id_input').value = profile.current_team_id || '';
-            
-            if (profile.full_name && profile.current_team_id) {
-                document.getElementById('setup-card').classList.add('hidden');
-                document.getElementById('edit-profile-btn').classList.remove('hidden');
-            }
-
             // 計算天數
             const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
             document.getElementById('day-progress').innerText = `Day ${dayNum}`;
-            document.getElementById('today-mission-tip').innerText = dayNum <= 10 ? `🎯 今日任務：${missions[dayNum-1]}` : "🎉 恭喜完成本賽季！";
-            
-            renderMissions(dayNum);
-            updateTicketDisplay(user.id);
+            calculateTotalPoints(user.id);
         }
     }
 
-    function renderMissions(currentDay) {
-        const container = document.getElementById('mission-container');
-        container.innerHTML = "";
-        missions.forEach((m, i) => {
-            const d = i + 1;
-            const div = document.createElement('div');
-            div.className = `mission-item ${d > currentDay ? 'locked' : (d === currentDay ? 'active' : '')}`;
-            div.innerHTML = `<span style="width:40px">D${d}</span> <span>${d > currentDay ? '🔒 尚未解鎖' : m}</span>`;
-            container.appendChild(div);
-        });
+    async function calculateTotalPoints(userId) {
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).single();
+        const { data: records } = await sb.from('weight_records').select('*').eq('user_id', userId);
+
+        let points = 0;
+
+        // 續跑與介紹分 (圖片內容)
+        if (profile.renewal_type === '100') points += 1;
+        else if (profile.renewal_type === '150') points += 2;
+        else if (profile.renewal_type === '250') points += 4;
+        points += (profile.referral_count || 0) * 15;
+
+        // 每日記錄積分：磅磅 + 打卡 + shake + 直播 = 1分
+        if (records) {
+            records.forEach(rec => {
+                if (rec.weight && rec.has_diet && rec.has_shake && rec.has_live) {
+                    points += 1;
+                }
+            });
+        }
+        document.getElementById('ticket-count').innerText = points;
     }
 
-    async function updateTicketDisplay(userId) {
-        // 這裡暫時以打卡紀錄數作為簡單計算，實際可根據資料庫 record 數量加總
-        const { data: records } = await sb.from('weight_records')
-                                     .select('mission_status')
-                                     .eq('user_id', userId);
-    
-    let totalTickets = 0;
-    if (records) {
-        records.forEach(rec => {
-            totalTickets += 1; // 基礎打卡 1 張
-            if (rec.mission_status) totalTickets += 2; // 完成挑戰加 2 張
-        });
-    }
-    document.getElementById('ticket-count').innerText = totalTickets;
-}
-        const { count } = await sb.from('weight_records').select('*', { count: 'exact', head: true }).eq('user_id', userId);
-        document.getElementById('ticket-count').innerText = count || 0;
-    }
-
-    function copyReferral() {
-        alert("推薦碼已複製：MARA-" + Math.random().toString(36).substr(2, 5).toUpperCase() + "\n發送給好友註冊即可領取 $100 抵用券！");
-    }
-
-    // 基本 Auth 與儲存功能 (維持原樣)
-async function saveDailyData() {
-    const { data: { user } } = await sb.auth.getUser();
-    const weight = document.getElementById('weight').value;
-    
-    // 假設你在 HTML 增加了一個 checkbox id="mission_check"
-    const isMissionDone = document.getElementById('mission_check').checked; 
-
-    if(!weight) return alert("請輸入體重！");
-
-    const { error } = await sb.from('weight_records').upsert({ 
-        user_id: user.id, 
-        date: new Date().toISOString().split('T')[0], 
-        weight: parseFloat(weight),
-        mission_status: isMissionDone // 儲存挑戰狀態
-    });
-
-    if (error) {
-        alert("儲存失敗：" + error.message);
-    } else {
-        const bonus = isMissionDone ? "3" : "1";
-        alert(`✅ 報到成功！本次獲得 ${bonus} 張券 🎟️`);
-        location.reload();
-    }
-}
-
-    function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
-    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
-    async function signIn() { 
-        const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
-        if (error) alert(error.message); else location.reload();
-    }
-    async function signUp() {
-        const { error } = await sb.auth.signUp({ email: document.getElementById('email').value, password: document.getElementById('password').value });
-        if (error) alert(error.message); else alert("註冊成功，請登入！");
-    }
-    async function signOut() { await sb.auth.signOut(); location.reload(); }
-    async function updateProfile() {
+    async function saveDailyData() {
         const { data: { user } } = await sb.auth.getUser();
-        await sb.from('profiles').upsert({ id: user.id, full_name: document.getElementById('full_name').value, current_team_id: document.getElementById('team_id_input').value });
-        location.reload();
-    }
-    async function updateTicketDisplay(userId) {
-    const { data: records } = await sb.from('weight_records')
-                                     .select('mission_status')
-                                     .eq('user_id', userId);
-    
-    let totalTickets = 0;
-    if (records) {
-        records.forEach(rec => {
-            totalTickets += 1; // 基礎打卡 1 張
-            if (rec.mission_status) totalTickets += 2; // 完成挑戰加 2 張
+        if (!user) return;
+
+        const weight = document.getElementById('weight').value;
+        const hasDiet = document.getElementById('check_diet').checked;
+        const hasShake = document.getElementById('check_shake').checked;
+        const hasLive = document.getElementById('check_live').checked;
+
+        if (!weight) return alert("請輸入體重！");
+
+        const { error } = await sb.from('weight_records').upsert({
+            user_id: user.id,
+            date: new Date().toISOString().split('T')[0],
+            weight: parseFloat(weight),
+            has_diet: hasDiet,
+            has_shake: hasShake,
+            has_live: hasLive
         });
+
+        if (error) alert(error.message);
+        else {
+            alert("✅ 報到成功！若四項全能則獲得 1 分");
+            location.reload();
+        }
     }
-    document.getElementById('ticket-count').innerText = totalTickets;
-}
 </script>
 </body>
 </html>
