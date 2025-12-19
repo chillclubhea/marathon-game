@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者後台</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; }
+        .sidebar { width: 250px; background: white; position: fixed; height: 100vh; overflow-y: auto; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .logo { padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
+        .logo h2 { margin: 0; color: #2c3e50; }
+        .nav-menu { padding: 20px 0; }
+        .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.3s; }
+        .nav-item:hover { background: #f8f9fa; }
+        .nav-item.active { background: var(--primary); color: white; }
+        .nav-item i { font-size: 18px; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card-title { font-size: 16px; color: #7f8c8d; margin-bottom: 10px; }
+        .card-value { font-size: 32px; font-weight: bold; color: #2c3e50; }
+        .card-change { font-size: 14px; margin-top: 5px; }
+        .card-change.positive { color: var(--success); }
+        .card-change.negative { color: var(--danger); }
+        .section-title { font-size: 24px; color: #2c3e50; margin: 30px 0 20px; }
+        .table-container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; padding: 15px; text-align: left; font-weight: bold; color: #2c3e50; border-bottom: 2px solid #eee; }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f8f9fa; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-small { padding: 5px 10px; font-size: 12px; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; width: 90%; max-width: 600px; margin: 50px auto; border-radius: 15px; padding: 30px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .modal-close { cursor: pointer; font-size: 24px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: bold; color: #2c3e50; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .chart-container { height: 300px; margin-top: 20px; }
+        .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: bold; }
+        .search-box { flex: 1; max-width: 300px; }
+        .hidden { display: none; }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>🏢 管理者後台</h2>
+            <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;" id="admin-info"></div>
+        </div>
+        
+        <div class="nav-menu">
+            <div class="nav-item active" onclick="showSection('dashboard')">
+                📊 儀表板
+            </div>
+            <div class="nav-item" onclick="showSection('users')">
+                👥 用戶管理
+            </div>
+            <div class="nav-item" onclick="showSection('teams')">
+                🏆 團隊管理
+            </div>
+            <div class="nav-item" onclick="showSection('role-requests')">
+                🔄 角色申請
+            </div>
+            <div class="nav-item" onclick="showSection('points')">
+                ⭐ 積分管理
+            </div>
+            <div class="nav-item" onclick="showSection('tasks')">
+                ✅ 任務管理
+            </div>
+            <div class="nav-item" onclick="showSection('reports')">
+                📈 數據報表
+            </div>
+            <div class="nav-item" onclick="showSection('audit')">
+                📋 操作日誌
+            </div>
+            <div class="nav-item" onclick="showSection('settings')">
+                ⚙️ 系統設定
+            </div>
+        </div>
+        
+        <div style="padding: 20px; position: absolute; bottom: 0; width: 100%;">
+            <button class="btn" style="width: 100%; background: #f8f9fa;" onclick="window.location.href='index.html'">
+                ← 返回主頁
+            </button>
+        </div>
+    </div>
+    
+    <!-- 主要內容區 -->
+    <div class="main-content">
+        <!-- 儀表板 -->
+        <div id="dashboard-section">
+            <h1 class="section-title">📊 系統儀表板</h1>
+            
+            <!-- 統計卡片 -->
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-title">總用戶數</div>
+                    <div class="card-value" id="total-users">0</div>
+                    <div class="card-change positive" id="user-change">+0 本週</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">活躍團隊</div>
+                    <div class="card-value" id="active-teams">0</div>
+                    <div class="card-change positive" id="team-change">+0 本週</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">待審申請</div>
+                    <div class="card-value" id="pending-requests">0</div>
+                    <div class="card-change negative" id="request-change">需處理</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">總積分</div>
+                    <div class="card-value" id="total-points">0</div>
+                    <div class="card-change positive" id="points-change">+0 今日</div>
+                </div>
+            </div>
+            
+            <!-- 圖表 -->
+            <div class="card">
+                <div class="card-title">📈 用戶增長趨勢</div>
+                <div class="chart-container">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+            </div>
+            
+            <!-- 最近活動 -->
+            <div class="card" style="margin-top: 20px;">
+                <div class="card-title">🕐 最近活動</div>
+                <div id="recent-activities">
+                    <div class="loading">載入中...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 用戶管理 -->
+        <div id="users-section" class="hidden">
+            <h1 class="section-title">👥 用戶管理</h1>
+            
+            <div class="filter-bar">
+                <input type="text" class="form-control search-box" placeholder="搜尋用戶..." oninput="searchUsers(this.value)">
+                <select class="form-control" style="width: 150px;" onchange="filterUsersByRole(this.value)">
+                    <option value="">所有角色</option>
+                    <option value="member">學員</option>
+                    <option value="captain">隊長</option>
+                    <option value="deputy">副隊長</option>
+                    <option value="admin">管理員</option>
+                </select>
+                <select class="form-control" style="width: 150px;" onchange="filterUsersByStatus(this.value)">
+                    <option value="">所有狀態</option>
+                    <option value="active">活躍</option>
+                    <option value="inactive">不活躍</option>
+                    <option value="locked">已鎖定</option>
+                </select>
+                <button class="btn btn-primary" onclick="exportUsers()">📥 匯出用戶</button>
+                <button class="btn btn-success" onclick="showAddUserModal()">➕ 新增用戶</button>
+            </div>
+            
+            <div class="table-container">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>角色</th>
+                            <th>計畫</th>
+                            <th>積分</th>
+                            <th>隊伍</th>
+                            <th>狀態</th>
+                            <th>註冊時間</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="9" class="loading">載入用戶資料中...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分頁控制 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                <div id="pagination-info">顯示 0-0 共 0 筆</div>
+                <div>
+                    <button class="btn" onclick="changeUserPage(-1)">← 上一頁</button>
+                    <span style="margin: 0 10px;" id="current-page">1</span>
+                    <button class="btn" onclick="changeUserPage(1)">下一頁 →</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 團隊管理 -->
+        <div id="teams-section" class="hidden">
+            <h1 class="section-title">🏆 團隊管理</h1>
+            <!-- 團隊管理內容 -->
+        </div>
+        
+        <!-- 角色申請 -->
+        <div id="role-requests-section" class="hidden">
+            <h1 class="section-title">🔄 角色修改申請</h1>
+            <!-- 角色申請內容 -->
+        </div>
+        
+        <!-- 其他部分省略以節省篇幅... -->
+    </div>
+    
+    <!-- 新增用戶模態框 -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">➕ 新增用戶</div>
+                <div class="modal-close" onclick="closeModal('add-user-modal')">×</div>
+            </div>
+            <!-- 新增用戶表單 -->
+        </div>
+    </div>
+    
+    <!-- 編輯用戶模態框 -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">✏️ 編輯用戶</div>
+                <div class="modal-close" onclick="closeModal('edit-user-modal')">×</div>
+            </div>
+            <!-- 編輯用戶表單 -->
+        </div>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 全局變數
+    let currentUser = null;
+    let currentAdmin = null;
+    let growthChart = null;
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            alert('請先登入');
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = session.user;
+        
+        // 檢查管理員權限
+        await checkAdminPermission();
+        
+        // 載入儀表板數據
+        loadDashboardData();
+        
+        // 載入用戶列表
+        loadUsers();
+    };
+    
+    // 檢查管理員權限
+    async function checkAdminPermission() {
+        try {
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('role, full_name')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (profile.role !== 'admin') {
+                alert('只有管理員可以訪問此頁面');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentAdmin = profile;
+            document.getElementById('admin-info').textContent = `管理員: ${profile.full_name}`;
+            
+        } catch (error) {
+            console.error('檢查管理員權限錯誤:', error);
+            alert('無法驗證管理員權限');
+            window.location.href = 'index.html';
+        }
+    }
+    
+    // 顯示/隱藏區塊
+    function showSection(sectionId) {
+        // 隱藏所有區塊
+        document.querySelectorAll('[id$="-section"]').forEach(section => {
+            section.classList.add('hidden');
+        });
+        
+        // 顯示目標區塊
+        document.getElementById(sectionId + '-section').classList.remove('hidden');
+        
+        // 更新導航選項
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 根據區塊載入數據
+        switch(sectionId) {
+            case 'dashboard':
+                loadDashboardData();
+                break;
+            case 'users':
+                loadUsers();
+                break;
+            case 'role-requests':
+                loadRoleRequests();
+                break;
+            // 其他區塊...
+        }
+    }
+    
+    // 載入儀表板數據
+    async function loadDashboardData() {
+        try {
+            // 載入總用戶數
+            const { count: totalUsers } = await sb
+                .from('profiles')
+                .select('*', { count: 'exact', head: true });
+            
+            document.getElementById('total-users').textContent = totalUsers || 0;
+            
+            // 載入本週新增用戶
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const { count: weeklyUsers } = await sb
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', weekAgo.toISOString());
+            
+            document.getElementById('user-change').textContent = `+${weeklyUsers || 0} 本週`;
+            
+            // 載入團隊數據
+            const { count: totalTeams } = await sb
+                .from('teams')
+                .select('*', { count: 'exact', head: true });
+            
+            document.getElementById('active-teams').textContent = totalTeams || 0;
+            
+            // 載入待審申請
+            const { count: pendingRequests } = await sb
+                .from('role_change_requests')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'pending');
+            
+            document.getElementById('pending-requests').textContent = pendingRequests || 0;
+            
+            // 載入總積分
+            const { data: pointsData } = await sb
+                .from('profiles')
+                .select('points');
+            
+            const totalPoints = pointsData?.reduce((sum, user) => sum + (user.points || 0), 0) || 0;
+            document.getElementById('total-points').textContent = totalPoints;
+            
+            // 載入圖表數據
+            await loadGrowthChart();
+            
+            // 載入最近活動
+            await loadRecentActivities();
+            
+        } catch (error) {
+            console.error('載入儀表板數據錯誤:', error);
+        }
+    }
+    
+    // 載入增長圖表
+    async function loadGrowthChart() {
+        try {
+            // 獲取過去30天的數據
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const { data: growthData } = await sb
+                .from('profiles')
+                .select('created_at')
+                .gte('created_at', thirtyDaysAgo.toISOString());
+            
+            // 處理數據
+            const dailyCounts = {};
+            growthData?.forEach(user => {
+                const date = new Date(user.created_at).toLocaleDateString('zh-TW');
+                dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+            });
+            
+            // 排序日期
+            const dates = Object.keys(dailyCounts).sort();
+            const counts = dates.map(date => dailyCounts[date]);
+            
+            // 創建累積數據
+            const cumulativeCounts = [];
+            let cumulative = 0;
+            counts.forEach(count => {
+                cumulative += count;
+                cumulativeCounts.push(cumulative);
+            });
+            
+            // 渲染圖表
+            const ctx = document.getElementById('growth-chart').getContext('2d');
+            
+            if (growthChart) {
+                growthChart.destroy();
+            }
+            
+            growthChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '每日新增',
+                        data: counts,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '累積用戶',
+                        data: cumulativeCounts,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('載入圖表數據錯誤:', error);
+        }
+    }
+    
+    // 載入最近活動
+    async function loadRecentActivities() {
+        try {
+            const { data: activities } = await sb
+                .from('audit_logs')
+                .select(`
+                    *,
+                    user:profiles(full_name)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(10);
+            
+            const container = document.getElementById('recent-activities');
+            if (!activities || activities.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #7f8c8d;">暫無活動記錄</div>';
+                return;
+            }
+            
+            let html = '';
+            activities.forEach(activity => {
+                const time = new Date(activity.created_at).toLocaleString('zh-TW');
+                const actionMap = {
+                    'REQUEST_ROLE_CHANGE': '提交角色修改申請',
+                    'ADMIN_ROLE_CHANGE': '管理員修改角色',
+                    'USER_CREATED': '創建新用戶',
+                    'USER_UPDATED': '更新用戶資料',
+                    'TEAM_CREATED': '創建團隊',
+                    'TASK_COMPLETED': '完成任務'
+                };
+                
+                html += `
+                <div style="padding: 10px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div style="font-weight: bold;">${activity.user?.full_name || '系統'}</div>
+                    <div style="font-size: 14px; color: #7f8c8d;">${actionMap[activity.action] || activity.action}</div>
+                    <div style="font-size: 12px; color: #95a5a6;">${time}</div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('載入最近活動錯誤:', error);
+        }
+    }
+    
+    // 用戶管理相關函數
+    let currentPage = 1;
+    const pageSize = 20;
+    let allUsers = [];
+    let filteredUsers = [];
+    
+    // 載入用戶列表
+    async function loadUsers() {
+        try {
+            const { data: users, error } = await sb
+                .from('profiles')
+                .select(`
+                    *,
+                    team:teams(team_name)
+                `)
+                .order('created_at', { ascending: false });
+            
+            if (error) throw error;
+            
+            allUsers = users || [];
+            filteredUsers = [...allUsers];
+            renderUsersTable();
+            
+        } catch (error) {
+            console.error('載入用戶列表錯誤:', error);
+            document.querySelector('#users-table tbody').innerHTML = 
+                '<tr><td colspan="9" style="color: #e74c3c;">載入失敗，請重新整理</td></tr>';
+        }
+    }
+    
+    // 渲染用戶表格
+    function renderUsersTable() {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageUsers = filteredUsers.slice(startIndex, endIndex);
+        
+        const tbody = document.querySelector('#users-table tbody');
+        let html = '';
+        
+        if (pageUsers.length === 0) {
+            html = '<tr><td colspan="9" style="text-align: center;">暫無用戶資料</td></tr>';
+        } else {
+            pageUsers.forEach(user => {
+                const roleNames = {
+                    'member': '學員',
+                    'captain': '隊長',
+                    'deputy': '副隊長',
+                    'admin': '管理員'
+                };
+                
+                const planNames = {
+                    'slow_run': '慢跑',
+                    'fast_run': '快跑',
+                    'vip': 'VIP'
+                };
+                
+                const statusClass = user.is_locked ? 'status-inactive' : 'status-active';
+                const statusText = user.is_locked ? '已鎖定' : '活躍';
+                
+                html += `
+                <tr>
+                    <td>${user.id.substring(0, 8)}...</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'U') + '&background=random'}" 
+                                 style="width: 30px; height: 30px; border-radius: 50%;">
+                            ${user.full_name || '未設定'}
+                        </div>
+                    </td>
+                    <td>${roleNames[user.role] || user.role}</td>
+                    <td>${planNames[user.plan] || user.plan}</td>
+                    <td><strong>${user.points || 0}</strong></td>
+                    <td>${user.team?.team_name || '無隊伍'}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${new Date(user.created_at).toLocaleDateString('zh-TW')}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="editUser('${user.id}')">編輯</button>
+                        <button class="btn btn-small ${user.is_locked ? 'btn-success' : 'btn-warning'}" 
+                                onclick="toggleUserLock('${user.id}', ${user.is_locked})">
+                            ${user.is_locked ? '解鎖' : '鎖定'}
+                        </button>
+                    </td>
+                </tr>`;
+            });
+        }
+        
+        tbody.innerHTML = html;
+        
+        // 更新分頁資訊
+        document.getElementById('pagination-info').textContent = 
+            `顯示 ${startIndex + 1}-${Math.min(endIndex, filteredUsers.length)} 共 ${filteredUsers.length} 筆`;
+        document.getElementById('current-page').textContent = currentPage;
+    }
+    
+    // 搜尋用戶
+    function searchUsers(keyword) {
+        if (!keyword.trim()) {
+            filteredUsers = [...allUsers];
+        } else {
+            filteredUsers = allUsers.filter(user => 
+                (user.full_name && user.full_name.includes(keyword)) ||
+                (user.email && user.email.includes(keyword))
+            );
+        }
+        currentPage = 1;
+        renderUsersTable();
+    }
+    
+    // 根據角色篩選用戶
+    function filterUsersByRole(role) {
+        if (!role) {
+            filteredUsers = [...allUsers];
+        } else {
+            filteredUsers = allUsers.filter(user => user.role === role);
+        }
+        currentPage = 1;
+        renderUsersTable();
+    }
+    
+    // 根據狀態篩選用戶
+    function filterUsersByStatus(status) {
+        if (!status) {
+            filteredUsers = [...allUsers];
+        } else if (status === 'locked') {
+            filteredUsers = allUsers.filter(user => user.is_locked);
+        } else if (status === 'active') {
+            filteredUsers = allUsers.filter(user => !user.is_locked);
+        }
+        currentPage = 1;
+        renderUsersTable();
+    }
+    
+    // 切換用戶鎖定狀態
+    async function toggleUserLock(userId, isCurrentlyLocked) {
+        const action = isCurrentlyLocked ? '解鎖' : '鎖定';
+        const reason = prompt(`請輸入${action}此用戶的原因：`);
+        
+        if (reason === null) return; // 用戶取消
+        
+        try {
+            const { error } = await sb
+                .from('profiles')
+                .update({
+                    is_locked: !isCurrentlyLocked,
+                    locked_by: currentUser.id,
+                    locked_at: new Date().toISOString()
+                })
+                .eq('id', userId);
+            
+            if (error) throw error;
+            
+            // 記錄審核日誌
+            await sb.from('audit_logs').insert([{
+                user_id: currentUser.id,
+                action: 'USER_LOCK_TOGGLE',
+                resource_type: 'USER',
+                resource_id: userId,
+                details: { 
+                    action: action,
+                    reason: reason,
+                    new_status: !isCurrentlyLocked
+                }
+            }]);
+            
+            alert(`用戶已${action}`);
+            loadUsers(); // 重新載入用戶列表
+            
+        } catch (error) {
+            console.error(`切換用戶鎖定狀態錯誤:`, error);
+            alert(`${action}失敗: ${error.message}`);
+        }
+    }
+    
+    // 編輯用戶
+    async function editUser(userId) {
+        try {
+            const { data: user, error } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+            
+            if (error) throw error;
+            
+            // 顯示編輯模態框
+            showEditUserModal(user);
+            
+        } catch (error) {
+            console.error('載入用戶資料錯誤:', error);
+            alert('無法載入用戶資料');
+        }
+    }
+    
+    // 顯示編輯用戶模態框
+    function showEditUserModal(user) {
+        const modal = document.getElementById('edit-user-modal');
+        const content = modal.querySelector('.modal-content');
+        
+        const roleOptions = {
+            'member': '學員',
+            'captain': '隊長', 
+            'deputy': '副隊長',
+            'admin': '管理員'
+        };
+        
+        const planOptions = {
+            'slow_run': '慢跑',
+            'fast_run': '快跑',
+            'vip': 'VIP'
+        };
+        
+        let roleOptionsHtml = '';
+        for (const [value, label] of Object.entries(roleOptions)) {
+            roleOptionsHtml += `<option value="${value}" ${user.role === value ? 'selected' : ''}>${label}</option>`;
+        }
+        
+        let planOptionsHtml = '';
+        for (const [value, label] of Object.entries(planOptions)) {
+            planOptionsHtml += `<option value="${value}" ${user.plan === value ? 'selected' : ''}>${label}</option>`;
+        }
+        
+        content.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-title">✏️ 編輯用戶: ${user.full_name || '未命名'}</div>
+                <div class="modal-close" onclick="closeModal('edit-user-modal')">×</div>
+            </div>
+            <form onsubmit="saveUserChanges(event, '${user.id}')">
+                <div class="form-group">
+                    <label class="form-label">真實姓名</label>
+                    <input type="text" class="form-control" id="edit-full-name" value="${user.full_name || ''}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">電子郵件</label>
+                    <input type="email" class="form-control" id="edit-email" value="${user.email || ''}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">角色</label>
+                    <select class="form-control" id="edit-role" required>
+                        ${roleOptionsHtml}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">計畫</label>
+                    <select class="form-control" id="edit-plan" required>
+                        ${planOptionsHtml}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">積分</label>
+                    <input type="number" class="form-control" id="edit-points" value="${user.points || 0}" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" id="edit-is-locked" ${user.is_locked ? 'checked' : ''}>
+                        鎖定帳號（鎖定後用戶無法修改資料）
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">修改原因</label>
+                    <textarea class="form-control" id="edit-reason" rows="3" placeholder="請說明修改此用戶資料的原因..." required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">儲存變更</button>
+                    <button type="button" class="btn" onclick="closeModal('edit-user-modal')" style="flex: 1;">取消</button>
+                </div>
+            </form>`;
+        
+        modal.style.display = 'block';
+    }
+    
+    // 儲存用戶變更
+    async function saveUserChanges(event, userId) {
+        event.preventDefault();
+        
+        const reason = document.getElementById('edit-reason').value;
+        if (!reason.trim()) {
+            alert('請填寫修改原因');
+            return;
+        }
+        
+        const updateData = {
+            full_name: document.getElementById('edit-full-name').value,
+            role: document.getElementById('edit-role').value,
+            plan: document.getElementById('edit-plan').value,
+            points: parseInt(document.getElementById('edit-points').value),
+            is_locked: document.getElementById('edit-is-locked').checked,
+            last_modified_by: currentUser.id,
+            last_modified_at: new Date().toISOString()
+        };
+        
+        try {
+            const { error } = await sb
+                .from('profiles')
+                .update(updateData)
+                .eq('id', userId);
+            
+            if (error) throw error;
+            
+            // 記錄審核日誌
+            await sb.from('audit_logs').insert([{
+                user_id: currentUser.id,
+                action: 'ADMIN_USER_UPDATE',
+                resource_type: 'USER',
+                resource_id: userId,
+                details: {
+                    reason: reason,
+                    changes: updateData
+                }
+            }]);
+            
+            alert('用戶資料已更新');
+            closeModal('edit-user-modal');
+            loadUsers(); // 重新載入用戶列表
+            
+        } catch (error) {
+            console.error('更新用戶資料錯誤:', error);
+            alert('更新失敗: ' + error.message);
+        }
+    }
+    
+    // 匯出用戶資料
+    async function exportUsers() {
+        try {
+            const { data: users } = await sb
+                .from('profiles')
+                .select(`
+                    *,
+                    team:teams(team_name)
+                `)
+                .order('created_at', { ascending: false });
+            
+            if (!users || users.length === 0) {
+                alert('暫無用戶資料可匯出');
+                return;
+            }
+            
+            // 轉換為CSV格式
+            const headers = ['ID', '姓名', '電子郵件', '角色', '計畫', '積分', '隊伍', '狀態', '註冊時間'];
+            const rows = users.map(user => [
+                user.id,
+                user.full_name || '',
+                user.email || '',
+                user.role,
+                user.plan,
+                user.points || 0,
+                user.team?.team_name || '無隊伍',
+                user.is_locked ? '已鎖定' : '活躍',
+                new Date(user.created_at).toLocaleString('zh-TW')
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            // 下載檔案
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `用戶資料_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+        } catch (error) {
+            console.error('匯出用戶資料錯誤:', error);
+            alert('匯出失敗: ' + error.message);
+        }
+    }
+    
+    // 載入角色申請
+    async function loadRoleRequests() {
+        // 實現角色申請管理功能
+    }
+    
+    // 工具函數
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+    
+    function changeUserPage(delta) {
+        const totalPages = Math.ceil(filteredUsers.length / pageSize);
+        const newPage = currentPage + delta;
+        
+        if (newPage >= 1 && newPage <= totalPages) {
+            currentPage = newPage;
+            renderUsersTable();
+        }
+    }
+</script>
+</body>
+</html>
