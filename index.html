@@ -6,6 +6,30 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 讓區塊切換時有平滑感 */
+.hidden {
+    display: none !important;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+/* 輕微的卡片陰影與過渡 */
+#profile-section {
+    transition: all 0.3s ease;
+}
         /* 定義進入動畫 */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -145,29 +169,38 @@
 </div>
 
 <script>
-    window.onload = async () => {
-    // 檢查目前是否已經有登入的 Session
+  window.onload = async () => {
+    // 取得目前 session
     const { data: { session } } = await sb.auth.getSession();
     
+    const authSection = document.getElementById('auth-section');
+    const profileSection = document.getElementById('profile-section');
+
     if (session && session.user) {
-        // 如果有 Session，直接顯示個人中心
+        // --- 已登入狀態 ---
+        authSection.classList.add('hidden'); // 隱藏登入框
+        profileSection.classList.remove('hidden'); // 顯示中心
+        profileSection.classList.add('fade-in'); // 加上剛才提到的自然跳動效果
+        
+        // 載入該使用者的資料
         showProfile(session.user);
     } else {
-        // 如果沒登入，顯示登入介面
-        document.getElementById('auth-section').classList.remove('hidden');
-        document.getElementById('profile-section').classList.add('hidden');
+        // --- 未登入狀態 ---
+        authSection.classList.remove('hidden');
+        authSection.classList.add('fade-in');
+        profileSection.classList.add('hidden');
     }
 };
 
-// 修改登入成功的邏輯
-async function signIn() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message); 
-    else {
-        // 登入成功後，重新整理頁面會自動進入中心
-        location.reload();
+// 顯示個人中心內容的函數
+async function showProfile(user) {
+    // 這裡放原本抓取姓名、體重、頭像的邏輯...
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    if (profile) {
+        document.getElementById('user-name').innerText = profile.full_name || "馬拉松選手";
+        if (profile.avatar_url) {
+            document.getElementById('avatar-img').src = profile.avatar_url;
+        }
     }
 }
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
