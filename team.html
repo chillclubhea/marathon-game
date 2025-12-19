@@ -7,28 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @keyframes cardPop {
-    0% { transform: scale(0.8); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.member-card {
-    opacity: 0; /* 預設先隱藏，由動畫轉為 1 */
-    animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* 加上懸停微動，增加回饋感 */
-.member-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
-}
         :root { --primary: #3498db; --danger: #e74c3c; --success: #2ecc71; --gold: #f1c40f; --body-bg: #f8f9fa; }
+        
+        /* 自然跳動動畫 */
+        @keyframes cardPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--body-bg); padding: 15px; text-align: center; }
         
-        /* 戰報圖片導出區域 */
         #capture-area { max-width: 480px; margin: 0 auto; padding: 20px 10px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 20px; }
 
-        /* 全隊總和數據樣式 */
         .team-summary { display: flex; justify-content: space-around; background: rgba(255,255,255,0.8); margin: 10px; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .summary-item { display: flex; flex-direction: column; gap: 2px; }
         .summary-label { font-size: 10px; color: #7f8c8d; }
@@ -36,7 +26,21 @@
         .val-good { color: var(--success); }
 
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(255, 255, 255, 0.4); padding: 10px; border-radius: 15px; }
-        .member-card { background: #fff; border-radius: 12px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .member-card { 
+            background: #fff; border-radius: 12px; padding: 15px 5px; 
+            display: flex; flex-direction: column; align-items: center; 
+            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            opacity: 0; /* 預設隱藏，由 JS 控制觸發動畫 */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .member-card.animate {
+            animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .member-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
         .mvp-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 22px; z-index: 5; }
         .btn-kick { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: none; z-index: 10; }
         .avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
@@ -48,7 +52,13 @@
         .status-tag { font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-top: 5px; }
         .tag-done { background: #d4edda; color: #155724; }
         .tag-none { background: #eee; color: #999; }
-        .btn-main { background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 80%; }
+        
+        .btn-main { background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 80%; transition: transform 0.1s; }
+        .btn-main:active { transform: scale(0.95); }
+        
+        .btn-back { display: block; margin-top: 20px; color: #3498db; text-decoration: none; font-size: 14px; transition: opacity 0.2s; }
+        .btn-back:hover { opacity: 0.7; }
+        
         .hidden { display: none !important; }
     </style>
 </head>
@@ -84,7 +94,7 @@
 
     <div id="action-area">
         <button id="captain-tools" class="btn-main hidden" onclick="generateImage()">📸 分享戰報圖片</button>
-        <a href="index.html" style="display:block; margin-top:20px; color:#3498db; text-decoration:none; font-size:14px;">⬅️ 返回個人中心</a>
+        <a href="index.html" class="btn-back">⬅️ 返回個人中心</a>
     </div>
 
 <script>
@@ -100,16 +110,10 @@
         const grid = document.getElementById('grid-display');
         document.getElementById('date-display').innerText = new Date().toLocaleDateString() + " 戰報";
 
-        // 在 for 迴圈中加入 animation-delay
-for (let i = 0; i < 9; i++) {
-    const card = document.createElement('div');
-    card.className = "member-card";
-    card.style.animationDelay = `${i * 0.05}s`; // 每張卡片差 0.05 秒，產生流瀑效果
-    // ... 剩下的渲染邏輯 ...
-}
-        
         try {
             const { data: { user } } = await sb.auth.getUser();
+            if (!user) { window.location.href = "index.html"; return; }
+
             const { data: myProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
             isCaptain = myProfile.role === 'captain';
 
@@ -123,7 +127,6 @@ for (let i = 0; i < 9; i++) {
             const yesterday = new Date(Date.now() - 864e5).toISOString().split('T')[0];
             const { data: records } = await sb.from('weight_records').select('*').in('user_id', members.map(m=>m.id)).in('date', [today, yesterday]);
 
-            // --- MVP 與 總和 計算 ---
             let weightMVPs = [], fatMVPs = [], muscleMVPs = [];
             let minWeight = 0, minFat = 0, maxMuscle = 0;
             let totalW = 0, totalF = 0, totalM = 0;
@@ -135,9 +138,7 @@ for (let i = 0; i < 9; i++) {
                     const wD = t.weight - y.weight;
                     const fD = t.fat_rate - y.fat_rate;
                     const mD = t.muscle_mass - y.muscle_mass;
-
                     totalW += wD; totalF += fD; totalM += mD;
-
                     if (wD < minWeight) { minWeight = wD; weightMVPs = [m.id]; }
                     else if (wD === minWeight && wD < 0) { weightMVPs.push(m.id); }
                     if (fD < minFat) { minFat = fD; fatMVPs = [m.id]; }
@@ -147,7 +148,6 @@ for (let i = 0; i < 9; i++) {
                 }
             });
 
-            // 更新總和顯示
             document.getElementById('total-weight').innerText = `${Math.abs(totalW).toFixed(1)} kg`;
             document.getElementById('total-fat').innerText = `${Math.abs(totalF).toFixed(1)} %`;
             document.getElementById('total-muscle').innerText = `${totalM.toFixed(1)} kg`;
@@ -157,6 +157,7 @@ for (let i = 0; i < 9; i++) {
                 const member = members[i];
                 const card = document.createElement('div');
                 card.className = "member-card";
+                card.style.animationDelay = `${i * 0.08}s`; // 增加延遲讓流瀑效果更明顯
 
                 if (member) {
                     const t = records.find(r => r.user_id === member.id && r.date === today);
@@ -179,6 +180,8 @@ for (let i = 0; i < 9; i++) {
                     card.innerHTML = `<div style="margin-top:50px; color:#bdc3c7; font-size:12px;">待加入</div>`;
                 }
                 grid.appendChild(card);
+                // 強制重繪觸發動畫
+                setTimeout(() => card.classList.add('animate'), 10);
             }
         } catch (e) { grid.innerHTML = "載入失敗"; }
     }
