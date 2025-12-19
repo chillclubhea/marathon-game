@@ -132,6 +132,68 @@
         if (session) showProfile(session.user);
     };
 
+    // 獲取香港目前時間的函數
+function getHKTime() {
+    const now = new Date();
+    // 轉換為香港時間 (UTC+8)
+    const hkOffset = 8 * 60; 
+    const localOffset = now.getTimezoneOffset(); // 分鐘
+    const hkTime = new Date(now.getTime() + (hkOffset + localOffset) * 60000);
+    return hkTime;
+}
+
+async function saveDailyData() {
+    const { data: { user } } = await sb.auth.getUser();
+    
+    // --- 截止時間檢查 ---
+    const now = getHKTime();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    
+    // 雖然理論上過了 12 點就是「明天」，但為了保險，我們加上邏輯判斷
+    // 如果你在系統內有嚴格的「當天」定義，這能防止跨日溢出
+    const todayStr = now.toISOString().split('T')[0];
+    
+    const weight = document.getElementById('weight').value;
+    if(!weight) { alert("請輸入體重"); return; }
+
+    const { error } = await sb.from('weight_records').upsert({
+        user_id: user.id,
+        date: todayStr, // 使用香港時間的日期
+        weight: parseFloat(weight),
+        fat_rate: parseFloat(document.getElementById('fat_rate').value) || 0,
+        muscle_mass: parseFloat(document.getElementById('muscle_mass').value) || 0
+    }, { onConflict: 'user_id,date' });
+
+    if (error) alert("儲存失敗：" + error.message);
+    else {
+        document.getElementById('status-msg').innerText = "✅ 今日數據已成功報到！";
+        setTimeout(() => location.reload(), 1500);
+    }
+}
+
+// 渲染 10 天日期列表
+function renderMarathonDates(startDateStr) {
+    const startDate = new Date(startDateStr);
+    const container = document.getElementById('mission-container'); // 假設你要顯示在這裡
+    let html = '<div style="font-size:12px; color:#666; margin-bottom:10px; text-align:left;">📅 賽期日程表：</div>';
+    
+    for (let i = 0; i < 10; i++) {
+        const current = new Date(startDate);
+        current.setDate(startDate.getDate() + i);
+        const dateStr = `${current.getMonth() + 1}/${current.getDate()}`;
+        const isToday = new Date().toDateString() === current.toDateString();
+        
+        html += `
+            <div class="mission-item ${isToday ? 'active' : ''}" style="display:flex; justify-content:space-between;">
+                <span>Day ${i + 1}</span>
+                <span>${dateStr}</span>
+                <span>${missions[i]}</span>
+            </div>`;
+    }
+    container.innerHTML = html;
+}
+
     function toggleProfileEdit() {
         const setupCard = document.getElementById('setup-card');
         const inputs = setupCard.querySelectorAll('input, select');
