@@ -135,61 +135,89 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const missions = [
-        "開賽打卡：拍燃料與體重，大喊我準備好了！", "彩虹午餐：午餐要有 3 種顏色的蔬菜。",
-        "分享愛：請家人喝一口奶昔或一起運動。", "飲水大王：拍下今天喝完的第 3 瓶水。",
-        "動起來：做 10 分鐘運動拍流汗照。", "聰明吃油：拍下餐盤裡的堅果或魚類。",
-        "小小網紅：將健康餐發到 FB/IG 限動。", "誇誇隊友：在群組對隊友說一句鼓勵的話。",
-        "變身見證：分享 10 天來身體精神的變化。", "帶好朋友：邀一位朋友測脂或參加下場比賽。"
-    ];
+const missions = [
+    "開賽打卡：拍燃料與體重，大喊我準備好了！", "彩虹午餐：午餐要有 3 種顏色的蔬菜。",
+    "分享愛：請家人喝一口奶昔或一起運動。", "飲水大王：拍下今天喝完的第 3 瓶水。",
+    "動起來：做 10 分鐘運動拍流汗照。", "聰明吃油：拍下餐盤裡的堅果或魚類。",
+    "小小網紅：將健康餐發到 FB/IG 限動。", "誇誇隊友：在群組對隊友說一句鼓勵的話。",
+    "變身見證：分享 10 天來身體精神的變化。", "帶好朋友：邀一位朋友測脂或參加下場比賽。"
+];
+   window.onload = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('profile-section').classList.remove('hidden');
+        loadDashboard(session.user);
+    }
+};
+  async function loadDashboard(user) {
+    // 1. 抓取用戶資料
+    const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    
+    if (error || !profile) {
+        console.error("讀取資料失敗:", error);
+        return;
+    }
 
-    window.onload = async () => {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('profile-section').classList.remove('hidden');
-            loadDashboard(session.user);
-        }
-    };
+    // 2. 填入資料並顯示頭像
+    document.getElementById('user-display').innerText = user.email;
+    if (profile.avatar_url && document.getElementById('avatar-img')) {
+        document.getElementById('avatar-img').src = profile.avatar_url;
+    }
 
-    async function loadDashboard(user) {
-        const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    const nameInput = document.getElementById('full_name');
+    const teamInput = document.getElementById('team_id_input');
         
-        if (error || !profile) {
-            console.error("讀取 Profile 失敗:", error);
-            return;
-        }
+nameInput.value = profile.full_name || '';
+    // 注意：這裡統一使用 current_team_id 以對接戰報系統
+    teamInput.value = profile.current_team_id || '';
 
-        document.getElementById('user-display').innerText = user.email;
-        document.getElementById('full_name').value = profile.full_name || '';
-        document.getElementById('team_id_input').value = profile.team_id || '';
-        
-        // 只有在資料完整時才隱藏設定卡
-        if (profile.full_name && profile.team_id) {
-            document.getElementById('setup-card').classList.add('hidden');
-            document.getElementById('edit-profile-btn').classList.remove('hidden');
-        }
+    // 3. UI 鎖定與自動切換邏輯
+    if (profile.full_name && profile.current_team_id) {
+        // 已有資料：隱藏設定卡、顯示修改按鈕、鎖定欄位
+        document.getElementById('setup-card').classList.add('hidden');
+        document.getElementById('edit-profile-btn').classList.remove('hidden');
+        nameInput.disabled = true;
+        teamInput.disabled = true;
+    } else {
+        // 無資料：顯示設定卡、隱藏修改按鈕、解鎖欄位
+        document.getElementById('setup-card').classList.remove('hidden');
+        document.getElementById('edit-profile-btn').classList.add('hidden');
+        nameInput.disabled = false;
+        teamInput.disabled = false;
+    }
 
-        // 產品門檻檢查 (如果還沒手動加分，這會是 false)
-        const hasMinPoints = (profile.product_points || 0) >= 60;
-        if (hasMinPoints) {
-            document.getElementById('checkin-box').classList.remove('hidden');
-            document.getElementById('lock-notice').classList.add('hidden');
-        } else {
-            document.getElementById('checkin-box').classList.add('hidden');
-            document.getElementById('lock-notice').classList.remove('hidden');
-        }
+    // 4. 產品門檻檢查 (product_points >= 60)
+    const hasMinPoints = (profile.product_points || 0) >= 60;
+    if (hasMinPoints) {
+        document.getElementById('checkin-box').classList.remove('hidden');
+        document.getElementById('lock-notice').classList.add('hidden');
+    } else {
+        document.getElementById('checkin-box').classList.add('hidden');
+        document.getElementById('lock-notice').classList.remove('hidden');
+    }
 
-        // 避免 team_id 為空時調用 API 導致 400 錯誤
-        if (profile.team_id) {
-            loadTeamGrid(profile.team_id);
-        } else {
-            document.getElementById('team-grid-container').innerHTML = '<div style="grid-column: span 3; color:#999; font-size:12px;">尚未加入小隊</div>';
-        }
+    // 5. 載入九宮格 (確保 current_team_id 存在)
+    if (profile.current_team_id) {
+        loadTeamGrid(profile.current_team_id);
+    } else {
+        document.getElementById('team-grid-container').innerHTML = '<div style="grid-column: span 3; color:#999; font-size:12px; padding:20px;">請先設定小隊邀請碼以加入戰隊</div>';
+    }
+      // 6. 其他 UI 更新
+    const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
+    document.getElementById('day-progress').innerText = `Day ${dayNum}`;
+    document.getElementById('today-mission-tip').innerText = dayNum <= 10 ? `🎯 今日挑戰：${missions[dayNum-1]}` : "🎉 賽季結束";
+    document.getElementById('voucher-display').innerText = `$${(profile.referral_count || 0) * 100}`;
+
+    renderMissions(dayNum);
+    updateTicketDisplay(user.id, profile);
+}
+
+      
 
         const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
         document.getElementById('day-progress').innerText = `Day ${dayNum}`;
@@ -259,14 +287,43 @@
         });
     }
 
-    async function updateProfile() {
-        const { data: { user } } = await sb.auth.getUser();
-        await sb.from('profiles').update({ full_name: document.getElementById('full_name').value, team_id: document.getElementById('team_id_input').value }).eq('id', user.id);
+async function updateProfile() {
+    const { data: { user } } = await sb.auth.getUser();
+    const name = document.getElementById('full_name').value;
+    const team = document.getElementById('team_id_input').value;
+
+    if (!name || !team) return alert("請填寫姓名與小隊碼！");
+
+    // 儲存至資料庫
+    const { error } = await sb.from('profiles').update({ 
+        full_name: name, 
+        current_team_id: team // 統一使用 current_team_id
+    }).eq('id', user.id);
+
+    if (error) {
+        alert("儲存失敗：" + error.message);
+    } else {
+        alert("✅ 資料已鎖定，開始馬拉松！");
         location.reload();
     }
+}
 
     function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
-    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
+    function toggleProfileEdit() {
+    const setupCard = document.getElementById('setup-card');
+    const nameInput = document.getElementById('full_name');
+    const teamInput = document.getElementById('team_id_input');
+
+    if (setupCard.classList.contains('hidden')) {
+        setupCard.classList.remove('hidden');
+        nameInput.disabled = false;
+        teamInput.disabled = false;
+    } else {
+        setupCard.classList.add('hidden');
+        nameInput.disabled = true;
+        teamInput.disabled = true;
+    }
+}
     function copyReferral() { alert("推薦碼已複製！發送給好友註冊即可領取 $100 抵用券！"); }
     async function signIn() { 
         const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
