@@ -905,6 +905,231 @@
             renderUsersTable();
         }
     }
+
+    // 在 admin.html 的 script 中添加
+
+// 載入角色申請
+async function loadRoleRequests() {
+    try {
+        const { data: requests, error } = await sb
+            .from('role_change_requests')
+            .select(`
+                *,
+                user:profiles!role_change_requests_user_id_fkey(full_name, avatar_url, role),
+                reviewer:profiles!role_change_requests_reviewed_by_fkey(full_name)
+            `)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const container = document.getElementById('role-requests-section');
+        if (!container) return;
+        
+        let html = `
+        <div class="filter-bar">
+            <select class="form-control" style="width: 150px;" onchange="filterRequestsByStatus(this.value)">
+                <option value="">所有狀態</option>
+                <option value="pending">待審核</option>
+                <option value="approved">已批准</option>
+                <option value="rejected">已拒絕</option>
+            </select>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>申請人</th>
+                        <th>當前角色</th>
+                        <th>申請角色</th>
+                        <th>申請原因</th>
+                        <th>申請時間</th>
+                        <th>狀態</th>
+                        <th>審核人</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        
+        if (!requests || requests.length === 0) {
+            html += `<tr><td colspan="8" style="text-align: center;">暫無角色修改申請</td></tr>`;
+        } else {
+            requests.forEach(request => {
+                const roleNames = {
+                    'member': '學員',
+                    'captain': '隊長',
+                    'deputy': '副隊長',
+                    'admin': '管理員'
+                };
+                
+                const statusClass = {
+                    'pending': 'status-pending',
+                    'approved': 'status-active',
+                    'rejected': 'status-inactive'
+                }[request.status] || '';
+                
+                const statusText = {
+                    'pending': '待審核',
+                    'approved': '已批准',
+                    'rejected': '已拒絕'
+                }[request.status] || request.status;
+                
+                html += `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${request.user?.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(request.user?.full_name || 'U') + '&background=random'}" 
+                                 style="width: 30px; height: 30px; border-radius: 50%;">
+                            ${request.user?.full_name || '未命名'}
+                        </div>
+                    </td>
+                    <td>${roleNames[request.current_role] || request.current_role}</td>
+                    <td>${roleNames[request.requested_role] || request.requested_role}</td>
+                    <td>${request.reason || '無'}</td>
+                    <td>${new Date(request.created_at).toLocaleDateString('zh-TW')}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>${request.reviewer?.full_name || '-'}</td>
+                    <td>`;
+                
+                if (request.status === 'pending') {
+                    html += `
+                        <button class="btn btn-small btn-success" onclick="approveRoleRequest('${request.id}', '${request.user_id}', '${request.requested_role}')">批准</button>
+                        <button class="btn btn-small btn-danger" onclick="rejectRoleRequest('${request.id}')">拒絕</button>`;
+                } else {
+                    html += `<span style="color: #7f8c8d;">已處理</span>`;
+                }
+                
+                html += `</td></tr>`;
+            });
+        }
+        
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('載入角色申請錯誤:', error);
+        const container = document.getElementById('role-requests-section');
+        if (container) {
+            container.innerHTML = `<div style="color: #e74c3c;">載入失敗，請重新整理</div>`;
+        }
+    }
+}
+
+// 批准角色申請
+async function approveRoleRequest(requestId, userId, newRole) {
+    const reason = prompt('請輸入批准原因：');
+    if (reason === null) return;
+    
+    try {
+        // 開始事務
+        // 1. 更新用戶角色
+        const { error: updateError } = await sb
+            .from('profiles')
+            .update({ 
+                role: newRole,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+        
+        if (updateError) throw updateError;
+        
+        // 2. 更新申請狀態
+        const { error: requestError } = await sb
+            .from('role_change_requests')
+            .update({
+                status: 'approved',
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            })
+            .eq('id', requestId);
+        
+        if (requestError) throw requestError;
+        
+        // 3. 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'ROLE_REQUEST_APPROVED',
+            resource_type: 'USER',
+            resource_id: userId,
+            details: { 
+                request_id: requestId,
+                new_role: newRole,
+                reason: reason
+            }
+        }]);
+        
+        alert('角色申請已批准');
+        loadRoleRequests();
+        
+    } catch (error) {
+        console.error('批准角色申請錯誤:', error);
+        alert('批准失敗: ' + error.message);
+    }
+}
+
+// 拒絕角色申請
+async function rejectRoleRequest(requestId) {
+    const reason = prompt('請輸入拒絕原因：');
+    if (reason === null) return;
+    
+    try {
+        const { error } = await sb
+            .from('role_change_requests')
+            .update({
+                status: 'rejected',
+                reviewed_by: currentUser.id,
+                reviewed_at: new Date().toISOString()
+            })
+            .eq('id', requestId);
+        
+        if (error) throw error;
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'ROLE_REQUEST_REJECTED',
+            resource_type: 'USER',
+            details: { 
+                request_id: requestId,
+                reason: reason
+            }
+        }]);
+        
+        alert('角色申請已拒絕');
+        loadRoleRequests();
+        
+    } catch (error) {
+        console.error('拒絕角色申請錯誤:', error);
+        alert('拒絕失敗: ' + error.message);
+    }
+}
+
+// 根據狀態篩選申請
+function filterRequestsByStatus(status) {
+    const rows = document.querySelectorAll('#role-requests-section table tbody tr');
+    
+    rows.forEach(row => {
+        if (!status) {
+            row.style.display = '';
+            return;
+        }
+        
+        const statusCell = row.querySelector('.status-badge');
+        const statusText = statusCell?.textContent.trim();
+        const statusMap = {
+            'pending': '待審核',
+            'approved': '已批准',
+            'rejected': '已拒絕'
+        };
+        
+        if (statusMap[status] === statusText) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
 </script>
 </body>
 </html>
