@@ -128,6 +128,31 @@
 </div>
 
 <script>
+    window.onload = async () => {
+    // 檢查目前是否已經有登入的 Session
+    const { data: { session } } = await sb.auth.getSession();
+    
+    if (session && session.user) {
+        // 如果有 Session，直接顯示個人中心
+        showProfile(session.user);
+    } else {
+        // 如果沒登入，顯示登入介面
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('profile-section').classList.add('hidden');
+    }
+};
+
+// 修改登入成功的邏輯
+async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message); 
+    else {
+        // 登入成功後，重新整理頁面會自動進入中心
+        location.reload();
+    }
+}
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
