@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隊長管理後台</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .subtitle { color: #7f8c8d; margin-top: 8px; font-size: 14px; }
+        .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card-title { font-size: 16px; color: #7f8c8d; margin-bottom: 10px; }
+        .card-value { font-size: 32px; font-weight: bold; color: #2c3e50; }
+        .section-title { font-size: 24px; color: #2c3e50; margin: 30px 0 20px; }
+        .tabs { display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: bold; }
+        .table-container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; padding: 15px; text-align: left; font-weight: bold; color: #2c3e50; border-bottom: 2px solid #eee; }
+        td { padding: 15px; border-bottom: 1px solid #eee; }
+        .btn { padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .hidden { display: none; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .form-control { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .member-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .member-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .member-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+        .member-info { flex: 1; }
+        .member-name { font-weight: bold; color: #2c3e50; font-size: 18px; }
+        .member-detail { font-size: 12px; color: #7f8c8d; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-inactive { background: #f8d7da; color: #721c24; }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+        .error-message { background: #fee; color: #c33; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 4px solid #c33; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>👑 隊長管理後台</h1>
+            <div class="subtitle" id="team-info">載入中...</div>
+        </div>
+        
+        <!-- 錯誤顯示區域 -->
+        <div id="error-container" class="hidden"></div>
+        
+        <!-- 儀表板卡片 -->
+        <div class="dashboard-cards">
+            <div class="card">
+                <div class="card-title">團隊成員</div>
+                <div class="card-value" id="team-members-count">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">今日完成率</div>
+                <div class="card-value" id="today-completion">0%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">團隊總積分</div>
+                <div class="card-value" id="team-points">0</div>
+            </div>
+            <div class="card">
+                <div class="card-title">本週減重</div>
+                <div class="card-value" id="week-weight-loss">0.0 kg</div>
+            </div>
+        </div>
+        
+        <!-- 頁籤 -->
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('members')">👥 團隊成員</div>
+            <div class="tab" onclick="showTab('progress')">📊 團隊進度</div>
+            <div class="tab" onclick="showTab('settings')">⚙️ 團隊設定</div>
+            <div class="tab" onclick="showTab('announcement')">📢 團隊公告</div>
+        </div>
+        
+        <!-- 團隊成員 -->
+        <div id="members-tab">
+            <div class="filter-bar">
+                <input type="text" class="form-control" placeholder="搜尋成員..." id="member-search" oninput="filterMembers()" style="flex: 1;">
+                <select class="form-control" id="status-filter" onchange="filterMembers()">
+                    <option value="">所有狀態</option>
+                    <option value="active">活躍</option>
+                    <option value="inactive">未報到</option>
+                </select>
+                <button class="btn btn-primary" onclick="exportTeamData()">📥 匯出資料</button>
+                <button class="btn btn-success" onclick="inviteMember()">➕ 邀請成員</button>
+            </div>
+            
+            <div id="members-container" class="member-grid">
+                <div class="loading">載入團隊成員中...</div>
+            </div>
+        </div>
+        
+        <!-- 團隊進度 -->
+        <div id="progress-tab" class="hidden">
+            <div class="card">
+                <h3>📈 團隊趨勢圖</h3>
+                <div id="progress-chart" style="height: 300px; margin-top: 20px;">
+                    <div class="loading">圖表載入中...</div>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>🏆 團隊排行榜</h3>
+                <div class="table-container">
+                    <table id="team-leaderboard">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>成員</th>
+                                <th>總積分</th>
+                                <th>減重 (kg)</th>
+                                <th>今日狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="loading">載入中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 團隊設定 -->
+        <div id="settings-tab" class="hidden">
+            <div class="card">
+                <h3>🔧 團隊基本設定</h3>
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">團隊名稱</label>
+                        <input type="text" class="form-control" id="team-name" style="width: 100%;" placeholder="輸入團隊名稱">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">團隊目標</label>
+                        <textarea class="form-control" id="team-goal" rows="4" placeholder="設定團隊目標..." style="width: 100%;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">副隊長</label>
+                        <select class="form-control" id="deputy-select" style="width: 100%;">
+                            <option value="">選擇副隊長</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveTeamSettings()">💾 儲存設定</button>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>📣 團隊邀請</h3>
+                <div style="margin-top: 15px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">邀請碼</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);" id="team-invite-code">載入中...</div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">分享此邀請碼給新成員加入團隊</div>
+                    </div>
+                    <button class="btn btn-success" onclick="copyInviteCode()">📋 複製邀請碼</button>
+                    <button class="btn btn-warning" onclick="generateNewInviteCode()">🔄 重新產生</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 團隊公告 -->
+        <div id="announcement-tab" class="hidden">
+            <div class="card">
+                <h3>📢 發布團隊公告</h3>
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">公告標題</label>
+                        <input type="text" class="form-control" id="announcement-title" style="width: 100%;" placeholder="輸入公告標題">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">公告內容</label>
+                        <textarea class="form-control" id="announcement-content" rows="6" placeholder="輸入公告內容..." style="width: 100%;"></textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">公告類型</label>
+                        <select class="form-control" id="announcement-type" style="width: 100%;">
+                            <option value="general">一般公告</option>
+                            <option value="important">重要公告</option>
+                            <option value="reminder">提醒事項</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="publishAnnouncement()">📢 發布公告</button>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <h3>📜 歷史公告</h3>
+                <div id="announcements-list" style="margin-top: 15px;">
+                    <div class="loading">載入公告中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 全局變數
+    let currentUser = null;
+    let currentTeam = null;
+    let teamMembers = [];
+    let allMembers = [];
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            showError('請先登入系統', true);
+            return;
+        }
+        currentUser = session.user;
+        
+        // 檢查隊長權限
+        await checkCaptainPermission();
+        
+        // 載入團隊資料
+        await loadTeamData();
+    };
+    
+    // 顯示錯誤訊息
+    function showError(message, isCritical = false) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `
+            <div class="error-message">
+                <strong>錯誤：</strong> ${message}
+                <br>
+                <button class="btn btn-warning" onclick="location.reload()">重新整理頁面</button>
+                ${isCritical ? '<br><small>如果問題持續，請聯絡管理員</small>' : ''}
+            </div>
+        `;
+        errorContainer.classList.remove('hidden');
+    }
+    
+    // 檢查隊長權限
+    async function checkCaptainPermission() {
+        try {
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (profile.role !== 'captain' && profile.role !== 'admin') {
+                showError('只有隊長或管理員可以訪問此頁面', true);
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('檢查隊長權限錯誤:', error);
+            showError('無法驗證用戶權限', true);
+            return false;
+        }
+    }
+    
+    // 載入團隊資料
+    async function loadTeamData() {
+        try {
+            // 獲取隊長資料和團隊ID
+            const { data: captainProfile, error: profileError } = await sb
+                .from('profiles')
+                .select('current_team_id, full_name')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (profileError) throw profileError;
+            
+            if (!captainProfile.current_team_id) {
+                showError('您目前沒有管理的團隊', false);
+                return;
+            }
+            
+            currentTeam = captainProfile.current_team_id;
+            
+            // 顯示團隊資訊
+            document.getElementById('team-info').textContent = `隊長: ${captainProfile.full_name} | 團隊ID: ${currentTeam}`;
+            
+            // 載入團隊成員
+            await loadTeamMembers();
+            
+            // 載入統計數據
+            await loadTeamStats();
+            
+        } catch (error) {
+            console.error('載入團隊資料錯誤:', error);
+            showError('無法載入團隊資料');
+        }
+    }
+    
+    // 載入團隊成員
+    async function loadTeamMembers() {
+        const container = document.getElementById('members-container');
+        container.innerHTML = '<div class="loading">載入團隊成員中...</div>';
+        
+        try {
+            // 獲取團隊成員
+            const { data: members, error } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('current_team_id', currentTeam);
+            
+            if (error) throw error;
+            
+            teamMembers = members || [];
+            allMembers = [...teamMembers];
+            
+            if (teamMembers.length === 0) {
+                container.innerHTML = '<div class="member-card"><div style="text-align: center; padding: 40px;">團隊暫無成員</div></div>';
+                return;
+            }
+            
+            // 更新成員數量
+            document.getElementById('team-members-count').textContent = teamMembers.length;
+            
+            // 獲取今日日期
+            const today = new Date().toISOString().split('T')[0];
+            
+            // 渲染成員卡片
+            let html = '';
+            for (const member of teamMembers) {
+                // 檢查今日是否已報到
+                const { data: todayRecord } = await sb
+                    .from('weight_records')
+                    .select('*')
+                    .eq('user_id', member.id)
+                    .eq('date', today)
+                    .maybeSingle();
+                
+                const isActive = !!todayRecord;
+                
+                html += `
+                <div class="member-card">
+                    <div class="member-header">
+                        <img class="member-avatar" src="${member.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.full_name || 'User') + '&background=random'}" alt="${member.full_name}">
+                        <div class="member-info">
+                            <div class="member-name">${member.full_name || '未設定姓名'}</div>
+                            <div class="member-detail">
+                                ${member.role === 'captain' ? '👑 隊長' : member.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
+                                積分: ${member.points || 0}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <span class="status-badge ${isActive ? 'status-active' : 'status-inactive'}">
+                            ${isActive ? '✅ 今日已報到' : '⏳ 今日未報到'}
+                        </span>
+                        ${member.id !== currentUser.id ? 
+                            `<button class="btn btn-danger btn-small" onclick="removeMember('${member.id}', '${member.full_name}')" style="float: right; padding: 5px 10px; font-size: 12px;">
+                                移除
+                            </button>` : ''
+                        }
+                    </div>
+                </div>`;
+            }
+            
+            container.innerHTML = html;
+            
+        } catch (error) {
+            console.error('載入團隊成員錯誤:', error);
+            container.innerHTML = '<div class="error-message">載入成員失敗，請重新整理</div>';
+        }
+    }
+    
+    // 載入團隊統計
+    async function loadTeamStats() {
+        try {
+            // 計算今日完成率
+            const today = new Date().toISOString().split('T')[0];
+            const { data: todayRecords } = await sb
+                .from('weight_records')
+                .select('user_id')
+                .eq('date', today);
+            
+            const todayCount = todayRecords ? todayRecords.length : 0;
+            const completionRate = teamMembers.length > 0 ? Math.round((todayCount / teamMembers.length) * 100) : 0;
+            
+            document.getElementById('today-completion').textContent = `${completionRate}%`;
+            
+            // 計算團隊總積分
+            const totalPoints = teamMembers.reduce((sum, member) => sum + (member.points || 0), 0);
+            document.getElementById('team-points').textContent = totalPoints;
+            
+            // 計算本週減重
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            
+            const { data: weightRecords } = await sb
+                .from('weight_records')
+                .select('*')
+                .in('user_id', teamMembers.map(m => m.id))
+                .gte('date', weekAgo.toISOString().split('T')[0]);
+            
+            // 這裡可以實現更詳細的減重計算邏輯
+            document.getElementById('week-weight-loss').textContent = '計算中...';
+            
+            // 顯示邀請碼
+            document.getElementById('team-invite-code').textContent = currentTeam;
+            
+        } catch (error) {
+            console.error('載入統計錯誤:', error);
+        }
+    }
+    
+    // 顯示/隱藏頁籤
+    function showTab(tabName) {
+        // 更新頁籤狀態
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // 顯示對應內容
+        document.getElementById('members-tab').classList.add('hidden');
+        document.getElementById('progress-tab').classList.add('hidden');
+        document.getElementById('settings-tab').classList.add('hidden');
+        document.getElementById('announcement-tab').classList.add('hidden');
+        
+        document.getElementById(tabName + '-tab').classList.remove('hidden');
+        
+        // 載入對應數據
+        if (tabName === 'progress') {
+            loadProgressData();
+        } else if (tabName === 'settings') {
+            loadTeamSettings();
+        } else if (tabName === 'announcement') {
+            loadAnnouncements();
+        }
+    }
+    
+    // 篩選成員
+    function filterMembers() {
+        const searchTerm = document.getElementById('member-search').value.toLowerCase();
+        const statusFilter = document.getElementById('status-filter').value;
+        
+        // 這裡可以實現更詳細的篩選邏輯
+        const filtered = allMembers.filter(member => {
+            const matchesSearch = member.full_name?.toLowerCase().includes(searchTerm) || 
+                                 member.email?.toLowerCase().includes(searchTerm);
+            // 狀態篩選需要額外查詢今日報到狀態
+            return matchesSearch;
+        });
+        
+        // 更新顯示
+        const container = document.getElementById('members-container');
+        // 簡單實現：重新載入時再優化
+        container.innerHTML = '<div class="loading">篩選中...</div>';
+        setTimeout(() => {
+            // 重新載入成員
+            loadTeamMembers();
+        }, 300);
+    }
+    
+    // 移除成員
+    async function removeMember(userId, userName) {
+        if (!confirm(`確定要移除成員 ${userName} 嗎？`)) {
+            return;
+        }
+        
+        try {
+            const { error } = await sb
+                .from('profiles')
+                .update({ current_team_id: null })
+                .eq('id', userId);
+            
+            if (error) throw error;
+            
+            alert('成員已移除');
+            loadTeamMembers();
+            
+        } catch (error) {
+            console.error('移除成員錯誤:', error);
+            alert('移除失敗: ' + error.message);
+        }
+    }
+    
+    // 邀請成員
+    function inviteMember() {
+        const inviteCode = currentTeam;
+        const inviteMessage = `請使用以下邀請碼加入我的團隊：\n\n${inviteCode}\n\n隊長：${currentUser.email}`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: '加入我的馬拉松團隊',
+                text: inviteMessage,
+                url: window.location.origin
+            });
+        } else {
+            navigator.clipboard.writeText(inviteMessage).then(() => {
+                alert('邀請訊息已複製到剪貼簿！\n\n請分享給您要邀請的成員。');
+            });
+        }
+    }
+    
+    // 複製邀請碼
+    function copyInviteCode() {
+        navigator.clipboard.writeText(currentTeam).then(() => {
+            alert('邀請碼已複製到剪貼簿！');
+        });
+    }
+    
+    // 載入進度數據
+    async function loadProgressData() {
+        // 實現圖表和排行榜
+        const leaderboardBody = document.querySelector('#team-leaderboard tbody');
+        leaderboardBody.innerHTML = '';
+        
+        // 簡單示例：顯示成員積分排行
+        teamMembers.sort((a, b) => (b.points || 0) - (a.points || 0));
+        
+        teamMembers.forEach((member, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${member.full_name || '未命名'}</td>
+                <td><strong>${member.points || 0}</strong></td>
+                <td>0.0</td>
+                <td><span class="status-badge status-active">活躍</span></td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+    }
+    
+    // 載入團隊設定
+    async function loadTeamSettings() {
+        // 載入副隊長選項
+        const deputySelect = document.getElementById('deputy-select');
+        deputySelect.innerHTML = '<option value="">選擇副隊長</option>';
+        
+        teamMembers.forEach(member => {
+            if (member.role === 'member') {
+                const option = document.createElement('option');
+                option.value = member.id;
+                option.textContent = member.full_name || '未命名';
+                deputySelect.appendChild(option);
+            }
+        });
+    }
+    
+    // 儲存團隊設定
+    async function saveTeamSettings() {
+        const deputyId = document.getElementById('deputy-select').value;
+        
+        if (deputyId) {
+            // 更新副隊長角色
+            try {
+                const { error } = await sb
+                    .from('profiles')
+                    .update({ role: 'deputy' })
+                    .eq('id', deputyId);
+                
+                if (error) throw error;
+                
+                alert('副隊長設定已更新');
+                location.reload();
+                
+            } catch (error) {
+                console.error('更新副隊長錯誤:', error);
+                alert('更新失敗: ' + error.message);
+            }
+        }
+    }
+    
+    // 載入公告
+    async function loadAnnouncements() {
+        const container = document.getElementById('announcements-list');
+        container.innerHTML = '<div class="loading">載入公告中...</div>';
+        
+        // 這裡可以實現從資料庫載入公告的邏輯
+        setTimeout(() => {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無公告</div>';
+        }, 1000);
+    }
+    
+    // 發布公告
+    async function publishAnnouncement() {
+        const title = document.getElementById('announcement-title').value;
+        const content = document.getElementById('announcement-content').value;
+        const type = document.getElementById('announcement-type').value;
+        
+        if (!title || !content) {
+            alert('請填寫公告標題和內容');
+            return;
+        }
+        
+        // 這裡可以實現儲存公告到資料庫的邏輯
+        alert('公告已發布！\n\n(此功能為演示，實際需連接資料庫)');
+        
+        // 清空表單
+        document.getElementById('announcement-title').value = '';
+        document.getElementById('announcement-content').value = '';
+        
+        // 重新載入公告列表
+        loadAnnouncements();
+    }
+    
+    // 匯出團隊資料
+    async function exportTeamData() {
+        try {
+            // 建立CSV內容
+            const headers = ['姓名', '角色', '積分', '計畫', '加入時間'];
+            const rows = teamMembers.map(member => [
+                member.full_name || '',
+                member.role === 'captain' ? '隊長' : member.role === 'deputy' ? '副隊長' : '學員',
+                member.points || 0,
+                member.plan || '',
+                new Date(member.created_at).toLocaleDateString('zh-TW')
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+            
+            // 下載檔案
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `團隊資料_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+        } catch (error) {
+            console.error('匯出資料錯誤:', error);
+            alert('匯出失敗: ' + error.message);
+        }
+    }
+</script>
+</body>
+</html>
