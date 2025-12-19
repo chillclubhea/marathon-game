@@ -1,163 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬拉松玩家中心</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --primary: #3498db;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --bg: #f4f7f6;
-        }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
-        
-        /* 標題區 */
-        .header { text-align: center; margin-bottom: 25px; }
-        h2 { color: #2c3e50; margin: 0; font-size: 24px; }
-        #user-display { font-size: 12px; color: #95a5a6; margin-top: 5px; }
-
-        /* 卡片化設計 */
-        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-        .card-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; color: #4a5568; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1); }
-
-        /* 橫向並排輸入框 */
-        .row { display: flex; gap: 10px; }
-        .row .form-group { flex: 1; }
-
-        /* 按鈕風格 */
-        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: 0.3s; }
-        .btn-primary { background-color: var(--primary); }
-        .btn-success { background-color: var(--success); }
-        .btn-warning { background-color: var(--warning); }
-        .btn-danger { background-color: var(--danger); margin-top: 30px; }
-        button:active { transform: scale(0.98); }
-
-        .hidden { display: none; }
-        .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div id="auth-section">
-        <h2>🔑 登入馬拉松</h2>
-        <div class="card" style="margin-top: 20px;">
-            <div class="form-group">
-                <label>電子信箱</label>
-                <input type="email" id="email" placeholder="Email">
-            </div>
-            <div class="form-group">
-                <label>密碼</label>
-                <input type="password" id="password" placeholder="Password">
-            </div>
-            <button class="btn-primary" onclick="signUp()">註冊</button>
-            <button class="btn-success" onclick="signIn()">登入</button>
-        </div>
-    </div>
-
-    <div id="profile-section" class="hidden">
-        <div class="header">
-            <h2>🏃 玩家中心</h2>
-            <div id="user-display"></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">👤 個人設定</div>
-            <img id="avatar-img" class="avatar-preview" src="https://via.placeholder.com/80" alt="頭像">
-            <div class="form-group">
-                <label>更換頭像</label>
-                <input type="file" id="avatar_file" accept="image/*">
-            </div>
-            <div class="form-group">
-                <label>真實姓名</label>
-                <input type="text" id="full_name" placeholder="隊友如何稱呼你">
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>角色</label>
-                    <select id="role">
-                        <option value="member">學員</option>
-                        <option value="captain">隊長</option>
-                        <option value="deputy">副隊長</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>計畫</label>
-                    <select id="plan">
-                        <option value="slow">慢跑</option>
-                        <option value="fast">快跑</option>
-                    </select>
-                </div>
-            </div>
-            <button class="btn-primary" onclick="updateProfile()">儲存個人資料</button>
-        </div>
-
-        <div class="card" style="border-left: 5px solid var(--warning);">
-            <div class="card-title">⚖️ 每日數據報到</div>
-            <div class="form-group">
-                <label>今日體重 (kg)</label>
-                <input type="number" id="weight" step="0.1" placeholder="0.0">
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>體脂率 (%)</label>
-                    <input type="number" id="fat_rate" step="0.1" placeholder="0.0">
-                </div>
-                <div class="form-group">
-                    <label>肌肉量 (kg)</label>
-                    <input type="number" id="muscle_mass" step="0.1" placeholder="0.0">
-                </div>
-            </div>
-            <button class="btn-warning" onclick="saveDailyData()">送出今日報到</button>
-            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold;"></p>
-        </div>
-
-        <div class="card">
-            <div class="card-title">🏁 隊伍操作</div>
-            <button class="btn-success" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
-            <div class="form-group" style="margin-top: 15px;">
-                <label>加入隊伍邀請碼</label>
-                <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
-            </div>
-            <button style="background: #9b59b6;" onclick="joinTeam()">加入隊伍</button>
-        </div>
-
-        <button class="btn-danger" onclick="signOut()">安全登出</button>
-    </div>
-</div>
-
-<script>
-    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    window.onload = async () => {
-        const { data: { user } } = await sb.auth.getUser();
-        if (user) showProfile(user);
-    };
-
-    async function signUp() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("註冊成功，請登入！");
-    }
-
-    async function signIn() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else showProfile(data.user);
+// 切換個人設定顯示/隱藏
+    function toggleProfileEdit() {
+        const setupCard = document.getElementById('setup-card');
+        setupCard.classList.toggle('hidden');
     }
 
     async function showProfile(user) {
@@ -166,73 +10,32 @@
         document.getElementById('user-display').innerText = `帳號: ${user.email}`;
 
         const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        
         if (data) {
+            // 填入既有資料
             document.getElementById('full_name').value = data.full_name || '';
             document.getElementById('role').value = data.role || 'member';
             document.getElementById('plan').value = data.plan || 'slow';
+            document.getElementById('team_id_input').value = data.current_team_id || '';
             if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
-        }
-    }
 
-    async function updateProfile() {
-        const { data: { user } } = await sb.auth.getUser();
-        const avatarFile = document.getElementById('avatar_file').files[0];
-        let avatarUrl = document.getElementById('avatar-img').src;
-
-        if (avatarFile) {
-            const fileName = `${user.id}_${Date.now()}.png`;
-            const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
-            if (!uploadError) {
-                const { data } = sb.storage.from('avatars').getPublicUrl(fileName);
-                avatarUrl = data.publicUrl;
+            // --- 關鍵邏輯：判斷是否為「老學員」 ---
+            // 如果姓名跟隊伍 ID 都填過了，就隱藏設定卡片，顯示修改按鈕
+            if (data.full_name && data.current_team_id) {
+                document.getElementById('setup-card').classList.add('hidden');
+                document.getElementById('edit-profile-btn').classList.remove('hidden');
             }
         }
-
-        const { error } = await sb.from('profiles').upsert({
-            id: user.id,
-            full_name: document.getElementById('full_name').value,
-            role: document.getElementById('role').value,
-            plan: document.getElementById('plan').value,
-            avatar_url: avatarUrl,
-            updated_at: new Date()
-        });
-        if (error) alert(error.message); else { alert("資料已更新！"); location.reload(); }
     }
 
-    async function saveDailyData() {
-        const { data: { user } } = await sb.auth.getUser();
-        const weight = document.getElementById('weight').value;
-        const fat = document.getElementById('fat_rate').value;
-        const muscle = document.getElementById('muscle_mass').value;
-        const today = new Date().toISOString().split('T')[0];
-
-        const { error } = await sb.from('weight_records').upsert({
-            user_id: user.id,
-            date: today,
-            weight: parseFloat(weight),
-            fat_rate: parseFloat(fat),
-            muscle_mass: parseFloat(muscle)
-        });
-
-        if (error) alert("今日可能已報到過囉！");
-        else {
-            document.getElementById('status-msg').innerText = "✅ 今日報到完成！";
-            setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
+    // 在 updateProfile 成功後，記得讓頁面重新整理或重新判斷
+    async function updateProfile() {
+        // ... 原本的圖片上傳與 upsert 邏輯 ...
+        
+        // 修改最後的 alert 之後
+        if (error) alert(error.message); 
+        else { 
+            alert("設定已儲存！"); 
+            location.reload(); // 重新整理會觸發 showProfile 重新判斷隱藏狀態
         }
     }
-
-    async function joinTeam() {
-        const { data: { user } } = await sb.auth.getUser();
-        const teamId = document.getElementById('team_id_input').value.trim();
-        const { error } = await sb.from('profiles').update({ current_team_id: teamId }).eq('id', user.id);
-        if (error) alert("邀請碼錯誤"); else alert("加入成功！");
-    }
-
-    async function signOut() {
-        await sb.auth.signOut();
-        location.reload();
-    }
-</script>
-
-</body>
-</html>
