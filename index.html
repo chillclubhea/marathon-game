@@ -191,28 +191,30 @@
     }
 
     async function saveDailyData() {
-        const { data: { user } } = await sb.auth.getUser();
-        const weight = document.getElementById('weight').value;
-        const fat = document.getElementById('fat_rate').value;
-        const muscle = document.getElementById('muscle_mass').value;
-        const today = new Date().toISOString().split('T')[0];
+    const { data: { user } } = await sb.auth.getUser();
+    const weight = document.getElementById('weight').value;
+    const fat = document.getElementById('fat_rate').value;
+    const muscle = document.getElementById('muscle_mass').value;
+    const today = new Date().toISOString().split('T')[0];
 
-        if(!weight) { alert("請輸入體重"); return; }
+    if(!weight) { alert("請輸入體重"); return; }
 
-        const { error } = await sb.from('weight_records').upsert({
-            user_id: user.id,
-            date: today,
-            weight: parseFloat(weight),
-            fat_rate: parseFloat(fat) || 0,
-            muscle_mass: parseFloat(muscle) || 0
-        });
+    const { error } = await sb.from('weight_records').upsert({
+        user_id: user.id,
+        date: today,
+        weight: parseFloat(weight),
+        fat_rate: parseFloat(fat) || 0,
+        muscle_mass: parseFloat(muscle) || 0
+    });
 
-        if (error) alert("今日可能已報到過囉！");
-        else {
-            document.getElementById('status-msg').innerText = "✅ 今日報到完成！";
-            setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
-        }
+    if (error) {
+        alert("儲存失敗：" + error.message);
+    } else {
+        // 提示文字改為「已更新」
+        document.getElementById('status-msg').innerText = "✅ 今日數據已成功儲存/覆蓋！";
+        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
     }
+}
 
     async function signUp() {
         const email = document.getElementById('email').value;
