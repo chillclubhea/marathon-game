@@ -209,14 +209,30 @@
     }
 
     // 基本 Auth 與儲存功能 (維持原樣)
-    async function saveDailyData() {
-        const { data: { user } } = await sb.auth.getUser();
-        const weight = document.getElementById('weight').value;
-        if(!weight) return alert("請輸入體重！");
-        await sb.from('weight_records').upsert({ user_id: user.id, date: new Date().toISOString().split('T')[0], weight: parseFloat(weight) });
-        alert("✅ 報到成功！獎券 +1");
+async function saveDailyData() {
+    const { data: { user } } = await sb.auth.getUser();
+    const weight = document.getElementById('weight').value;
+    
+    // 假設你在 HTML 增加了一個 checkbox id="mission_check"
+    const isMissionDone = document.getElementById('mission_check').checked; 
+
+    if(!weight) return alert("請輸入體重！");
+
+    const { error } = await sb.from('weight_records').upsert({ 
+        user_id: user.id, 
+        date: new Date().toISOString().split('T')[0], 
+        weight: parseFloat(weight),
+        mission_status: isMissionDone // 儲存挑戰狀態
+    });
+
+    if (error) {
+        alert("儲存失敗：" + error.message);
+    } else {
+        const bonus = isMissionDone ? "3" : "1";
+        alert(`✅ 報到成功！本次獲得 ${bonus} 張券 🎟️`);
         location.reload();
     }
+}
 
     function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
     function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
@@ -234,6 +250,20 @@
         await sb.from('profiles').upsert({ id: user.id, full_name: document.getElementById('full_name').value, current_team_id: document.getElementById('team_id_input').value });
         location.reload();
     }
+    async function updateTicketDisplay(userId) {
+    const { data: records } = await sb.from('weight_records')
+                                     .select('mission_status')
+                                     .eq('user_id', userId);
+    
+    let totalTickets = 0;
+    if (records) {
+        records.forEach(rec => {
+            totalTickets += 1; // 基礎打卡 1 張
+            if (rec.mission_status) totalTickets += 2; // 完成挑戰加 2 張
+        });
+    }
+    document.getElementById('ticket-count').innerText = totalTickets;
+}
 </script>
 </body>
 </html>
