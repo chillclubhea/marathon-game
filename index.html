@@ -6,78 +6,45 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .mission-list { margin-top: 10px; }
-.mission-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-    transition: all 0.3s;
-}
-.mission-item.locked {
-    color: #bdc3c7;
-    background: #f9f9f9;
-    filter: grayscale(1);
-}
-.mission-item.active {
-    background: #fff9e6;
-    border-left: 4px solid #f1c40f;
-    font-weight: bold;
-    color: #2c3e50;
-}
-.day-label { width: 50px; font-weight: bold; color: #e67e22; }
-.mission-item.locked .day-label { color: #bdc3c7; }
-.lock-icon { margin-left: auto; font-size: 12px; }
         :root {
-            --primary: #3498db;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --bg: #f4f7f6;
+            --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6;
         }
-
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
         .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
         .header { text-align: center; margin-bottom: 25px; }
         h2 { color: #2c3e50; margin: 0; font-size: 24px; }
         #user-display { font-size: 12px; color: #95a5a6; margin-top: 5px; }
-        
         .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s; }
-        .card:active { transform: scale(0.98); }
         .card-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-
-        /* 動畫效果 */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
-        .hidden { display: none !important; }
-
-        /* 按鈕與輸入框 */
+        
+        /* 按鈕與輸入 */
         input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
-        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
-        button:hover { opacity: 0.9; }
+        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
         .btn-primary { background-color: var(--primary); }
         .btn-success { background-color: var(--success); }
         .btn-warning { background-color: var(--warning); }
         .btn-danger { background-color: var(--danger); }
         .btn-info { background: #f39c12; box-shadow: 0 4px 0 #d35400; margin-bottom: 15px; }
-        .btn-info:active { transform: translateY(3px); box-shadow: none; }
 
-        /* 規則彈窗樣式 */
+        /* 關卡清單樣式 */
+        .mission-list { margin-top: 10px; border: 1px solid #eee; border-radius: 10px; overflow: hidden; }
+        .mission-item { display: flex; align-items: center; padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; background: white; }
+        .mission-item.locked { color: #bdc3c7; background: #f9f9f9; }
+        .mission-item.active { background: #fff9e6; border-left: 5px solid #f1c40f; font-weight: bold; }
+        .day-label { width: 45px; font-weight: bold; color: #e67e22; }
+        .lock-icon { margin-left: auto; }
+
+        /* 彈窗 */
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
-        .rules-card { background: white; width: 90%; max-width: 400px; max-height: 80vh; border-radius: 20px; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popUp 0.3s ease-out; }
-        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .rules-header { background: #3498db; color: white; padding: 15px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; }
-        .rules-content { padding: 15px; text-align: left; font-size: 14px; }
-        .rules-content h4 { color: #2980b9; border-left: 4px solid #3498db; padding-left: 8px; margin: 15px 0 5px; }
+        .rules-card { background: white; width: 90%; max-width: 400px; max-height: 85vh; border-radius: 20px; overflow-y: auto; position: relative; }
+        .rules-header { background: #3498db; color: white; padding: 15px; display: flex; justify-content: space-between; position: sticky; top: 0; }
+        .rules-content { padding: 15px; }
         .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
-        .task-grid span { background: #ecf0f1; padding: 5px; border-radius: 8px; font-size: 12px; text-align: center; }
-        .rules-table { width: 100%; border-collapse: collapse; }
-        .rules-table td { padding: 6px; border-bottom: 1px dotted #eee; }
-        .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .task-grid span { background: #ecf0f1; padding: 6px; border-radius: 8px; font-size: 12px; text-align: center; }
+        .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -115,8 +82,8 @@
                 <select id="role"><option value="member">學員</option><option value="captain">隊長</option></select>
                 <select id="plan"><option value="slow">慢跑</option><option value="fast">快跑</option></select>
             </div>
-            <input type="text" id="team_id_input" placeholder="隊伍邀請碼" style="margin-top:10px;">
-            <button class="btn-primary" onclick="updateProfile()">儲存並進入遊戲</button>
+            <input type="text" id="team_id_input" placeholder="隊伍邀請碼">
+            <button class="btn-primary" onclick="updateProfile()">儲存設定</button>
         </div>
 
         <div class="card" style="border-left: 5px solid var(--warning);">
@@ -127,7 +94,7 @@
                 <input type="number" id="muscle_mass" step="0.1" placeholder="肌肉 kg">
             </div>
             <button class="btn-warning" onclick="saveDailyData()">送出報到</button>
-            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; margin-top:10px;"></p>
+            <p id="status-msg" style="text-align: center; font-size: 14px; margin-top:10px; min-height: 20px;"></p>
         </div>
 
         <button class="btn-success" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
@@ -138,24 +105,17 @@
 <div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
     <div class="rules-card" onclick="event.stopPropagation()">
         <div class="rules-header">
-            <h3>🏆 10天健康馬拉松：全攻略</h3>
+            <h3>🏆 10天攻略清單</h3>
             <span style="cursor:pointer" onclick="toggleRules()">✕</span>
         </div>
         <div class="rules-content">
-            <h4>🎮 第一步：準備 (Day 0)</h4>
-            <ul>
-                <li>準備 10 天份營養奶昔。</li>
-                <li>加入小隊群 (9人) 與大任務區。</li>
-            </ul>
-            <h4>⚔️ 第二步：每日任務</h4>
+            <h4>⚔️ 每日任務</h4>
             <div class="task-grid">
                 <span>⚖️ 拍體重</span><span>🥛 拍奶昔</span>
                 <span>🥗 拍午餐</span><span>🎯 今日挑戰</span>
             </div>
-            <h4>📅 第三步：10 天關卡</h4>
-            <table class="rules-table">
-              <div id="mission-container" class="mission-list">
-    </div>
+            <h4>📅 10天解鎖關卡</h4>
+            <div id="mission-container" class="mission-list"></div>
         </div>
     </div>
 </div>
@@ -164,6 +124,13 @@
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const missions = [
+        "開賽打卡：曬燃料與初始體重", "彩虹午餐：3種顏色蔬菜", "分享愛：邀家人喝奶昔/運動",
+        "飲水大王：喝完第3瓶水", "動起來：10分鐘運動流汗照", "聰明吃油：攝取堅果或好魚",
+        "小小網紅：發FB/IG限動", "誇誇隊友：給隊友一句鼓勵", "變身見證：分享身體正向變化",
+        "帶好朋友：邀好友測脂或參賽"
+    ];
 
     window.onload = async () => {
         const { data: { session } } = await sb.auth.getSession();
@@ -178,39 +145,52 @@
     async function loadFullProfile(user) {
         document.getElementById('user-display').innerText = `帳號: ${user.email}`;
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        
         if (profile) {
             document.getElementById('full_name').value = profile.full_name || '';
             document.getElementById('role').value = profile.role || 'member';
             document.getElementById('plan').value = profile.plan || 'slow';
             document.getElementById('team_id_input').value = profile.current_team_id || '';
             if (profile.avatar_url) document.getElementById('avatar-img').src = profile.avatar_url;
+
+            // 【核心邏輯】：判斷是否隱藏設定區
             if (profile.full_name && profile.current_team_id) {
                 document.getElementById('setup-card').classList.add('hidden');
                 document.getElementById('edit-profile-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('setup-card').classList.remove('hidden');
+                document.getElementById('edit-profile-btn').classList.add('hidden');
             }
+
+            renderMissions(profile.created_at || user.created_at);
+            showTodayTip(profile.created_at || user.created_at);
         }
     }
 
-    function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
-    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
-
-    async function signIn() {
-        const { data, error } = await sb.auth.signInWithPassword({
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value
+    function renderMissions(createdAt) {
+        const container = document.getElementById('mission-container');
+        container.innerHTML = "";
+        const dayDiff = Math.ceil(Math.abs(new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24));
+        
+        missions.forEach((m, i) => {
+            const dayNum = i + 1;
+            const div = document.createElement('div');
+            div.className = `mission-item ${dayNum > dayDiff ? 'locked' : (dayNum === dayDiff ? 'active' : '')}`;
+            div.innerHTML = `
+                <span class="day-label">D${dayNum}</span>
+                <span>${dayNum > dayDiff ? '🔒 尚未解鎖' : m}</span>
+                <span class="lock-icon">${dayNum < dayDiff ? '✅' : (dayNum === dayDiff ? '📍' : '')}</span>
+            `;
+            container.appendChild(div);
         });
-        if (error) alert(error.message); else location.reload();
     }
 
-    async function signUp() {
-        const { error } = await sb.auth.signUp({
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value
-        });
-        if (error) alert(error.message); else alert("註冊成功！");
+    function showTodayTip(createdAt) {
+        const dayNum = Math.ceil(Math.abs(new Date() - new Date(createdAt)) / (1000 * 60 * 60 * 24));
+        if (dayNum <= 10) {
+            document.getElementById('status-msg').innerHTML = `<span style="color:#3498db">🌟 今日 Day ${dayNum}：${missions[dayNum-1]}</span>`;
+        }
     }
-
-    async function signOut() { await sb.auth.signOut(); location.reload(); }
 
     async function saveDailyData() {
         const { data: { user } } = await sb.auth.getUser();
@@ -218,17 +198,16 @@
         if(!weight) return alert("請輸入體重");
         
         const { error } = await sb.from('weight_records').upsert({
-            user_id: user.id,
-            date: new Date().toISOString().split('T')[0],
+            user_id: user.id, date: new Date().toISOString().split('T')[0],
             weight: parseFloat(weight),
             fat_rate: parseFloat(document.getElementById('fat_rate').value) || 0,
             muscle_mass: parseFloat(document.getElementById('muscle_mass').value) || 0
         });
-
         if (error) alert(error.message);
         else {
-            document.getElementById('status-msg').innerText = "✅ 數據已同步！";
-            setTimeout(() => document.getElementById('status-msg').innerText = "", 3000);
+            const originalTip = document.getElementById('status-msg').innerHTML;
+            document.getElementById('status-msg').innerHTML = "✅ 數據已同步！";
+            setTimeout(() => { document.getElementById('status-msg').innerHTML = originalTip; }, 3000);
         }
     }
 
@@ -243,7 +222,7 @@
             avatarUrl = sb.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
         }
 
-        await sb.from('profiles').upsert({
+        const { error } = await sb.from('profiles').upsert({
             id: user.id,
             full_name: document.getElementById('full_name').value,
             role: document.getElementById('role').value,
@@ -251,86 +230,20 @@
             current_team_id: document.getElementById('team_id_input').value.trim(),
             avatar_url: avatarUrl
         });
-        location.reload();
+        if (error) alert(error.message); else location.reload();
     }
-    // 1. 定義 10 天的關卡內容
-const missions = [
-    "開賽打卡：曬燃料與初始體重",
-    "彩虹午餐：3種顏色蔬菜",
-    "分享愛：邀家人喝奶昔/運動",
-    "飲水大王：喝完第3瓶水",
-    "動起來：10分鐘運動流汗照",
-    "聰明吃油：攝取堅果或好魚",
-    "小小網紅：發FB/IG限動",
-    "誇誇隊友：給隊友一句鼓勵",
-    "變身見證：分享身體正向變化",
-    "帶好朋友：邀好友測脂或參賽"
-];
 
-// 2. 核心函數：計算並渲染關卡
-function renderMissions(createdAt) {
-    const container = document.getElementById('mission-container');
-    container.innerHTML = ""; // 清空
-
-    // 計算今天是第幾天 (Day 1, Day 2...)
-    const startDate = new Date(createdAt);
-    const today = new Date();
-    const diffTime = Math.abs(today - startDate);
-    const currentDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // 無條件進位
-
-    missions.forEach((content, index) => {
-        const dayNum = index + 1;
-        const item = document.createElement('div');
-        item.className = 'mission-item';
-
-        if (dayNum < currentDay) {
-            // 已過的關卡
-            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>${content}</span> <span class="lock-icon">✅</span>`;
-        } else if (dayNum === currentDay) {
-            // 今天的關卡
-            item.classList.add('active');
-            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>🔥 ${content}</span> <span class="lock-icon">📍 今日任務</span>`;
-        } else {
-            // 尚未解鎖的關卡
-            item.classList.add('locked');
-            item.innerHTML = `<span class="day-label">D${dayNum}</span> <span>🔒 內容尚未解鎖</span>`;
-        }
-        
-        container.appendChild(item);
-    });
-}
-
-// 3. 在 loadFullProfile 裡面呼叫
-async function loadFullProfile(user) {
-    document.getElementById('user-display').innerText = `帳號: ${user.email}`;
-    
-    // 這裡我們需要取得 user 的創建時間
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    
-    if (profile) {
-        // ... 原本的欄位填充邏輯 ...
-
-        // 呼叫關卡渲染 (使用 profile 的 created_at 或 user 的 created_at)
-        renderMissions(profile.created_at || user.created_at);
-        
-        // 額外驚喜：如果是今天，把今日任務顯示在首頁
-        showTodayTip(profile.created_at || user.created_at);
+    function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
+    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
+    async function signIn() { 
+        const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
+        if (error) alert(error.message); else location.reload();
     }
-}
-
-// 在首頁顯示今日溫馨提示
-function showTodayTip(createdAt) {
-    const startDate = new Date(createdAt);
-    const today = new Date();
-    const currentDay = Math.ceil(Math.abs(today - startDate) / (1000 * 60 * 60 * 24));
-    
-    if(currentDay <= 10) {
-        const tipMsg = `🌟 今日 Day ${currentDay} 挑戰：${missions[currentDay-1]}`;
-        const statusMsg = document.getElementById('status-msg');
-        statusMsg.style.color = "#3498db";
-        statusMsg.innerText = tipMsg;
+    async function signUp() {
+        const { error } = await sb.auth.signUp({ email: document.getElementById('email').value, password: document.getElementById('password').value });
+        if (error) alert(error.message); else alert("註冊成功！");
     }
-}
+    async function signOut() { await sb.auth.signOut(); location.reload(); }
 </script>
 </body>
 </html>
