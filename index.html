@@ -35,7 +35,12 @@
     <div id="deadline-notice" style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; font-size:13px; margin-bottom:10px; text-align:center;">
     ⚠️ 今日報到截止：香港時間 23:59
 </div>
-    
+    <div id="profile-section" class="hidden">
+        <div class="ticket-stats">
+            <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
+            <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
+        </div>
+        
     <div id="auth-section">
         <h2>🔑 登入馬拉松</h2>
         <form onsubmit="signIn(); return false;" class="card" style="margin-top: 20px;">
@@ -114,6 +119,8 @@
                     <input type="number" id="muscle_mass" step="0.1" placeholder="0.0">
                 </div>
             </div>
+
+            
             <button class="btn-warning" onclick="saveDailyData()">送出今日報到</button>
             <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold;"></p>
         </div>
@@ -145,6 +152,36 @@ function getHKTime() {
     const hkTime = new Date(now.getTime() + (hkOffset + localOffset) * 60000);
     return hkTime;
 }
+
+    // --- 積分計算邏輯 (根據您的積分整理表) ---
+    async function calculateTotalPoints(userId) {
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).single();
+        const { data: records } = await sb.from('weight_records').select('*').eq('user_id', userId);
+
+        let points = 0;
+
+        // 1. 續跑套餐積分
+        if (profile.renewal_type === '100') points += 1;
+        else if (profile.renewal_type === '150') points += 2;
+        else if (profile.renewal_type === '250') points += 4;
+
+        // 2. 介紹好友積分 (15分/人)
+        points += (profile.referral_count || 0) * 15;
+
+        // 3. 研討會積分 (首次參加2分 + 邀請2分)
+        if (profile.seminar_status) points += 2;
+        points += (profile.seminar_invite_count || 0) * 2;
+
+        // 4. 每日「完成一圈」 (磅磅 + 飲食 + 奶昔 + 直播 = 1分)
+        if (records) {
+            records.forEach(rec => {
+                if (rec.weight && rec.has_diet && rec.has_shake && rec.has_live) {
+                    points += 1;
+                }
+            });
+        }
+        document.getElementById('ticket-count').innerText = points;
+    }
 
 async function saveDailyData() {
     const { data: { user } } = await sb.auth.getUser();
