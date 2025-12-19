@@ -405,6 +405,649 @@
         // 載入用戶列表
         loadUsers();
     };
+
+    // 在 admin.html 的 script 中添加以下函數
+
+// 顯示管理員管理區塊
+async function showAdminManagement() {
+    const adminSection = document.getElementById('admin-management-section');
+    const superAdminSection = document.getElementById('super-admin-section');
+    const regularAdminSection = document.getElementById('regular-admin-section');
+    
+    // 檢查是否為超級管理員
+    const { data: currentProfile } = await sb
+        .from('profiles')
+        .select('role, is_super_admin')
+        .eq('id', currentUser.id)
+        .single();
+    
+    if (currentProfile.is_super_admin || currentProfile.role === 'super_admin') {
+        superAdminSection.classList.remove('hidden');
+        regularAdminSection.classList.add('hidden');
+        loadAdminList();
+    } else {
+        superAdminSection.classList.add('hidden');
+        regularAdminSection.classList.remove('hidden');
+        loadCurrentAdminPermissions();
+    }
+}
+
+// 載入管理員列表（僅超級管理員可見）
+async function loadAdminList() {
+    const tableBody = document.querySelector('#admins-table tbody');
+    tableBody.innerHTML = '<tr><td colspan="7" class="loading">載入中...</td></tr>';
+    
+    try {
+        // 獲取所有管理員
+        const { data: admins, error } = await sb
+            .from('profiles')
+            .select(`
+                *,
+                admin_permissions(*)
+            `)
+            .in('role', ['admin', 'super_admin'])
+            .order('is_super_admin', { ascending: false })
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!admins || admins.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">暫無其他管理員</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        admins.forEach(admin => {
+            const permissions = admin.admin_permissions?.[0] || {};
+            const isCurrentUser = admin.id === currentUser.id;
+            const isSuperAdmin = admin.is_super_admin || admin.role === 'super_admin';
+            
+            // 格式化權限文字
+            const permissionsText = isSuperAdmin ? 
+                '所有權限 (超級管理員)' :
+                [
+                    permissions.can_manage_teams ? '團隊管理' : null,
+                    permissions.can_manage_users ? '用戶管理' : null,
+                    permissions.can_view_reports ? '查看報表' : null,
+                    permissions.can_manage_admins ? '管理員管理' : null
+                ].filter(Boolean).join(', ');
+            
+            // 獲取最後登入時間（需要啟用 Supabase 的登入日誌功能）
+            const lastLogin = admin.last_sign_in_at ? 
+                new Date(admin.last_sign_in_at).toLocaleString('zh-TW') : '從未登入';
+            
+            html += `
+            <tr>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${admin.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(admin.full_name || 'A') + '&background=random'}" 
+                             style="width: 30px; height: 30px; border-radius: 50%;">
+                        <div>
+                            <div style="font-weight: bold;">${admin.full_name || '未設定姓名'}</div>
+                            ${isCurrentUser ? '<span style="font-size: 12px; color: var(--primary);">(您自己)</span>' : ''}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge ${isSuperAdmin ? 'status-active' : 'status-pending'}">
+                        ${isSuperAdmin ? '👑 超級管理員' : '👨‍💼 管理員'}
+                    </span>
+                </td>
+                <td>${admin.email || '未設定'}</td>
+                <td style="font-size: 12px;">${permissionsText || '未設定權限'}</td>
+                <td>
+                    <span class="status-badge ${admin.is_locked ? 'status-inactive' : 'status-active'}">
+                        ${admin.is_locked ? '已停用' : '正常'}
+                    </span>
+                </td>
+                <td style="font-size: 12px;">${lastLogin}</td>
+                <td>
+                    ${!isCurrentUser ? `
+                    <button class="btn btn-small btn-primary" onclick="editAdminPermissions('${admin.id}')">
+                        編輯權限
+                    </button>
+                    <button class="btn btn-small ${admin.is_locked ? 'btn-success' : 'btn-warning'}" 
+                            onclick="toggleAdminStatus('${admin.id}', ${admin.is_locked})">
+                        ${admin.is_locked ? '啟用' : '停用'}
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="removeAdmin('${admin.id}', '${admin.full_name}')">
+                        移除
+                    </button>
+                    ` : '<span style="color: #7f8c8d;">不可操作自己</span>'}
+                </td>
+            </tr>`;
+        });
+        
+        tableBody.innerHTML = html;
+        
+    } catch (error) {
+        console.error('載入管理員列表錯誤:', error);
+        tableBody.innerHTML = '<tr><td colspan="7" style="color: #e74c3c;">載入失敗，請重新整理</td></tr>';
+    }
+}
+
+// 載入當前管理員權限
+async function loadCurrentAdminPermissions() {
+    const container = document.getElementById('current-admin-permissions');
+    
+    try {
+        const { data: profile } = await sb
+            .from('profiles')
+            .select('role, is_super_admin')
+            .eq('id', currentUser.id)
+            .single();
+        
+        const { data: permissions } = await sb
+            .from('admin_permissions')
+            .select('*')
+            .eq('admin_id', currentUser.id)
+            .maybeSingle();
+        
+        const isSuperAdmin = profile.is_super_admin || profile.role === 'super_admin';
+        
+        let html = '';
+        if (isSuperAdmin) {
+            html = `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px;">
+                <h4 style="margin: 0 0 10px 0;">👑 超級管理員</h4>
+                <p style="margin: 0;">您擁有系統所有權限，包括管理其他管理員</p>
+            </div>`;
+        } else if (permissions) {
+            html = `
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                <div style="background: #e8f4fc; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px;">${permissions.can_manage_teams ? '✅' : '❌'}</div>
+                    <div>團隊管理</div>
+                </div>
+                <div style="background: #e8f4fc; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px;">${permissions.can_manage_users ? '✅' : '❌'}</div>
+                    <div>用戶管理</div>
+                </div>
+                <div style="background: #e8f4fc; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px;">${permissions.can_view_reports ? '✅' : '❌'}</div>
+                    <div>查看報表</div>
+                </div>
+                <div style="background: #e8f4fc; padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 24px;">${permissions.can_manage_admins ? '✅' : '❌'}</div>
+                    <div>管理員管理</div>
+                </div>
+            </div>`;
+        } else {
+            html = '<div style="color: #7f8c8d;">暫無權限設定</div>';
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('載入權限錯誤:', error);
+        container.innerHTML = '<div style="color: #e74c3c;">載入失敗</div>';
+    }
+}
+
+// 顯示新增管理員模態框
+async function showAddAdminModal() {
+    const modal = document.getElementById('add-admin-modal');
+    const userSelect = document.getElementById('admin-user-select');
+    
+    // 清空選項
+    userSelect.innerHTML = '<option value="">請選擇用戶...</option>';
+    
+    try {
+        // 獲取所有非管理員用戶
+        const { data: users, error } = await sb
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .not('role', 'in', '("admin","super_admin")')
+            .order('full_name');
+        
+        if (error) throw error;
+        
+        if (!users || users.length === 0) {
+            userSelect.innerHTML += '<option value="" disabled>暫無可用用戶</option>';
+        } else {
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.full_name || '未命名'} (${user.email}) - ${user.role}`;
+                userSelect.appendChild(option);
+            });
+        }
+        
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('載入用戶列表錯誤:', error);
+        alert('無法載入用戶列表: ' + error.message);
+    }
+}
+
+// 新增管理員
+async function addNewAdmin() {
+    const userId = document.getElementById('admin-user-select').value;
+    const adminType = document.getElementById('admin-type').value;
+    const isSuperAdmin = adminType === 'super_admin';
+    
+    if (!userId) {
+        alert('請選擇用戶');
+        return;
+    }
+    
+    // 獲取權限設定
+    const permissions = {
+        can_manage_teams: document.getElementById('perm-manage-teams').checked,
+        can_manage_users: document.getElementById('perm-manage-users').checked,
+        can_view_reports: document.getElementById('perm-view-reports').checked,
+        can_manage_admins: isSuperAdmin ? true : document.getElementById('perm-manage-admins').checked
+    };
+    
+    try {
+        // 開始事務
+        // 1. 更新用戶角色
+        const { error: updateError } = await sb
+            .from('profiles')
+            .update({
+                role: adminType,
+                is_super_admin: isSuperAdmin,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', userId);
+        
+        if (updateError) throw updateError;
+        
+        // 2. 設定權限
+        const { error: permError } = await sb
+            .from('admin_permissions')
+            .upsert({
+                admin_id: userId,
+                ...permissions,
+                updated_at: new Date().toISOString()
+            });
+        
+        if (permError) throw permError;
+        
+        // 3. 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'ADD_ADMIN',
+            resource_type: 'USER',
+            resource_id: userId,
+            details: {
+                admin_type: adminType,
+                permissions: permissions,
+                is_super_admin: isSuperAdmin
+            }
+        }]);
+        
+        alert('✅ 管理員已成功新增！');
+        closeModal('add-admin-modal');
+        loadAdminList();
+        
+    } catch (error) {
+        console.error('新增管理員錯誤:', error);
+        alert('新增失敗: ' + error.message);
+    }
+}
+
+// 編輯管理員權限
+async function editAdminPermissions(adminId) {
+    try {
+        // 獲取管理員資料
+        const { data: admin, error } = await sb
+            .from('profiles')
+            .select(`
+                *,
+                admin_permissions(*)
+            `)
+            .eq('id', adminId)
+            .single();
+        
+        if (error) throw error;
+        
+        const permissions = admin.admin_permissions?.[0] || {};
+        const isSuperAdmin = admin.is_super_admin || admin.role === 'super_admin';
+        
+        const modal = document.getElementById('edit-admin-modal');
+        const content = document.getElementById('edit-admin-content');
+        
+        // 生成權限設定表單
+        content.innerHTML = `
+            <form onsubmit="updateAdminPermissions(event, '${adminId}')">
+                <div class="form-group">
+                    <label class="form-label">管理員名稱</label>
+                    <input type="text" class="form-control" value="${admin.full_name || '未設定'}" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">電子郵件</label>
+                    <input type="email" class="form-control" value="${admin.email || '未設定'}" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">管理員類型</label>
+                    <div>
+                        <span class="status-badge ${isSuperAdmin ? 'status-active' : 'status-pending'}" style="margin-right: 10px;">
+                            ${isSuperAdmin ? '👑 超級管理員' : '👨‍💼 管理員'}
+                        </span>
+                        ${isSuperAdmin ? 
+                            '<small style="color: #7f8c8d;">（超級管理員無法更改類型）</small>' :
+                            `<button type="button" class="btn btn-small btn-warning" onclick="toggleSuperAdmin('${adminId}', ${isSuperAdmin})" style="margin-left: 10px;">
+                                ${isSuperAdmin ? '降為普通管理員' : '升為超級管理員'}
+                            </button>`
+                        }
+                    </div>
+                </div>
+                
+                <div class="form-group" ${isSuperAdmin ? 'style="display: none;"' : ''}>
+                    <label class="form-label">權限設定</label>
+                    <div style="margin-top: 10px;">
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="edit-perm-teams" ${permissions.can_manage_teams ? 'checked' : ''}>
+                            團隊管理權限
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="edit-perm-users" ${permissions.can_manage_users ? 'checked' : ''}>
+                            用戶管理權限
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="edit-perm-reports" ${permissions.can_view_reports ? 'checked' : ''}>
+                            查看報表權限
+                        </label>
+                        <label style="display: block; margin-bottom: 8px;">
+                            <input type="checkbox" id="edit-perm-admins" ${permissions.can_manage_admins ? 'checked' : ''}>
+                            管理員管理權限
+                        </label>
+                    </div>
+                </div>
+                
+                ${isSuperAdmin ? 
+                    '<div class="form-group"><p style="color: #7f8c8d;">超級管理員擁有所有權限，無法單獨設定。</p></div>' : ''
+                }
+                
+                <div class="form-group">
+                    <label class="form-label">修改原因</label>
+                    <textarea class="form-control" id="edit-reason" rows="3" placeholder="請說明修改權限的原因..." required></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">儲存變更</button>
+                    <button type="button" class="btn" onclick="closeModal('edit-admin-modal')" style="flex: 1;">取消</button>
+                </div>
+            </form>
+        `;
+        
+        modal.style.display = 'block';
+        
+    } catch (error) {
+        console.error('編輯管理員權限錯誤:', error);
+        alert('無法載入管理員資料: ' + error.message);
+    }
+}
+
+// 更新管理員權限
+async function updateAdminPermissions(event, adminId) {
+    event.preventDefault();
+    
+    const reason = document.getElementById('edit-reason').value;
+    if (!reason.trim()) {
+        alert('請填寫修改原因');
+        return;
+    }
+    
+    try {
+        // 檢查是否為超級管理員
+        const { data: admin } = await sb
+            .from('profiles')
+            .select('is_super_admin, role')
+            .eq('id', adminId)
+            .single();
+        
+        const isSuperAdmin = admin.is_super_admin || admin.role === 'super_admin';
+        
+        let updateData = {};
+        
+        if (!isSuperAdmin) {
+            // 獲取權限設定
+            updateData = {
+                can_manage_teams: document.getElementById('edit-perm-teams').checked,
+                can_manage_users: document.getElementById('edit-perm-users').checked,
+                can_view_reports: document.getElementById('edit-perm-reports').checked,
+                can_manage_admins: document.getElementById('edit-perm-admins').checked,
+                updated_at: new Date().toISOString()
+            };
+            
+            // 更新權限表
+            const { error } = await sb
+                .from('admin_permissions')
+                .update(updateData)
+                .eq('admin_id', adminId);
+            
+            if (error) throw error;
+        }
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'UPDATE_ADMIN_PERMISSIONS',
+            resource_type: 'USER',
+            resource_id: adminId,
+            details: {
+                reason: reason,
+                changes: updateData,
+                is_super_admin: isSuperAdmin
+            }
+        }]);
+        
+        alert('✅ 權限已更新！');
+        closeModal('edit-admin-modal');
+        loadAdminList();
+        
+    } catch (error) {
+        console.error('更新權限錯誤:', error);
+        alert('更新失敗: ' + error.message);
+    }
+}
+
+// 切換超級管理員狀態
+async function toggleSuperAdmin(adminId, isCurrentlySuperAdmin) {
+    const action = isCurrentlySuperAdmin ? '降為普通管理員' : '升為超級管理員';
+    const reason = prompt(`請輸入${action}的原因：`);
+    
+    if (reason === null) return;
+    
+    try {
+        const { error } = await sb
+            .from('profiles')
+            .update({
+                role: isCurrentlySuperAdmin ? 'admin' : 'super_admin',
+                is_super_admin: !isCurrentlySuperAdmin,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', adminId);
+        
+        if (error) throw error;
+        
+        // 如果是升為超級管理員，設定完整權限
+        if (!isCurrentlySuperAdmin) {
+            await sb.from('admin_permissions').upsert({
+                admin_id: adminId,
+                can_manage_admins: true,
+                can_manage_teams: true,
+                can_manage_users: true,
+                can_view_reports: true,
+                updated_at: new Date().toISOString()
+            });
+        }
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'CHANGE_SUPER_ADMIN',
+            resource_type: 'USER',
+            resource_id: adminId,
+            details: {
+                action: action,
+                reason: reason,
+                new_status: !isCurrentlySuperAdmin
+            }
+        }]);
+        
+        alert(`管理員已${action}`);
+        closeModal('edit-admin-modal');
+        loadAdminList();
+        
+    } catch (error) {
+        console.error('切換超級管理員錯誤:', error);
+        alert(`${action}失敗: ${error.message}`);
+    }
+}
+
+// 切換管理員狀態（啟用/停用）
+async function toggleAdminStatus(adminId, isCurrentlyLocked) {
+    const action = isCurrentlyLocked ? '啟用' : '停用';
+    const reason = prompt(`請輸入${action}此管理員的原因：`);
+    
+    if (reason === null) return;
+    
+    try {
+        const { error } = await sb
+            .from('profiles')
+            .update({
+                is_locked: !isCurrentlyLocked,
+                locked_by: currentUser.id,
+                locked_at: new Date().toISOString()
+            })
+            .eq('id', adminId);
+        
+        if (error) throw error;
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'TOGGLE_ADMIN_STATUS',
+            resource_type: 'USER',
+            resource_id: adminId,
+            details: {
+                action: action,
+                reason: reason,
+                new_status: !isCurrentlyLocked
+            }
+        }]);
+        
+        alert(`管理員已${action}`);
+        loadAdminList();
+        
+    } catch (error) {
+        console.error('切換管理員狀態錯誤:', error);
+        alert(`${action}失敗: ${error.message}`);
+    }
+}
+
+// 移除管理員
+async function removeAdmin(adminId, adminName) {
+    if (!confirm(`確定要將「${adminName}」移除管理員職務嗎？\n\n此操作會將其降級為普通用戶。`)) {
+        return;
+    }
+    
+    const reason = prompt('請輸入移除管理員的原因：');
+    if (reason === null) return;
+    
+    try {
+        // 更新用戶角色為 member
+        const { error } = await sb
+            .from('profiles')
+            .update({
+                role: 'member',
+                is_super_admin: false,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', adminId);
+        
+        if (error) throw error;
+        
+        // 刪除權限記錄
+        await sb
+            .from('admin_permissions')
+            .delete()
+            .eq('admin_id', adminId);
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'REMOVE_ADMIN',
+            resource_type: 'USER',
+            resource_id: adminId,
+            details: {
+                reason: reason,
+                previous_role: 'admin'
+            }
+        }]);
+        
+        alert('✅ 管理員已移除');
+        loadAdminList();
+        
+    } catch (error) {
+        console.error('移除管理員錯誤:', error);
+        alert('移除失敗: ' + error.message);
+    }
+}
+
+// 搜尋管理員
+function searchAdmins(keyword) {
+    const tableBody = document.querySelector('#admins-table tbody');
+    const rows = tableBody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        if (text.includes(keyword.toLowerCase())) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// 重新整理管理員列表
+function refreshAdminList() {
+    loadAdminList();
+}
+
+// 在 checkAdminPermission 函數中檢查超級管理員權限
+async function checkAdminPermission() {
+    try {
+        const { data: profile, error } = await sb
+            .from('profiles')
+            .select('role, is_super_admin, full_name')
+            .eq('id', currentUser.id)
+            .single();
+        
+        if (error) throw error;
+        
+        // 檢查是否為管理員或超級管理員
+        if (profile.role !== 'admin' && profile.role !== 'super_admin' && !profile.is_super_admin) {
+            alert('只有管理員可以訪問此頁面');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        currentAdmin = profile;
+        let adminTitle = '管理員';
+        
+        if (profile.is_super_admin || profile.role === 'super_admin') {
+            adminTitle = '👑 超級管理員';
+        }
+        
+        document.getElementById('admin-info').innerHTML = 
+            `${adminTitle}: ${profile.full_name} <br><small style="font-size: 10px;">${currentUser.email}</small>`;
+        
+    } catch (error) {
+        console.error('檢查管理員權限錯誤:', error);
+        alert('無法驗證管理員權限');
+        window.location.href = 'index.html';
+    }
+}
     
     // 檢查管理員權限
     async function checkAdminPermission() {
@@ -810,158 +1453,217 @@
     }
     
     // 編輯用戶
-    async function editUser(userId) {
-        try {
-            const { data: user, error } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-            
-            if (error) throw error;
-            
-            // 顯示編輯模態框
-            showEditUserModal(user);
-            
-        } catch (error) {
-            console.error('載入用戶資料錯誤:', error);
-            alert('無法載入用戶資料');
-        }
+    // 修改 editUser 函數，允許管理員修改角色
+async function editUser(userId) {
+    try {
+        const { data: user, error } = await sb
+            .from('profiles')
+            .select('*, team:teams(team_name)')
+            .eq('id', userId)
+            .single();
+        
+        if (error) throw error;
+        
+        // 檢查當前管理員權限
+        const { data: currentAdminProfile } = await sb
+            .from('profiles')
+            .select('is_super_admin, role')
+            .eq('id', currentUser.id)
+            .single();
+        
+        const isSuperAdmin = currentAdminProfile.is_super_admin || currentAdminProfile.role === 'super_admin';
+        
+        // 顯示編輯模態框
+        showEditUserModal(user, isSuperAdmin);
+        
+    } catch (error) {
+        console.error('載入用戶資料錯誤:', error);
+        alert('無法載入用戶資料');
+    }
+}
+
+// 修改 showEditUserModal 函數，根據權限顯示不同選項
+function showEditUserModal(user, isSuperAdmin) {
+    const modal = document.getElementById('edit-user-modal');
+    const content = modal.querySelector('.modal-content');
+    
+    const roleOptions = {
+        'member': '學員',
+        'captain': '隊長', 
+        'deputy': '副隊長',
+        'admin': '管理員'
+    };
+    
+    // 如果不是超級管理員，移除 admin 選項
+    if (!isSuperAdmin) {
+        delete roleOptions.admin;
+        delete roleOptions.super_admin;
     }
     
-    // 顯示編輯用戶模態框
-    function showEditUserModal(user) {
-        const modal = document.getElementById('edit-user-modal');
-        const content = modal.querySelector('.modal-content');
-        
-        const roleOptions = {
-            'member': '學員',
-            'captain': '隊長', 
-            'deputy': '副隊長',
-            'admin': '管理員'
-        };
-        
-        const planOptions = {
-            'slow_run': '慢跑',
-            'fast_run': '快跑',
-            'vip': 'VIP'
-        };
-        
-        let roleOptionsHtml = '';
-        for (const [value, label] of Object.entries(roleOptions)) {
-            roleOptionsHtml += `<option value="${value}" ${user.role === value ? 'selected' : ''}>${label}</option>`;
-        }
-        
-        let planOptionsHtml = '';
-        for (const [value, label] of Object.entries(planOptions)) {
-            planOptionsHtml += `<option value="${value}" ${user.plan === value ? 'selected' : ''}>${label}</option>`;
-        }
-        
-        content.innerHTML = `
-            <div class="modal-header">
-                <div class="modal-title">✏️ 編輯用戶: ${user.full_name || '未命名'}</div>
-                <div class="modal-close" onclick="closeModal('edit-user-modal')">×</div>
+    // 如果是超級管理員，添加 super_admin 選項
+    if (isSuperAdmin) {
+        roleOptions.super_admin = '超級管理員';
+    }
+    
+    const planOptions = {
+        'slow_run': '慢跑',
+        'fast_run': '快跑',
+        'vip': 'VIP'
+    };
+    
+    let roleOptionsHtml = '';
+    for (const [value, label] of Object.entries(roleOptions)) {
+        roleOptionsHtml += `<option value="${value}" ${user.role === value ? 'selected' : ''}>${label}</option>`;
+    }
+    
+    let planOptionsHtml = '';
+    for (const [value, label] of Object.entries(planOptions)) {
+        planOptionsHtml += `<option value="${value}" ${user.plan === value ? 'selected' : ''}>${label}</option>`;
+    }
+    
+    content.innerHTML = `
+        <div class="modal-header">
+            <div class="modal-title">✏️ 編輯用戶: ${user.full_name || '未命名'}</div>
+            <div class="modal-close" onclick="closeModal('edit-user-modal')">×</div>
+        </div>
+        <form onsubmit="saveUserChanges(event, '${user.id}', ${isSuperAdmin})">
+            <div class="form-group">
+                <label class="form-label">真實姓名</label>
+                <input type="text" class="form-control" id="edit-full-name" value="${user.full_name || ''}" required>
             </div>
-            <form onsubmit="saveUserChanges(event, '${user.id}')">
-                <div class="form-group">
-                    <label class="form-label">真實姓名</label>
-                    <input type="text" class="form-control" id="edit-full-name" value="${user.full_name || ''}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">電子郵件</label>
-                    <input type="email" class="form-control" id="edit-email" value="${user.email || ''}" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">角色</label>
-                    <select class="form-control" id="edit-role" required>
-                        ${roleOptionsHtml}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">計畫</label>
-                    <select class="form-control" id="edit-plan" required>
-                        ${planOptionsHtml}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">積分</label>
-                    <input type="number" class="form-control" id="edit-points" value="${user.points || 0}" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">
-                        <input type="checkbox" id="edit-is-locked" ${user.is_locked ? 'checked' : ''}>
-                        鎖定帳號（鎖定後用戶無法修改資料）
-                    </label>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">修改原因</label>
-                    <textarea class="form-control" id="edit-reason" rows="3" placeholder="請說明修改此用戶資料的原因..." required></textarea>
-                </div>
-                
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">儲存變更</button>
-                    <button type="button" class="btn" onclick="closeModal('edit-user-modal')" style="flex: 1;">取消</button>
-                </div>
-            </form>`;
-        
-        modal.style.display = 'block';
+            
+            <div class="form-group">
+                <label class="form-label">電子郵件</label>
+                <input type="email" class="form-control" id="edit-email" value="${user.email || ''}" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">角色</label>
+                <select class="form-control" id="edit-role" required>
+                    ${roleOptionsHtml}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">計畫</label>
+                <select class="form-control" id="edit-plan" required>
+                    ${planOptionsHtml}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">隊伍ID</label>
+                <input type="text" class="form-control" id="edit-team-id" value="${user.current_team_id || ''}">
+                <small style="color: #7f8c8d;">變更隊伍會影響團隊統計</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">積分</label>
+                <input type="number" class="form-control" id="edit-points" value="${user.points || 0}" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" id="edit-is-locked" ${user.is_locked ? 'checked' : ''}>
+                    鎖定帳號（鎖定後用戶無法修改資料）
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">修改原因</label>
+                <textarea class="form-control" id="edit-reason" rows="3" placeholder="請說明修改此用戶資料的原因..." required></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">儲存變更</button>
+                <button type="button" class="btn" onclick="closeModal('edit-user-modal')" style="flex: 1;">取消</button>
+            </div>
+        </form>`;
+    
+    modal.style.display = 'block';
+}
+
+// 修改 saveUserChanges 函數，支援管理員操作
+async function saveUserChanges(event, userId, isSuperAdmin) {
+    event.preventDefault();
+    
+    const reason = document.getElementById('edit-reason').value;
+    if (!reason.trim()) {
+        alert('請填寫修改原因');
+        return;
     }
     
-    // 儲存用戶變更
-    async function saveUserChanges(event, userId) {
-        event.preventDefault();
-        
-        const reason = document.getElementById('edit-reason').value;
-        if (!reason.trim()) {
-            alert('請填寫修改原因');
-            return;
-        }
-        
-        const updateData = {
-            full_name: document.getElementById('edit-full-name').value,
-            role: document.getElementById('edit-role').value,
-            plan: document.getElementById('edit-plan').value,
-            points: parseInt(document.getElementById('edit-points').value),
-            is_locked: document.getElementById('edit-is-locked').checked,
-            last_modified_by: currentUser.id,
-            last_modified_at: new Date().toISOString()
-        };
-        
-        try {
-            const { error } = await sb
-                .from('profiles')
-                .update(updateData)
-                .eq('id', userId);
-            
-            if (error) throw error;
-            
-            // 記錄審核日誌
-            await sb.from('audit_logs').insert([{
-                user_id: currentUser.id,
-                action: 'ADMIN_USER_UPDATE',
-                resource_type: 'USER',
-                resource_id: userId,
-                details: {
-                    reason: reason,
-                    changes: updateData
-                }
-            }]);
-            
-            alert('用戶資料已更新');
-            closeModal('edit-user-modal');
-            loadUsers(); // 重新載入用戶列表
-            
-        } catch (error) {
-            console.error('更新用戶資料錯誤:', error);
-            alert('更新失敗: ' + error.message);
-        }
+    const newRole = document.getElementById('edit-role').value;
+    
+    // 檢查權限：只有超級管理員可以設定 super_admin 角色
+    if (newRole === 'super_admin' && !isSuperAdmin) {
+        alert('只有超級管理員可以設定超級管理員角色');
+        return;
     }
+    
+    // 檢查權限：普通管理員不能設定 admin 角色
+    if (newRole === 'admin' && !isSuperAdmin) {
+        alert('只有超級管理員可以設定管理員角色');
+        return;
+    }
+    
+    const updateData = {
+        full_name: document.getElementById('edit-full-name').value,
+        role: newRole,
+        plan: document.getElementById('edit-plan').value,
+        current_team_id: document.getElementById('edit-team-id').value || null,
+        points: parseInt(document.getElementById('edit-points').value),
+        is_locked: document.getElementById('edit-is-locked').checked,
+        is_super_admin: newRole === 'super_admin',
+        last_modified_by: currentUser.id,
+        last_modified_at: new Date().toISOString()
+    };
+    
+    try {
+        const { error } = await sb
+            .from('profiles')
+            .update(updateData)
+            .eq('id', userId);
+        
+        if (error) throw error;
+        
+        // 如果是設定為管理員，同時設定預設權限
+        if (newRole === 'admin' || newRole === 'super_admin') {
+            const permData = {
+                admin_id: userId,
+                can_manage_teams: true,
+                can_manage_users: true,
+                can_view_reports: true,
+                can_manage_admins: newRole === 'super_admin',
+                updated_at: new Date().toISOString()
+            };
+            
+            await sb.from('admin_permissions')
+                .upsert(permData);
+        }
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'ADMIN_USER_UPDATE',
+            resource_type: 'USER',
+            resource_id: userId,
+            details: {
+                reason: reason,
+                changes: updateData,
+                performed_by_admin: true
+            }
+        }]);
+        
+        alert('✅ 用戶資料已更新');
+        closeModal('edit-user-modal');
+        loadUsers(); // 重新載入用戶列表
+        
+    } catch (error) {
+        console.error('更新用戶資料錯誤:', error);
+        alert('更新失敗: ' + error.message);
+    }
+}
     
     // 匯出用戶資料
     async function exportUsers() {
@@ -1258,6 +1960,246 @@ function filterRequestsByStatus(status) {
             row.style.display = 'none';
         }
     });
+}
+
+    // 載入團隊管理數據
+async function loadTeamsManagement() {
+    const container = document.getElementById('teams-section');
+    
+    try {
+        // 獲取所有團隊
+        const { data: teams, error } = await sb
+            .from('teams')
+            .select(`
+                *,
+                captain:profiles!teams_captain_id_fkey(id, full_name, email),
+                deputy:profiles!teams_deputy_id_fkey(id, full_name, email),
+                members:profiles(count)
+            `);
+        
+        if (error) throw error;
+        
+        let html = `
+        <div class="filter-bar">
+            <input type="text" class="form-control search-box" placeholder="搜尋團隊..." id="team-search">
+            <button class="btn btn-success" onclick="createNewTeam()">➕ 建立新團隊</button>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>團隊名稱</th>
+                        <th>隊長</th>
+                        <th>副隊長</th>
+                        <th>成員數</th>
+                        <th>創建時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        
+        if (!teams || teams.length === 0) {
+            html += `<tr><td colspan="6" style="text-align: center;">暫無團隊資料</td></tr>`;
+        } else {
+            teams.forEach(team => {
+                html += `
+                <tr>
+                    <td><strong>${team.team_name || '未命名'}</strong><br><small>ID: ${team.id}</small></td>
+                    <td>
+                        ${team.captain ? 
+                            `<div>${team.captain.full_name || '未命名'}</div>
+                             <small>${team.captain.email}</small>
+                             <button class="btn btn-small btn-warning" onclick="changeCaptain('${team.id}', '${team.captain.id}')">更換</button>` 
+                            : '未設定'}
+                    </td>
+                    <td>
+                        ${team.deputy ? 
+                            `<div>${team.deputy.full_name || '未命名'}</div>
+                             <small>${team.deputy.email}</small>
+                             <button class="btn btn-small btn-warning" onclick="changeDeputy('${team.id}', '${team.deputy?.id || ''}')">更換</button>` 
+                            : '<button class="btn btn-small btn-success" onclick="assignDeputy(\'' + team.id + '\')">指派</button>'}
+                    </td>
+                    <td>${team.members?.[0]?.count || 0} 人</td>
+                    <td>${new Date(team.created_at).toLocaleDateString('zh-TW')}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="viewTeamDetails('${team.id}')">查看</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteTeam('${team.id}', '${team.team_name}')">刪除</button>
+                    </td>
+                </tr>`;
+            });
+        }
+        
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+        
+        // 綁定搜尋功能
+        document.getElementById('team-search')?.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = container.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+    } catch (error) {
+        console.error('載入團隊管理錯誤:', error);
+        container.innerHTML = '<div class="error-message">載入失敗，請重新整理</div>';
+    }
+}
+
+// 更換隊長
+async function changeCaptain(teamId, currentCaptainId) {
+    const newCaptainEmail = prompt('請輸入新隊長的電子郵件：');
+    
+    if (!newCaptainEmail) return;
+    
+    try {
+        // 尋找新隊長用戶
+        const { data: newCaptain, error: findError } = await sb
+            .from('profiles')
+            .select('id, full_name, current_team_id')
+            .eq('email', newCaptainEmail)
+            .single();
+        
+        if (findError || !newCaptain) {
+            alert('找不到該用戶，請確認電子郵件是否正確');
+            return;
+        }
+        
+        // 更新團隊隊長
+        const { error: updateError } = await sb
+            .from('teams')
+            .update({
+                captain_id: newCaptain.id,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', teamId);
+        
+        if (updateError) throw updateError;
+        
+        // 更新原隊長角色
+        await sb
+            .from('profiles')
+            .update({
+                role: 'member',
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', currentCaptainId);
+        
+        // 更新新隊長角色
+        await sb
+            .from('profiles')
+            .update({
+                role: 'captain',
+                current_team_id: teamId,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', newCaptain.id);
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'CHANGE_TEAM_CAPTAIN',
+            resource_type: 'TEAM',
+            resource_id: teamId,
+            details: {
+                old_captain_id: currentCaptainId,
+                new_captain_id: newCaptain.id,
+                new_captain_email: newCaptainEmail
+            }
+        }]);
+        
+        alert(`✅ 隊長已更換為 ${newCaptain.full_name}`);
+        loadTeamsManagement();
+        
+    } catch (error) {
+        console.error('更換隊長錯誤:', error);
+        alert('更換失敗: ' + error.message);
+    }
+}
+
+// 指派/更換副隊長
+async function changeDeputy(teamId, currentDeputyId = null) {
+    const newDeputyEmail = prompt('請輸入新副隊長的電子郵件：');
+    
+    if (!newDeputyEmail) return;
+    
+    try {
+        // 尋找新副隊長用戶
+        const { data: newDeputy, error: findError } = await sb
+            .from('profiles')
+            .select('id, full_name, current_team_id')
+            .eq('email', newDeputyEmail)
+            .single();
+        
+        if (findError || !newDeputy) {
+            alert('找不到該用戶，請確認電子郵件是否正確');
+            return;
+        }
+        
+        // 更新團隊副隊長
+        const { error: updateError } = await sb
+            .from('teams')
+            .update({
+                deputy_id: newDeputy.id,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', teamId);
+        
+        if (updateError) throw updateError;
+        
+        // 如果有原副隊長，更新其角色
+        if (currentDeputyId) {
+            await sb
+                .from('profiles')
+                .update({
+                    role: 'member',
+                    last_modified_by: currentUser.id,
+                    last_modified_at: new Date().toISOString()
+                })
+                .eq('id', currentDeputyId);
+        }
+        
+        // 更新新副隊長角色
+        await sb
+            .from('profiles')
+            .update({
+                role: 'deputy',
+                current_team_id: teamId,
+                last_modified_by: currentUser.id,
+                last_modified_at: new Date().toISOString()
+            })
+            .eq('id', newDeputy.id);
+        
+        // 記錄審核日誌
+        await sb.from('audit_logs').insert([{
+            user_id: currentUser.id,
+            action: 'CHANGE_TEAM_DEPUTY',
+            resource_type: 'TEAM',
+            resource_id: teamId,
+            details: {
+                old_deputy_id: currentDeputyId,
+                new_deputy_id: newDeputy.id,
+                new_deputy_email: newDeputyEmail
+            }
+        }]);
+        
+        alert(`✅ 副隊長已設定為 ${newDeputy.full_name}`);
+        loadTeamsManagement();
+        
+    } catch (error) {
+        console.error('設定副隊長錯誤:', error);
+        alert('設定失敗: ' + error.message);
+    }
 }
 </script>
 </body>
