@@ -210,30 +210,34 @@
         }
     }
 
-    async function saveDailyData() {
-        const { data: { user } } = await sb.auth.getUser();
-        const weight = document.getElementById('weight').value;
-        const fat = document.getElementById('fat_rate').value;
-        const muscle = document.getElementById('muscle_mass').value;
-        const today = new Date().toISOString().split('T')[0];
+async function saveDailyData() {
+    const { data: { user } } = await sb.auth.getUser();
+    const weight = document.getElementById('weight').value;
+    const fat = document.getElementById('fat_rate').value;
+    const muscle = document.getElementById('muscle_mass').value;
+    const today = new Date().toISOString().split('T')[0];
 
-        if(!weight) { alert("請輸入體重"); return; }
+    if(!weight) { alert("請輸入體重"); return; }
 
-        const { error } = await sb.from('weight_records').upsert({
-            user_id: user.id,
-            date: today,
-            weight: parseFloat(weight),
-            fat_rate: parseFloat(fat) || 0,
-            muscle_mass: parseFloat(muscle) || 0
-        });
+    // 💡 關鍵：加上 onConflict 參數
+    const { error } = await sb.from('weight_records').upsert({
+        user_id: user.id,
+        date: today,
+        weight: parseFloat(weight),
+        fat_rate: parseFloat(fat) || 0,
+        muscle_mass: parseFloat(muscle) || 0
+    }, { 
+        onConflict: 'user_id,date' 
+    });
 
-        if (error) {
-            alert("儲存失敗：" + error.message);
-        } else {
-            document.getElementById('status-msg').innerText = "✅ 今日數據已更新！";
-            setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
-        }
+    if (error) {
+        console.error("儲存失敗詳情:", error);
+        alert("儲存失敗：" + error.message);
+    } else {
+        document.getElementById('status-msg').innerText = "✅ 今日數據已更新！";
+        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
     }
+}
 
     async function signUp() {
         const email = document.getElementById('email').value;
