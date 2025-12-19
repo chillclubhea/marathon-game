@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>副隊長任務管理</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .subtitle { color: #7f8c8d; margin-top: 8px; font-size: 14px; }
+        .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 15px; flex-wrap: wrap; }
+        .date-selector, .team-selector { display: flex; gap: 10px; align-items: center; }
+        select, input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
+        .refresh-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .team-members { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .member-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .member-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .member-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+        .member-info { flex: 1; }
+        .member-name { font-weight: bold; color: #2c3e50; font-size: 18px; }
+        .member-detail { font-size: 12px; color: #7f8c8d; }
+        .tasks-list { margin-top: 15px; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .task-item:last-child { border-bottom: none; }
+        .task-name { flex: 1; }
+        .task-status { display: flex; gap: 10px; }
+        .status-btn { padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .status-complete { background: var(--success); color: white; }
+        .status-pending { background: #f0f0f0; color: #7f8c8d; }
+        .summary-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .summary-item { text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px; }
+        .summary-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .summary-label { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+        .hidden { display: none; }
+        .error-message { background: #fee; color: #c33; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 4px solid #c33; }
+        .retry-btn { background: var(--warning); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>👑 副隊長任務管理</h1>
+            <div class="subtitle">標記團隊成員任務完成狀態 • 每日更新</div>
+        </div>
+        
+        <!-- 錯誤顯示區域 -->
+        <div id="error-container" class="hidden"></div>
+        
+        <!-- 控制面板 -->
+        <div class="controls">
+            <div class="date-selector">
+                <input type="date" id="date-selector" value="">
+                <select id="team-selector">
+                    <option value="">選擇團隊...</option>
+                </select>
+            </div>
+            <button class="refresh-btn" onclick="loadTeamData()">🔄 重新載入</button>
+        </div>
+        
+        <!-- 統計摘要 -->
+        <div id="summary-container" class="summary-card hidden">
+            <h3>📊 團隊任務統計</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-value" id="total-members">0</div>
+                    <div class="summary-label">團隊成員</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="completed-tasks">0%</div>
+                    <div class="summary-label">任務完成率</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="pending-tasks">0</div>
+                    <div class="summary-label">待確認任務</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="team-points">0</div>
+                    <div class="summary-label">團隊總積分</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 團隊成員列表 -->
+        <div id="team-container">
+            <div class="member-card">
+                <div style="text-align: center; padding: 40px; color: #7f8c8d;">
+                    <div style="font-size: 48px;">👥</div>
+                    <div>正在載入團隊資料...</div>
+                    <div style="font-size: 14px; margin-top: 10px;">請選擇日期和團隊</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 全局變數
+    let currentUser = null;
+    let currentTeam = null;
+    let teamMembers = [];
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            showError('請先登入系統', true);
+            return;
+        }
+        currentUser = session.user;
+        
+        // 檢查用戶是否為副隊長
+        await checkDeputyStatus();
+        
+        // 設置日期選擇器為今天
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date-selector').value = today;
+        
+        // 載入團隊列表
+        await loadTeamList();
+    };
+    
+    // 顯示錯誤訊息
+    function showError(message, isCritical = false) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.innerHTML = `
+            <div class="error-message">
+                <strong>錯誤：</strong> ${message}
+                <br>
+                <button class="retry-btn" onclick="location.reload()">重新整理頁面</button>
+                ${isCritical ? '<br><small>如果問題持續，請聯絡管理員</small>' : ''}
+            </div>
+        `;
+        errorContainer.classList.remove('hidden');
+    }
+    
+    // 隱藏錯誤訊息
+    function hideError() {
+        document.getElementById('error-container').classList.add('hidden');
+    }
+    
+    // 檢查用戶是否為副隊長
+    async function checkDeputyStatus() {
+        try {
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (profile.role !== 'deputy' && profile.role !== 'captain' && profile.role !== 'admin') {
+                showError('只有副隊長、隊長或管理員可以訪問此頁面', true);
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('檢查副隊長狀態錯誤:', error);
+            showError('無法驗證用戶權限', true);
+            return false;
+        }
+    }
+    
+    // 載入團隊列表
+    async function loadTeamList() {
+        const selector = document.getElementById('team-selector');
+        selector.innerHTML = '<option value="">選擇團隊...</option>';
+        
+        try {
+            // 查找用戶管理的團隊
+            const { data: teams, error } = await sb
+                .from('teams')
+                .select('id, team_name')
+                .or(`captain_id.eq.${currentUser.id},deputy_id.eq.${currentUser.id}`);
+            
+            if (error) throw error;
+            
+            if (!teams || teams.length === 0) {
+                selector.innerHTML += '<option value="" disabled>您目前沒有管理的團隊</option>';
+                return;
+            }
+            
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id;
+                option.textContent = team.team_name;
+                selector.appendChild(option);
+            });
+            
+        } catch (error) {
+            console.error('載入團隊列表錯誤:', error);
+            showError('無法載入團隊列表');
+        }
+    }
+    
+    // 載入團隊數據
+    async function loadTeamData() {
+        const teamId = document.getElementById('team-selector').value;
+        const dateStr = document.getElementById('date-selector').value;
+        
+        if (!teamId || !dateStr) {
+            showError('請選擇團隊和日期');
+            return;
+        }
+        
+        currentTeam = teamId;
+        const container = document.getElementById('team-container');
+        container.innerHTML = '<div class="member-card"><div style="text-align: center; padding: 40px;">載入中...</div></div>';
+        
+        try {
+            // 獲取團隊成員
+            const { data: members, error } = await sb
+                .from('team_members')
+                .select(`
+                    member:profiles(
+                        id,
+                        full_name,
+                        avatar_url,
+                        role,
+                        points
+                    )
+                `)
+                .eq('team_id', teamId);
+            
+            if (error) throw error;
+            
+            if (!members || members.length === 0) {
+                container.innerHTML = '<div class="member-card"><div style="text-align: center; padding: 40px;">此團隊暫無成員</div></div>';
+                return;
+            }
+            
+            teamMembers = members.map(m => m.member);
+            
+            // 顯示統計摘要
+            showSummary();
+            
+            // 載入每個成員的任務狀態並顯示
+            let html = '';
+            
+            for (const member of teamMembers) {
+                // 獲取成員今日任務狀態
+                const { data: dailyScore } = await sb
+                    .from('daily_scores')
+                    .select('*')
+                    .eq('user_id', member.id)
+                    .eq('date', dateStr)
+                    .maybeSingle();
+                
+                html += generateMemberCard(member, dailyScore, dateStr);
+            }
+            
+            container.innerHTML = html;
+            hideError();
+            
+        } catch (error) {
+            console.error('載入團隊數據錯誤:', error);
+            showError('無法載入團隊數據');
+        }
+    }
+    
+    // 顯示統計摘要
+    function showSummary() {
+        const summaryContainer = document.getElementById('summary-container');
+        summaryContainer.classList.remove('hidden');
+        
+        document.getElementById('total-members').textContent = teamMembers.length;
+        // 其他統計數據可以在loadTeamData中計算後更新
+    }
+    
+    // 生成成員卡片
+    function generateMemberCard(member, dailyScore, dateStr) {
+        const tasks = [
+            { id: 'weight_recorded', name: '磅磅 + 打卡飲食', completed: dailyScore ? dailyScore.weight_recorded : false },
+            { id: 'shake_used', name: '使用Shake', completed: dailyScore ? dailyScore.shake_used : false },
+            { id: 'task_completed', name: '完成直播', completed: dailyScore ? dailyScore.task_completed : false },
+            { id: 'exercise_done', name: '完成運動', completed: dailyScore ? dailyScore.exercise_done : false },
+            { id: 'social_shared', name: '社交分享', completed: dailyScore ? dailyScore.social_shared : false }
+        ];
+        
+        const completedTasks = tasks.filter(t => t.completed).length;
+        const completionRate = Math.round((completedTasks / tasks.length) * 100);
+        
+        let tasksHtml = '';
+        tasks.forEach(task => {
+            tasksHtml += `
+            <div class="task-item">
+                <div class="task-name">${task.name}</div>
+                <div class="task-status">
+                    <button class="status-btn ${task.completed ? 'status-complete' : 'status-pending'}" 
+                            onclick="toggleTaskStatus('${member.id}', '${dateStr}', '${task.id}', ${!task.completed})">
+                        ${task.completed ? '✅ 已完成' : '⏳ 待確認'}
+                    </button>
+                </div>
+            </div>`;
+        });
+        
+        return `
+        <div class="member-card">
+            <div class="member-header">
+                <img class="member-avatar" src="${member.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.full_name || 'User') + '&background=random'}" alt="${member.full_name}">
+                <div class="member-info">
+                    <div class="member-name">${member.full_name || '未設定姓名'}</div>
+                    <div class="member-detail">
+                        ${member.role === 'captain' ? '👑 隊長' : member.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
+                        積分: ${member.points || 0} • 
+                        完成率: ${completionRate}%
+                    </div>
+                </div>
+            </div>
+            <div class="tasks-list">
+                ${tasksHtml}
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button class="status-btn" style="background: var(--primary); color: white;" 
+                        onclick="markAllTasks('${member.id}', '${dateStr}')">
+                    標記所有任務為完成
+                </button>
+            </div>
+        </div>`;
+    }
+    
+    // 切換任務狀態
+    window.toggleTaskStatus = async function(userId, dateStr, taskField, newStatus) {
+        try {
+            // 首先獲取現有的記錄
+            const { data: existingRecord } = await sb
+                .from('daily_scores')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('date', dateStr)
+                .maybeSingle();
+            
+            // 準備更新數據
+            let updateData = existingRecord || {
+                user_id: userId,
+                date: dateStr,
+                created_at: new Date().toISOString()
+            };
+            
+            // 更新對應欄位
+            updateData[taskField] = newStatus;
+            
+            // 重新計算總分數
+            updateData.total_points = calculateDailyPoints(updateData);
+            updateData.updated_at = new Date().toISOString();
+            
+            // 使用 upsert 更新或創建記錄
+            const { error } = await sb
+                .from('daily_scores')
+                .upsert(updateData, { 
+                    onConflict: 'user_id,date',
+                    returning: 'minimal'
+                });
+            
+            if (error) {
+                console.error('更新任務狀態錯誤:', error);
+                alert('更新失敗: ' + error.message);
+                return;
+            }
+            
+            // 重新載入團隊數據
+            loadTeamData();
+            
+        } catch (error) {
+            console.error('切換任務狀態錯誤:', error);
+            alert('操作失敗: ' + error.message);
+        }
+    };
+    
+    // 標記所有任務為完成
+    window.markAllTasks = async function(userId, dateStr) {
+        if (!confirm('確定要標記此成員的所有任務為完成嗎？')) {
+            return;
+        }
+        
+        try {
+            // 首先獲取現有的記錄
+            const { data: existingRecord } = await sb
+                .from('daily_scores')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('date', dateStr)
+                .maybeSingle();
+            
+            // 準備更新數據
+            let updateData = existingRecord || {
+                user_id: userId,
+                date: dateStr,
+                created_at: new Date().toISOString()
+            };
+            
+            // 標記所有任務為完成
+            updateData.weight_recorded = true;
+            updateData.shake_used = true;
+            updateData.task_completed = true;
+            updateData.exercise_done = true;
+            updateData.social_shared = true;
+            
+            // 重新計算總分數
+            updateData.total_points = calculateDailyPoints(updateData);
+            updateData.updated_at = new Date().toISOString();
+            
+            // 使用 upsert 更新或創建記錄
+            const { error } = await sb
+                .from('daily_scores')
+                .upsert(updateData, { 
+                    onConflict: 'user_id,date',
+                    returning: 'minimal'
+                });
+            
+            if (error) {
+                console.error('標記所有任務錯誤:', error);
+                alert('更新失敗: ' + error.message);
+                return;
+            }
+            
+            // 重新載入團隊數據
+            loadTeamData();
+            
+        } catch (error) {
+            console.error('標記所有任務錯誤:', error);
+            alert('操作失敗: ' + error.message);
+        }
+    };
+    
+    // 計算每日積分
+    function calculateDailyPoints(data) {
+        let points = 0;
+        
+        // 完成一圈（體重+飲食+奶昔+直播）
+        if (data.weight_recorded && data.shake_used && data.task_completed) {
+            points += 1;
+        }
+        
+        // 其他任務各1分
+        if (data.weight_recorded) points += 1;
+        if (data.shake_used) points += 1;
+        if (data.exercise_done) points += 1;
+        if (data.social_shared) points += 1;
+        if (data.task_completed) points += 1;
+        
+        return points;
+    }
+</script>
+</body>
+</html>
