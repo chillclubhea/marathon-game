@@ -27,22 +27,28 @@
         .btn-danger { background-color: var(--danger); }
         .hidden { display: none !important; }
         .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .ticket-stats { display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; }
+        .ticket-stats div { text-align: center; }
+        .ticket-stats span { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; }
+        .ticket-stats b { display: block; font-size: 24px; color: #0ea5e9; }
+        .mission-item { background: #f1f5f9; padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 14px; }
+        .mission-item.active { background: #dbeafe; border-left: 4px solid #3b82f6; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- 截止時間通知 -->
     <div id="deadline-notice" style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; font-size:13px; margin-bottom:10px; text-align:center;">
-    ⚠️ 今日報到截止：香港時間 23:59
-</div>
-    <div id="profile-section" class="hidden">
-        <div class="ticket-stats">
-            <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
-            <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
-        </div>
-        
+        ⚠️ 今日報到截止：香港時間 23:59
+    </div>
+
+    <!-- 登入區塊 -->
     <div id="auth-section">
-        <h2>🔑 登入馬拉松</h2>
+        <div class="header">
+            <h2>🔑 登入馬拉松</h2>
+            <div id="login-msg" style="font-size:14px; color:#666; margin-top:5px;">請登入以繼續</div>
+        </div>
         <form onsubmit="signIn(); return false;" class="card" style="margin-top: 20px;">
             <div class="form-group">
                 <label>電子信箱</label>
@@ -57,23 +63,33 @@
         </form>
     </div>
 
+    <!-- 個人資料區塊 -->
     <div id="profile-section" class="hidden">
         <div class="header">
             <h2>🏃 玩家中心</h2>
             <div id="user-display"></div>
         </div>
 
+        <!-- 積分統計 -->
+        <div class="ticket-stats">
+            <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
+            <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
+            <div><span>隊伍狀態</span><b id="team-status">未加入</b></div>
+        </div>
+
+        <!-- 編輯按鈕 -->
         <button id="edit-profile-btn" class="hidden" onclick="toggleProfileEdit()" 
                 style="background: #edf2f7; color: #4a5568; font-size: 14px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">
             ⚙️ 修改個人資料或更換隊伍
         </button>
 
+        <!-- 個人設定卡片 -->
         <div id="setup-card" class="card">
             <div class="card-title">👤 個人設定 & 加入隊伍</div>
             <img id="avatar-img" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random">
             <div class="form-group">
                 <label>更換頭像</label>
-                <input type="file" id="avatar_file" accept="image/*">
+                <input type="file" id="avatar_file" accept="image/*" onchange="previewAvatar()">
             </div>
             <div class="form-group">
                 <label>真實姓名</label>
@@ -91,18 +107,21 @@
                 <div class="form-group">
                     <label>計畫</label>
                     <select id="plan">
-                        <option value="slow">慢跑</option>
-                        <option value="fast">快跑</option>
+                        <option value="slow_run">慢跑</option>
+                        <option value="fast_run">快跑</option>
+                        <option value="vip">VIP</option>
                     </select>
                 </div>
             </div>
             <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
                 <label>加入隊伍邀請碼 (Team ID)</label>
                 <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
+                <small style="color:#666; display:block; margin-top:5px;">若無隊伍代碼，請聯絡隊長</small>
             </div>
             <button class="btn-primary" onclick="updateProfile()">儲存並開始遊戲</button>
         </div>
 
+        <!-- 每日數據報到卡片 -->
         <div class="card" style="border-left: 5px solid var(--warning);">
             <div class="card-title">⚖️ 每日數據報到</div>
             <div class="form-group">
@@ -119,243 +138,419 @@
                     <input type="number" id="muscle_mass" step="0.1" placeholder="0.0">
                 </div>
             </div>
-
+            
+            <!-- 任務完成狀態 -->
+            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <label>今日任務完成狀態</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <label style="font-size: 13px; display: flex; align-items: center;">
+                        <input type="checkbox" id="task_shake" style="margin-right: 8px;"> 使用Shake
+                    </label>
+                    <label style="font-size: 13px; display: flex; align-items: center;">
+                        <input type="checkbox" id="task_live" style="margin-right: 8px;"> 完成直播
+                    </label>
+                    <label style="font-size: 13px; display: flex; align-items: center;">
+                        <input type="checkbox" id="task_diet" style="margin-right: 8px;"> 打卡飲食
+                    </label>
+                    <label style="font-size: 13px; display: flex; align-items: center;">
+                        <input type="checkbox" id="task_exercise" style="margin-right: 8px;"> 完成運動
+                    </label>
+                </div>
+            </div>
             
             <button class="btn-warning" onclick="saveDailyData()">送出今日報到</button>
-            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold;"></p>
+            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold; margin-top: 10px; min-height: 20px;"></p>
         </div>
 
-        <div class="card">
-            <button class="btn-success" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
+        <!-- 功能按鈕 -->
+        <div class="card" style="text-align: center;">
+            <button class="btn-success" onclick="window.open('team.html', '_blank')" style="margin-bottom: 10px;">
+                🏆 查看九宮格戰況
+            </button>
+            <button class="btn-primary" onclick="window.open('leaderboard.html', '_blank')" style="margin-bottom: 10px;">
+                📊 查看排行榜
+            </button>
+            <button class="btn-primary" onclick="window.open('tasks.html', '_blank')">
+                ✅ 查看任務區
+            </button>
         </div>
 
+        <!-- 登出按鈕 -->
         <button class="btn-danger" style="margin-top:20px;" onclick="signOut()">安全登出</button>
     </div>
 </div>
 
 <script>
+    // Supabase 初始化
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 頁面載入時檢查登入狀態
     window.onload = async () => {
-        const { data: { session } } = await sb.auth.getSession();
-        if (session) showProfile(session.user);
+        const { data: { session }, error } = await sb.auth.getSession();
+        if (error) {
+            console.error("檢查登入狀態錯誤:", error);
+            return;
+        }
+        
+        if (session) {
+            console.log("已登入，用戶:", session.user.email);
+            await showProfile(session.user);
+        } else {
+            console.log("未登入，顯示登入表單");
+            document.getElementById('auth-section').classList.remove('hidden');
+        }
     };
 
-    // 獲取香港目前時間的函數
-function getHKTime() {
-    const now = new Date();
-    // 轉換為香港時間 (UTC+8)
-    const hkOffset = 8 * 60; 
-    const localOffset = now.getTimezoneOffset(); // 分鐘
-    const hkTime = new Date(now.getTime() + (hkOffset + localOffset) * 60000);
-    return hkTime;
-}
-
-    // --- 積分計算邏輯 (根據您的積分整理表) ---
-    async function calculateTotalPoints(userId) {
-        const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).single();
-        const { data: records } = await sb.from('weight_records').select('*').eq('user_id', userId);
-
-        let points = 0;
-
-        // 1. 續跑套餐積分
-        if (profile.renewal_type === '100') points += 1;
-        else if (profile.renewal_type === '150') points += 2;
-        else if (profile.renewal_type === '250') points += 4;
-
-        // 2. 介紹好友積分 (15分/人)
-        points += (profile.referral_count || 0) * 15;
-
-        // 3. 研討會積分 (首次參加2分 + 邀請2分)
-        if (profile.seminar_status) points += 2;
-        points += (profile.seminar_invite_count || 0) * 2;
-
-        // 4. 每日「完成一圈」 (磅磅 + 飲食 + 奶昔 + 直播 = 1分)
-        if (records) {
-            records.forEach(rec => {
-                if (rec.weight && rec.has_diet && rec.has_shake && rec.has_live) {
-                    points += 1;
-                }
-            });
+    // 預覽頭像
+    function previewAvatar() {
+        const fileInput = document.getElementById('avatar_file');
+        const avatarImg = document.getElementById('avatar-img');
+        
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                avatarImg.src = e.target.result;
+            };
+            reader.readAsDataURL(fileInput.files[0]);
         }
-        document.getElementById('ticket-count').innerText = points;
     }
 
-async function saveDailyData() {
-    const { data: { user } } = await sb.auth.getUser();
-    
-    // --- 截止時間檢查 ---
-    const now = getHKTime();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    
-    // 雖然理論上過了 12 點就是「明天」，但為了保險，我們加上邏輯判斷
-    // 如果你在系統內有嚴格的「當天」定義，這能防止跨日溢出
-    const todayStr = now.toISOString().split('T')[0];
-    
-    const weight = document.getElementById('weight').value;
-    if(!weight) { alert("請輸入體重"); return; }
-
-    const { error } = await sb.from('weight_records').upsert({
-        user_id: user.id,
-        date: todayStr, // 使用香港時間的日期
-        weight: parseFloat(weight),
-        fat_rate: parseFloat(document.getElementById('fat_rate').value) || 0,
-        muscle_mass: parseFloat(document.getElementById('muscle_mass').value) || 0
-    }, { onConflict: 'user_id,date' });
-
-    if (error) alert("儲存失敗：" + error.message);
-    else {
-        document.getElementById('status-msg').innerText = "✅ 今日數據已成功報到！";
-        setTimeout(() => location.reload(), 1500);
-    }
-}
-
-// 渲染 10 天日期列表
-function renderMarathonDates(startDateStr) {
-    const startDate = new Date(startDateStr);
-    const container = document.getElementById('mission-container'); // 假設你要顯示在這裡
-    let html = '<div style="font-size:12px; color:#666; margin-bottom:10px; text-align:left;">📅 賽期日程表：</div>';
-    
-    for (let i = 0; i < 10; i++) {
-        const current = new Date(startDate);
-        current.setDate(startDate.getDate() + i);
-        const dateStr = `${current.getMonth() + 1}/${current.getDate()}`;
-        const isToday = new Date().toDateString() === current.toDateString();
-        
-        html += `
-            <div class="mission-item ${isToday ? 'active' : ''}" style="display:flex; justify-content:space-between;">
-                <span>Day ${i + 1}</span>
-                <span>${dateStr}</span>
-                <span>${missions[i]}</span>
-            </div>`;
-    }
-    container.innerHTML = html;
-}
-
-    function toggleProfileEdit() {
-        const setupCard = document.getElementById('setup-card');
-        const inputs = setupCard.querySelectorAll('input, select');
-        const isHidden = setupCard.classList.toggle('hidden');
-        
-        // 切換時解除/恢復鎖定
-        inputs.forEach(input => {
-            if (input.id !== 'avatar_file') input.disabled = isHidden;
-        });
+    // 獲取香港時間
+    function getHKTime() {
+        const now = new Date();
+        const hkOffset = 8 * 60; // 香港 UTC+8
+        const localOffset = now.getTimezoneOffset();
+        return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
     }
 
+    // 顯示個人資料
     async function showProfile(user) {
+        console.log("顯示用戶資料:", user.email);
+        
+        // 切換顯示區域
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('profile-section').classList.remove('hidden');
         document.getElementById('user-display').innerText = `帳號: ${user.email}`;
 
-        const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        
-        if (data) {
-            document.getElementById('full_name').value = data.full_name || '';
-            document.getElementById('role').value = data.role || 'member';
-            document.getElementById('plan').value = data.plan || 'slow';
-            document.getElementById('team_id_input').value = data.current_team_id || '';
-            
-            if (data.avatar_url) {
-                document.getElementById('avatar-img').src = data.avatar_url;
-            } else if (data.full_name) {
-                document.getElementById('avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=random`;
+        try {
+            // 查詢用戶資料
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle(); // 使用 maybeSingle 避免找不到資料時報錯
+
+            if (error) {
+                console.error("查詢用戶資料錯誤:", error);
+                return;
             }
 
-            // --- 鎖定邏輯 ---
-            if (data.full_name && data.current_team_id) {
-                document.getElementById('setup-card').classList.add('hidden');
-                document.getElementById('edit-profile-btn').classList.remove('hidden');
+            console.log("查詢到的用戶資料:", profile);
+
+            // 更新表單資料
+            if (profile) {
+                // 基本資料
+                document.getElementById('full_name').value = profile.full_name || '';
+                document.getElementById('role').value = profile.role || 'member';
+                document.getElementById('plan').value = profile.plan || 'slow_run';
+                document.getElementById('team_id_input').value = profile.current_team_id || '';
                 
-                // 鎖定所有輸入框
-                document.getElementById('full_name').disabled = true;
-                document.getElementById('role').disabled = true;
-                document.getElementById('plan').disabled = true;
-                document.getElementById('team_id_input').disabled = true;
+                // 頭像
+                if (profile.avatar_url) {
+                    document.getElementById('avatar-img').src = profile.avatar_url;
+                } else if (profile.full_name) {
+                    document.getElementById('avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name)}&background=random`;
+                }
+
+                // 檢查是否已完成設定
+                const isSetupComplete = profile.full_name && profile.current_team_id;
+                
+                // 控制顯示/隱藏和鎖定狀態
+                if (isSetupComplete) {
+                    document.getElementById('setup-card').classList.add('hidden');
+                    document.getElementById('edit-profile-btn').classList.remove('hidden');
+                    
+                    // 鎖定輸入欄位
+                    document.getElementById('full_name').disabled = true;
+                    document.getElementById('role').disabled = true;
+                    document.getElementById('plan').disabled = true;
+                    document.getElementById('team_id_input').disabled = true;
+                    
+                    // 更新隊伍狀態顯示
+                    document.getElementById('team-status').textContent = '已加入';
+                    
+                    // 計算並顯示積分
+                    await calculateTotalPoints(user.id);
+                    
+                    // 檢查今日是否已報到
+                    await checkDailyCheckin(user.id);
+                } else {
+                    document.getElementById('setup-card').classList.remove('hidden');
+                    document.getElementById('edit-profile-btn').classList.add('hidden');
+                    document.getElementById('team-status').textContent = '未加入';
+                }
+            } else {
+                // 如果沒有個人資料，顯示設定卡片
+                document.getElementById('setup-card').classList.remove('hidden');
+                document.getElementById('edit-profile-btn').classList.add('hidden');
+                document.getElementById('team-status').textContent = '未設定';
+            }
+        } catch (err) {
+            console.error("顯示個人資料錯誤:", err);
+        }
+    }
+
+    // 檢查今日是否已報到
+    async function checkDailyCheckin(userId) {
+        const today = getHKTime().toISOString().split('T')[0];
+        
+        const { data, error } = await sb
+            .from('weight_records')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('date', today)
+            .maybeSingle();
+            
+        if (data) {
+            // 如果今日已報到，填入資料
+            document.getElementById('weight').value = data.weight || '';
+            document.getElementById('fat_rate').value = data.fat_rate || '';
+            document.getElementById('muscle_mass').value = data.muscle_mass || '';
+            
+            // 檢查任務狀態
+            const { data: dailyScore } = await sb
+                .from('daily_scores')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('date', today)
+                .maybeSingle();
+                
+            if (dailyScore) {
+                document.getElementById('task_shake').checked = dailyScore.shake_used || false;
+                document.getElementById('task_live').checked = dailyScore.task_completed || false;
+                document.getElementById('task_diet').checked = dailyScore.weight_recorded || false;
+                document.getElementById('task_exercise').checked = dailyScore.exercise_done || false;
             }
         }
     }
 
-    async function updateProfile() {
-        const { data: { user } } = await sb.auth.getUser();
-        const avatarFile = document.getElementById('avatar_file').files[0];
-        let avatarUrl = document.getElementById('avatar-img').src;
+    // 計算總積分
+    async function calculateTotalPoints(userId) {
+        try {
+            const { data: profile } = await sb
+                .from('profiles')
+                .select('points')
+                .eq('id', userId)
+                .single();
+                
+            if (profile && profile.points) {
+                document.getElementById('ticket-count').textContent = profile.points;
+            } else {
+                document.getElementById('ticket-count').textContent = '0';
+            }
+        } catch (err) {
+            console.error("計算積分錯誤:", err);
+            document.getElementById('ticket-count').textContent = '0';
+        }
+    }
 
+    // 切換編輯模式
+    function toggleProfileEdit() {
+        const setupCard = document.getElementById('setup-card');
+        const isHidden = setupCard.classList.contains('hidden');
+        
+        if (isHidden) {
+            // 顯示設定卡片並解鎖
+            setupCard.classList.remove('hidden');
+            document.getElementById('full_name').disabled = false;
+            document.getElementById('role').disabled = false;
+            document.getElementById('plan').disabled = false;
+            document.getElementById('team_id_input').disabled = false;
+        } else {
+            // 隱藏設定卡片並鎖定
+            setupCard.classList.add('hidden');
+            document.getElementById('full_name').disabled = true;
+            document.getElementById('role').disabled = true;
+            document.getElementById('plan').disabled = true;
+            document.getElementById('team_id_input').disabled = true;
+        }
+    }
+
+    // 更新個人資料
+    async function updateProfile() {
+        const { data: { user }, error: authError } = await sb.auth.getUser();
+        if (authError || !user) {
+            alert("請先登入");
+            return;
+        }
+
+        const fullName = document.getElementById('full_name').value.trim();
+        const role = document.getElementById('role').value;
+        const plan = document.getElementById('plan').value;
+        const teamId = document.getElementById('team_id_input').value.trim();
+        
+        if (!fullName) {
+            alert("請輸入真實姓名");
+            return;
+        }
+
+        // 處理頭像上傳
+        let avatarUrl = document.getElementById('avatar-img').src;
+        const avatarFile = document.getElementById('avatar_file').files[0];
+        
         if (avatarFile) {
             const fileName = `${user.id}_${Date.now()}.png`;
-            const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
+            const { error: uploadError } = await sb.storage
+                .from('avatars')
+                .upload(fileName, avatarFile, { upsert: true });
+                
             if (!uploadError) {
-                const { data } = sb.storage.from('avatars').getPublicUrl(fileName);
-                avatarUrl = data.publicUrl;
+                const { data: urlData } = sb.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+                avatarUrl = urlData.publicUrl;
             }
         }
 
-        // 修正 400 錯誤：確保欄位名稱與資料庫 profiles 表完全一致
-        const { error } = await sb.from('profiles').upsert({
-            id: user.id,
-            full_name: document.getElementById('full_name').value,
-            role: document.getElementById('role').value,
-            plan: document.getElementById('plan').value,
-            current_team_id: document.getElementById('team_id_input').value.trim(),
-            avatar_url: avatarUrl,
-            updated_at: new Date()
-        });
-        
+        // 更新或創建個人資料
+        const { error } = await sb
+            .from('profiles')
+            .upsert({
+                id: user.id,
+                full_name: fullName,
+                role: role,
+                plan: plan,
+                current_team_id: teamId || null,
+                avatar_url: avatarUrl,
+                updated_at: new Date().toISOString()
+            });
+
         if (error) {
-            console.error("Profiles Upsert Error:", error);
-            alert("儲存失敗，請檢查資料庫 profiles 欄位設定。");
+            console.error("更新資料錯誤:", error);
+            alert("儲存失敗：" + error.message);
         } else {
-            alert("✅ 設定已儲存並鎖定！");
+            alert("✅ 設定已儲存！");
+            location.reload(); // 重新載入以更新顯示狀態
+        }
+    }
+
+    // 儲存每日數據
+    async function saveDailyData() {
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user) {
+            alert("請先登入");
+            return;
+        }
+
+        const weight = parseFloat(document.getElementById('weight').value);
+        if (!weight || weight <= 0) {
+            alert("請輸入有效的體重");
+            return;
+        }
+
+        const today = getHKTime().toISOString().split('T')[0];
+        const fatRate = parseFloat(document.getElementById('fat_rate').value) || 0;
+        const muscleMass = parseFloat(document.getElementById('muscle_mass').value) || 0;
+        
+        // 獲取任務狀態
+        const hasShake = document.getElementById('task_shake').checked;
+        const hasLive = document.getElementById('task_live').checked;
+        const hasDiet = document.getElementById('task_diet').checked;
+        const hasExercise = document.getElementById('task_exercise').checked;
+
+        try {
+            // 儲存體重記錄
+            const { error: weightError } = await sb
+                .from('weight_records')
+                .upsert({
+                    user_id: user.id,
+                    date: today,
+                    weight: weight,
+                    fat_rate: fatRate,
+                    muscle_mass: muscleMass
+                }, { onConflict: 'user_id,date' });
+
+            if (weightError) throw weightError;
+
+            // 計算今日積分
+            let dailyPoints = 0;
+            if (weight > 0 && hasDiet && hasShake && hasLive) {
+                dailyPoints += 1; // 完成一圈
+            }
+            if (hasExercise) dailyPoints += 1;
+            if (hasShake) dailyPoints += 1;
+
+            // 儲存每日分數
+            const { error: scoreError } = await sb
+                .from('daily_scores')
+                .upsert({
+                    user_id: user.id,
+                    date: today,
+                    weight_recorded: weight > 0,
+                    shake_used: hasShake,
+                    exercise_done: hasExercise,
+                    task_completed: hasLive,
+                    social_shared: false,
+                    referral_made: false,
+                    total_points: dailyPoints,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,date' });
+
+            if (scoreError) throw scoreError;
+
+            // 更新狀態訊息
+            document.getElementById('status-msg').textContent = "✅ 今日數據已成功報到！";
+            setTimeout(() => {
+                document.getElementById('status-msg').textContent = "";
+                location.reload();
+            }, 2000);
+
+        } catch (error) {
+            console.error("儲存數據錯誤:", error);
+            alert("儲存失敗：" + error.message);
+        }
+    }
+
+    // 註冊
+    async function signUp() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+            alert("請填寫信箱和密碼");
+            return;
+        }
+
+        const { data, error } = await sb.auth.signUp({ email, password });
+        if (error) {
+            alert("註冊失敗：" + error.message);
+        } else {
+            alert("✅ 註冊成功！請檢查信箱驗證郵件後登入。");
+        }
+    }
+
+    // 登入
+    async function signIn() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+            alert("請填寫信箱和密碼");
+            return;
+        }
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert("登入失敗：" + error.message);
+        } else {
+            // 登入成功，重新載入頁面
             location.reload();
         }
     }
 
-async function saveDailyData() {
-    const { data: { user } } = await sb.auth.getUser();
-    const weight = document.getElementById('weight').value;
-    const fat = document.getElementById('fat_rate').value;
-    const muscle = document.getElementById('muscle_mass').value;
-    const today = new Date().toISOString().split('T')[0];
-
-    if(!weight) { alert("請輸入體重"); return; }
-
-    // 💡 關鍵：加上 onConflict 參數
-    const { error } = await sb.from('weight_records').upsert({
-        user_id: user.id,
-        date: today,
-        weight: parseFloat(weight),
-        fat_rate: parseFloat(fat) || 0,
-        muscle_mass: parseFloat(muscle) || 0
-    }, { 
-        onConflict: 'user_id,date' 
-    });
-
-    if (error) {
-        console.error("儲存失敗詳情:", error);
-        alert("儲存失敗：" + error.message);
-    } else {
-        document.getElementById('status-msg').innerText = "✅ 今日數據已更新！";
-        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
-    }
-}
-
-    async function signUp() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("註冊成功，請登入！");
-    }
-
-    async function signIn() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else location.reload();
-    }
-
+    // 登出
     async function signOut() {
         await sb.auth.signOut();
         location.reload();
