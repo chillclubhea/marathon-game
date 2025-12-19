@@ -200,6 +200,19 @@
 
     async function updateTicketDisplay(userId) {
         // 這裡暫時以打卡紀錄數作為簡單計算，實際可根據資料庫 record 數量加總
+        const { data: records } = await sb.from('weight_records')
+                                     .select('mission_status')
+                                     .eq('user_id', userId);
+    
+    let totalTickets = 0;
+    if (records) {
+        records.forEach(rec => {
+            totalTickets += 1; // 基礎打卡 1 張
+            if (rec.mission_status) totalTickets += 2; // 完成挑戰加 2 張
+        });
+    }
+    document.getElementById('ticket-count').innerText = totalTickets;
+}
         const { count } = await sb.from('weight_records').select('*', { count: 'exact', head: true }).eq('user_id', userId);
         document.getElementById('ticket-count').innerText = count || 0;
     }
