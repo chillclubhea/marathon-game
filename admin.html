@@ -245,6 +245,135 @@
         </div>
     </div>
 
+    <div class="nav-item" onclick="showSection('admin-management')">
+    👑 管理員管理
+</div>
+
+<!-- 在 main-content 中添加管理員管理區塊 -->
+<div id="admin-management-section" class="hidden">
+    <h1 class="section-title">👑 管理員權限管理</h1>
+    
+    <!-- 錯誤顯示區域 -->
+    <div id="admin-error-container" class="hidden"></div>
+    
+    <!-- 超級管理員專用功能 -->
+    <div id="super-admin-section" class="hidden">
+        <div class="filter-bar">
+            <input type="text" class="form-control search-box" placeholder="搜尋用戶..." oninput="searchAdmins(this.value)">
+            <button class="btn btn-success" onclick="showAddAdminModal()">➕ 新增管理員</button>
+            <button class="btn btn-warning" onclick="refreshAdminList()">🔄 重新整理</button>
+        </div>
+        
+        <div class="card" style="margin-bottom: 20px; border-left: 5px solid #e74c3c;">
+            <h3>⚠️ 超級管理員專用功能</h3>
+            <p style="color: #7f8c8d;">只有超級管理員可以管理其他管理員的權限</p>
+        </div>
+        
+        <div class="table-container">
+            <table id="admins-table">
+                <thead>
+                    <tr>
+                        <th>管理員</th>
+                        <th>角色</th>
+                        <th>電子郵件</th>
+                        <th>權限</th>
+                        <th>狀態</th>
+                        <th>最後登入</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="7" class="loading">載入管理員列表中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 普通管理員顯示區域 -->
+    <div id="regular-admin-section" class="hidden">
+        <div class="card">
+            <h3>📋 您的管理員權限</h3>
+            <div id="current-admin-permissions" style="margin-top: 15px;">
+                <div class="loading">載入權限中...</div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h3>📝 權限說明</h3>
+            <ul style="margin-top: 15px;">
+                <li>✅ <strong>管理員管理</strong>：可以新增/移除其他管理員</li>
+                <li>✅ <strong>團隊管理</strong>：可以管理所有團隊和隊長</li>
+                <li>✅ <strong>用戶管理</strong>：可以管理所有用戶資料</li>
+                <li>✅ <strong>查看報表</strong>：可以查看系統統計報表</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 新增管理員模態框 -->
+    <div id="add-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">➕ 新增管理員</div>
+                <div class="modal-close" onclick="closeModal('add-admin-modal')">×</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">選擇用戶</label>
+                <select class="form-control" id="admin-user-select">
+                    <option value="">請選擇用戶...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">管理員類型</label>
+                <select class="form-control" id="admin-type">
+                    <option value="admin">普通管理員</option>
+                    <option value="super_admin">超級管理員</option>
+                </select>
+                <small style="color: #7f8c8d; display: block; margin-top: 5px;">
+                    超級管理員擁有所有權限，包括管理其他管理員
+                </small>
+            </div>
+            <div class="form-group">
+                <label class="form-label">權限設定</label>
+                <div style="margin-top: 10px;">
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="perm-manage-teams" checked>
+                        團隊管理權限
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="perm-manage-users" checked>
+                        用戶管理權限
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="perm-view-reports" checked>
+                        查看報表權限
+                    </label>
+                    <label style="display: block; margin-bottom: 8px;">
+                        <input type="checkbox" id="perm-manage-admins" checked>
+                        管理員管理權限 (僅超級管理員可用)
+                    </label>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" style="flex: 1;" onclick="addNewAdmin()">確認新增</button>
+                <button class="btn" style="flex: 1;" onclick="closeModal('add-admin-modal')">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 編輯管理員權限模態框 -->
+    <div id="edit-admin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚙️ 編輯管理員權限</div>
+                <div class="modal-close" onclick="closeModal('edit-admin-modal')">×</div>
+            </div>
+            <div id="edit-admin-content">
+                <!-- 動態內容 -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Supabase 配置
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
