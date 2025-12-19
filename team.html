@@ -62,6 +62,53 @@
         // 2. 抓取同隊所有成員
         const { data: members } = await sb.from('profiles').select('id, full_name, avatar_url').eq('current_team_id', teamId);
 
+        // ... 前面抓取資料的代碼保持不變 ...
+
+// 排序邏輯：隊長排第 5 (Index 4)，副隊長排前面，隊員隨後
+const sortedMembers = new Array(9).fill(null);
+const captains = members.filter(m => m.role === 'captain');
+const deputies = members.filter(m => m.role === 'deputy');
+const others = members.filter(m => m.role === 'member');
+
+// 把隊長放中間 (第 5 格)
+if (captains.length > 0) sortedMembers[4] = captains[0];
+// 剩下的人依序填入空白格
+let memberIndex = 0;
+const combined = [...deputies, ...others];
+for (let i = 0; i < 9; i++) {
+    if (i === 4) continue; // 跳過中間格
+    if (memberIndex < combined.length) {
+        sortedMembers[i] = combined[memberIndex];
+        memberIndex++;
+    }
+}
+
+// 開始渲染
+const gridDiv = document.getElementById('grid');
+gridDiv.innerHTML = "";
+
+sortedMembers.forEach((member, index) => {
+    const weightRecord = weights.find(w => w.user_id === member?.id);
+    const card = document.createElement('div');
+    card.className = "member-card";
+    
+    // 如果是隊長，加個特別的框
+    if (member?.role === 'captain') card.style.border = "2px solid #f1c40f";
+
+    if (member) {
+        card.innerHTML = `
+            <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" 
+                 style="${member.role === 'captain' ? 'border: 2px solid #f1c40f' : ''}">
+            <div class="name">${member.full_name || '隊友'}</div>
+            <div class="weight-status ${weightRecord ? 'done' : 'pending'}">
+                ${weightRecord ? weightRecord.weight + ' kg' : '未報到'}
+            </div>
+        `;
+    } else {
+        card.innerHTML = `<div style="color: #ccc; margin-top: 40px;">(第 ${index+1} 席)</div>`;
+    }
+    gridDiv.appendChild(card);
+});
         // 3. 抓取今天的體重紀錄
         const today = new Date().toISOString().split('T')[0];
         const { data: weights } = await sb.from('weight_records').select('user_id, weight').eq('date', today);
