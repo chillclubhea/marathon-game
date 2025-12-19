@@ -7,6 +7,57 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 讓區塊切換時有平滑感 */
+        /* 規則按鈕樣式 */
+.btn-info {
+    background: #f39c12;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #d35400;
+    transition: all 0.2s;
+}
+.btn-info:active { transform: translateY(3px); box-shadow: none; }
+
+/* 彈窗背景 */
+.overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); display: flex; align-items: center;
+    justify-content: center; z-index: 1000; backdrop-filter: blur(5px);
+}
+
+/* 規則卡片 */
+.rules-card {
+    background: white; width: 90%; max-width: 400px; max-height: 80vh;
+    border-radius: 20px; overflow-y: auto; position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.rules-header {
+    background: #3498db; color: white; padding: 15px;
+    position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center;
+}
+.rules-header h3 { margin: 0; font-size: 16px; }
+.close-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+
+.rules-content { padding: 15px; text-align: left; line-height: 1.6; }
+.rules-content h4 { color: #2980b9; border-left: 4px solid #3498db; padding-left: 8px; margin: 15px 0 8px 0; }
+.rules-content ul { padding-left: 20px; margin: 0; font-size: 14px; }
+
+.task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.task-grid span { background: #ecf0f1; padding: 5px; border-radius: 8px; font-size: 12px; text-align: center; }
+
+.rules-table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px; }
+.rules-table td { padding: 8px; border-bottom: 1px solid #eee; }
+.rules-table td:first-child { font-weight: bold; color: #e67e22; width: 40px; }
+
+.reward-list li { list-style: none; padding: 5px 0; font-size: 14px; }
 .hidden {
     display: none !important;
 }
@@ -30,6 +81,64 @@
 #profile-section {
     transition: all 0.3s ease;
 }
+
+        <button class="btn-info" onclick="toggleRules()">📜 10天馬拉松手冊</button>
+
+<div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
+    <div class="rules-card" onclick="event.stopPropagation()">
+        <div class="rules-header">
+            <h3>🏆 10天健康馬拉松：全攻略</h3>
+            <button class="close-btn" onclick="toggleRules()">✕</button>
+        </div>
+        <div class="rules-content">
+            <section>
+                <h4>🎮 第一步：進入遊戲前準備 (Day 0)</h4>
+                <ul>
+                    <li><strong>燃料準備：</strong> 找教練準備「10天份營養奶昔」。</li>
+                    <li><strong>模式選擇：</strong> 慢跑(60分) / 快跑(100分)。</li>
+                    <li><strong>加入公會：</strong> 進入【小隊群】(9人) 與 【大任務區】(300人)。</li>
+                </ul>
+            </section>
+
+            <section>
+                <h4>⚔️ 第二步：每日任務 (Day 1-10)</h4>
+                <p>完成以下 4 件事領取抽獎券：</p>
+                <div class="task-grid">
+                    <span>⚖️ 拍體重</span>
+                    <span>🥛 拍奶昔合照</span>
+                    <span>🥗 拍健康午餐</span>
+                    <span>🎯 完成今日挑戰</span>
+                </div>
+            </section>
+
+            <section>
+                <h4>📅 第三步：10 天任務關卡</h4>
+                <table class="rules-table">
+                    <tr><td>D1</td><td>開賽打卡：曬燃料與初始體重</td></tr>
+                    <tr><td>D2</td><td>彩虹午餐：3種顏色蔬菜</td></tr>
+                    <tr><td>D3</td><td>分享愛：邀家人喝奶昔/運動</td></tr>
+                    <tr><td>D4</td><td>飲水大王：喝完第3瓶水</td></tr>
+                    <tr><td>D5</td><td>動起來：10分鐘運動流汗照</td></tr>
+                    <tr><td>D6</td><td>聰明吃油：攝取堅果或好魚</td></tr>
+                    <tr><td>D7</td><td>小小網紅：發FB/IG限動</td></tr>
+                    <tr><td>D8</td><td>誇誇隊友：給隊友一句鼓勵</td></tr>
+                    <tr><td>D9</td><td>變身見證：分享身體正向變化</td></tr>
+                    <tr><td>D10</td><td>帶好朋友：邀好友測脂或參賽</td></tr>
+                </table>
+            </section>
+
+            <section>
+                <h4>🎟️ 第四步：獎勵制度</h4>
+                <ul class="reward-list">
+                    <li>✅ 每日報榜：<strong>+1 張</strong>券</li>
+                    <li>🎯 每日任務：<strong>+2 張</strong>券</li>
+                    <li>💻 Zoom 派對：<strong>+5 張</strong>券</li>
+                    <li>👥 推薦好友：<strong>+10 張</strong>券</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
         /* 定義進入動畫 */
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -364,6 +473,10 @@ async function saveDailyData() {
         await sb.auth.signOut();
         location.reload();
     }
+    function toggleRules() {
+    const overlay = document.getElementById('rules-overlay');
+    overlay.classList.toggle('hidden');
+}
 </script>
 </body>
 </html>
