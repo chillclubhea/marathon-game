@@ -3,74 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>隊伍九宮格戰況</title>
+    <title>戰隊管理與榮譽榜</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary: #3498db;
+            --danger: #e74c3c;
             --success: #2ecc71;
-            --warning: #f1c40f;
-            --bg: #f0f2f5;
+            --gold: #f1c40f;
+            --body-bg: #f8f9fa;
         }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); padding: 20px; text-align: center; margin: 0; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--body-bg); padding: 15px; text-align: center; }
         
-        /* 九宮格容器 */
-        .grid-container { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            max-width: 450px; 
-            margin: 20px auto; 
-            padding: 15px; 
-            background: #ffffff; 
+        #capture-area {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 10px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* 個人卡片樣式 */
+        .grid-container { 
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
+            background: rgba(255, 255, 255, 0.4); padding: 10px; border-radius: 15px;
+        }
+
         .member-card { 
-            background: #fff; 
-            border: 1px solid #eee;
-            border-radius: 12px; 
-            padding: 10px 5px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 150px;
-            transition: 0.3s;
+            background: #fff; border-radius: 12px; padding: 15px 5px; 
+            display: flex; flex-direction: column; align-items: center; 
+            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 8px; border: 2px solid var(--primary); background: #eee; }
-        .name { font-weight: bold; font-size: 14px; color: #2c3e50; margin-bottom: 8px; }
 
-        /* 數據行樣式 */
-        .data-row { font-size: 11px; width: 90%; margin-bottom: 4px; padding: 3px; border-radius: 4px; text-align: center; }
-        .diff { font-size: 10px; font-weight: bold; }
-        .done { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        /* 勳章樣式 */
+        .mvp-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            z-index: 5;
+        }
 
-        /* 按鈕與提示 */
-        .btn-capture { background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(230,126,34,0.3); }
-        .btn-home { display: block; margin-top: 20px; color: #7f8c8d; text-decoration: none; font-size: 14px; }
-        .invite-box { font-size: 13px; color: #34495e; background: #fff; padding: 12px; border-radius: 10px; max-width: 400px; margin: 0 auto 15px; border: 2px dashed var(--primary); cursor: pointer; }
+        .btn-kick {
+            position: absolute; top: 5px; right: 5px; background: var(--danger);
+            color: white; border: none; border-radius: 50%; width: 18px; height: 18px;
+            font-size: 10px; cursor: pointer; display: none; z-index: 10;
+        }
+
+        .avatar-wrapper { position: relative; width: 60px; height: 60px; margin-bottom: 5px; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+
+        .name { font-weight: bold; font-size: 13px; margin: 5px 0; color: #2c3e50; }
+        .data-box { width: 90%; font-size: 10px; margin-bottom: 2px; border-radius: 4px; }
+        .diff { font-weight: bold; font-size: 9px; }
+        .diff-good { color: var(--success); }
+        .diff-bad { color: var(--danger); }
         
-        .hidden { display: none !important; }
-        .error-msg { color: #e74c3c; font-weight: bold; padding: 20px; }
+        .status-tag { font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-top: 5px; }
+        .tag-done { background: #d4edda; color: #155724; }
+        .tag-none { background: #eee; color: #999; }
+
+        .btn-main { background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 80%; }
+        .invite-info { background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 10px; margin-bottom: 15px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <h2 id="team-title">🏆 戰隊九宮格戰況</h2>
-    
     <div id="invite-area"></div>
 
-    <div id="grid-display" class="grid-container">
-        <p style="grid-column: span 3;">📡 資料同步中，請稍候...</p>
+    <div id="capture-area">
+        <div style="margin-bottom:15px;">
+            <h2 style="margin:0; font-size:22px;">🏃 馬拉松戰隊日報</h2>
+            <p id="date-display" style="margin:5px 0; font-size:12px; color:#666;"></p>
+        </div>
+
+        <div id="grid-display" class="grid-container">
+            <p style="grid-column: span 3;">數據計算中...</p>
+        </div>
+        
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#555;">
+            <span>🔥 減重王</span> <span>💧 減脂王</span> <span>💪 增肌王</span>
+        </div>
     </div>
 
-    <div id="controls">
-        <button id="captain-tools" class="btn-capture hidden" onclick="generateImage()">📸 生成今日戰報圖片</button>
-        <a href="index.html" class="btn-home">⬅️ 返回個人中心</a>
+    <div id="action-area">
+        <button id="captain-tools" class="btn-main hidden" onclick="generateImage()">📸 分享戰報圖片</button>
+        <a href="index.html" style="display:block; margin-top:20px; color:#3498db; text-decoration:none; font-size:14px;">⬅️ 返回個人中心</a>
     </div>
 
 <script>
@@ -78,126 +98,112 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let isCaptain = false;
+
     window.onload = loadTeamData;
 
     async function loadTeamData() {
-        const gridElement = document.getElementById('grid-display');
-        
+        const grid = document.getElementById('grid-display');
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString() + " 榮譽榜";
+
         try {
-            // 1. 驗證使用者身份
-            const { data: { user }, error: authError } = await sb.auth.getUser();
-            if (authError || !user) throw new Error("請先登入帳號");
+            const { data: { user } } = await sb.auth.getUser();
+            const { data: myProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            isCaptain = myProfile.role === 'captain';
 
-            // 2. 取得個人資料與隊伍 ID
-            const { data: myProfile, error: profileError } = await sb.from('profiles').select('*').eq('id', user.id).single();
-            if (profileError || !myProfile) throw new Error("找不到個人資料");
-            
-            const teamId = myProfile.current_team_id;
-            if (!teamId) throw new Error("尚未加入任何隊伍");
-
-            // 3. 隊長權限邏輯
-            if (myProfile.role === 'captain') {
+            if (isCaptain) {
                 document.getElementById('captain-tools').classList.remove('hidden');
-                document.getElementById('invite-area').innerHTML = `
-                    <div class="invite-box" onclick="copyInvite('${teamId}')">
-                        🔑 隊伍邀請碼：<strong>${teamId}</strong><br>
-                        <span style="font-size:11px; color:var(--primary)">(點擊即可複製給隊員)</span>
-                    </div>`;
+                document.getElementById('invite-area').innerHTML = `<div class="invite-info" onclick="copyText('${myProfile.current_team_id}')">隊伍邀請碼: <strong>${myProfile.current_team_id}</strong> (點擊複製)</div>`;
             }
 
-            // 4. 取得所有隊友
-            const { data: members, error: memError } = await sb.from('profiles')
-                .select('*')
-                .eq('current_team_id', teamId)
-                .order('created_at', { ascending: true });
-            if (memError) throw memError;
-
-            // 5. 準備日期 (本地時區基準)
+            const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', myProfile.current_team_id);
             const today = new Date().toISOString().split('T')[0];
-            const yesterdayDate = new Date();
-            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-            const yesterday = yesterdayDate.toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 864e5).toISOString().split('T')[0];
+            const { data: records } = await sb.from('weight_records').select('*').in('user_id', members.map(m=>m.id)).in('date', [today, yesterday]);
 
-            // 6. 取得體重紀錄
-            const memberIds = members.map(m => m.id);
-            const { data: records, error: recError } = await sb.from('weight_records')
-                .select('*')
-                .in('user_id', memberIds)
-                .in('date', [today, yesterday]);
-            if (recError) throw recError;
+            // --- MVP 計算邏輯 ---
+            let weightMVPs = [], fatMVPs = [], muscleMVPs = [];
+            let minWeight = 0, minFat = 0, maxMuscle = 0;
 
-            // 7. 渲染九宮格
-            gridElement.innerHTML = "";
+            members.forEach(m => {
+                const t = records.find(r => r.user_id === m.id && r.date === today);
+                const y = records.find(r => r.user_id === m.id && r.date === yesterday);
+                if (t && y) {
+                    const wDiff = t.weight - y.weight;
+                    const fDiff = t.fat_rate - y.fat_rate;
+                    const mDiff = t.muscle_mass - y.muscle_mass;
+
+                    if (wDiff < minWeight) { minWeight = wDiff; weightMVPs = [m.id]; }
+                    else if (wDiff === minWeight && wDiff < 0) { weightMVPs.push(m.id); }
+
+                    if (fDiff < minFat) { minFat = fDiff; fatMVPs = [m.id]; }
+                    else if (fDiff === minFat && fDiff < 0) { fatMVPs.push(m.id); }
+
+                    if (mDiff > maxMuscle) { maxMuscle = mDiff; muscleMVPs = [m.id]; }
+                    else if (mDiff === maxMuscle && mDiff > 0) { muscleMVPs.push(m.id); }
+                }
+            });
+
+            grid.innerHTML = "";
             for (let i = 0; i < 9; i++) {
-                const member = members[i] || null;
+                const member = members[i];
                 const card = document.createElement('div');
                 card.className = "member-card";
 
                 if (member) {
-                    const tData = records.find(r => r.user_id === member.id && r.date === today);
-                    const yData = records.find(r => r.user_id === member.id && r.date === yesterday);
+                    const t = records.find(r => r.user_id === member.id && r.date === today);
+                    const y = records.find(r => r.user_id === member.id && r.date === yesterday);
+                    
+                    const wDiff = (t && y) ? (t.weight - y.weight).toFixed(1) : null;
+                    const fDiff = (t && y) ? (t.fat_rate - y.fat_rate).toFixed(1) : null;
+                    const mDiff = (t && y) ? (t.muscle_mass - y.muscle_mass).toFixed(1) : null;
 
-                    // 計算變化值
-                    const calcDiff = (now, prev) => {
-                        if (now === undefined || prev === undefined) return '--';
-                        const diff = (now - prev).toFixed(1);
-                        return diff > 0 ? `+${diff}` : diff;
-                    };
+                    // 勳章判斷
+                    let badges = "";
+                    if (weightMVPs.includes(member.id)) badges += "🔥";
+                    if (fatMVPs.includes(member.id)) badges += "💧";
+                    if (muscleMVPs.includes(member.id)) badges += "💪";
 
                     card.innerHTML = `
-                        <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" 
-                             crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/60'">
-                        <div class="name">${member.full_name || '未命名'}</div>
-                        
-                        <div class="data-row ${tData ? 'done' : 'pending'}">
-                            重: ${tData ? tData.weight : '--'} <span class="diff">(${calcDiff(tData?.weight, yData?.weight)})</span>
+                        ${(isCaptain && member.id !== user.id) ? `<button class="btn-kick" onclick="kickMember('${member.id}', '${member.full_name}')" style="display:block;">✕</button>` : ''}
+                        ${badges ? `<div class="mvp-badge">${badges}</div>` : ''}
+                        <div class="avatar-wrapper">
+                            <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" crossorigin="anonymous">
                         </div>
-                        <div class="data-row" style="color:#666; font-size:9px;">
-                            脂: ${tData?.fat_rate ?? '--'}% <span class="diff">(${calcDiff(tData?.fat_rate, yData?.fat_rate)})</span>
-                        </div>
-                        <div class="data-row" style="color:#666; font-size:9px;">
-                            肌: ${tData?.muscle_mass ?? '--'} <span class="diff">(${calcDiff(tData?.muscle_mass, yData?.muscle_mass)})</span>
-                        </div>
+                        <div class="name">${member.full_name || '隊友'}</div>
+                        <div class="data-box">體重: ${t ? t.weight : '--'} <span class="diff ${wDiff < 0 ? 'diff-good' : 'diff-bad'}">${wDiff ? (wDiff>0?'+'+wDiff:wDiff) : ''}</span></div>
+                        <div class="data-box">體脂: ${t ? t.fat_rate : '--'}% <span class="diff ${fDiff < 0 ? 'diff-good' : 'diff-bad'}">${fDiff ? (fDiff>0?'+'+fDiff:fDiff) : ''}</span></div>
+                        <div class="data-box">肌肉: ${t ? t.muscle_mass : '--'} <span class="diff ${mDiff > 0 ? 'diff-good' : 'diff-bad'}">${mDiff ? (mDiff>0?'+'+mDiff:mDiff) : ''}</span></div>
+                        <div class="status-tag ${t ? 'tag-done' : 'tag-none'}">${t ? '✅ 已報到' : '⏳ 待報到'}</div>
                     `;
                 } else {
-                    card.innerHTML = `<div style="color:#ccc; margin-top:50px; font-size:12px;">(空位)</div>`;
+                    card.innerHTML = `<div style="margin-top:60px; color:#bdc3c7; font-size:12px;">待加入</div>`;
                 }
-                gridElement.appendChild(card);
+                grid.appendChild(card);
             }
-        } catch (err) {
-            console.error(err);
-            gridElement.innerHTML = `<div class="error-msg">⚠️ 讀取失敗<br><small>${err.message}</small></div>`;
-        }
+        } catch (e) { grid.innerHTML = "載入失敗"; }
     }
 
-    function copyInvite(id) {
-        navigator.clipboard.writeText(id).then(() => alert("邀請碼已複製！"));
+    async function kickMember(userId, name) {
+        if (!confirm(`確定要將隊員 ${name} 移出隊伍嗎？`)) return;
+        await sb.from('profiles').update({ current_team_id: null, role: 'member' }).eq('id', userId);
+        location.reload();
     }
+
+    function copyText(txt) { navigator.clipboard.writeText(txt); alert("邀請碼已複製"); }
 
     async function generateImage() {
-        const element = document.getElementById('grid-display');
-        const btn = document.getElementById('captain-tools');
-        
-        btn.innerText = "正在生成中...";
-        btn.disabled = true;
+        const area = document.getElementById('capture-area');
+        const kicks = document.querySelectorAll('.btn-kick');
+        kicks.forEach(b => b.style.display = 'none');
 
-        try {
-            const canvas = await html2canvas(element, {
-                useCORS: true,
-                scale: 2,
-                backgroundColor: '#f0f2f5',
-                logging: false
-            });
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = `馬拉松戰報_${new Date().toLocaleDateString()}.png`;
-            link.click();
-        } catch (e) {
-            alert("圖片生成失敗，請確認是否所有頭像皆已正確載入。");
-        } finally {
-            btn.innerText = "📸 生成今日戰報圖片";
-            btn.disabled = false;
-        }
+        const canvas = await html2canvas(area, { useCORS: true, scale: 2 });
+        const link = document.createElement('a');
+        link.href = canvas.toURL ? canvas.toDataURL() : canvas.toDataURL(); 
+        link.download = `戰報_${new Date().toLocaleDateString()}.png`;
+        link.click();
+
+        if (isCaptain) kicks.forEach(b => b.style.display = 'block');
     }
 </script>
 </body>
