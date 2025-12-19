@@ -7,6 +7,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
+        @keyframes cardPop {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.member-card {
+    opacity: 0; /* 預設先隱藏，由動畫轉為 1 */
+    animation: cardPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 加上懸停微動，增加回饋感 */
+.member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
         :root { --primary: #3498db; --danger: #e74c3c; --success: #2ecc71; --gold: #f1c40f; --body-bg: #f8f9fa; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--body-bg); padding: 15px; text-align: center; }
         
@@ -85,6 +100,14 @@
         const grid = document.getElementById('grid-display');
         document.getElementById('date-display').innerText = new Date().toLocaleDateString() + " 戰報";
 
+        // 在 for 迴圈中加入 animation-delay
+for (let i = 0; i < 9; i++) {
+    const card = document.createElement('div');
+    card.className = "member-card";
+    card.style.animationDelay = `${i * 0.05}s`; // 每張卡片差 0.05 秒，產生流瀑效果
+    // ... 剩下的渲染邏輯 ...
+}
+        
         try {
             const { data: { user } } = await sb.auth.getUser();
             const { data: myProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
