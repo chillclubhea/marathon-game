@@ -28,6 +28,10 @@
 <div class="form-group">
     <label for="avatar_file">上傳我的頭像</label>
     <input type="file" id="avatar_file" accept="image/*">
+    <input type="number" id="weight" step="0.1" placeholder="今日體重 (kg)">
+    <input type="number" id="fat_rate" step="0.1" placeholder="脂肪率 (%)">
+    <input type="number" id="muscle_mass" step="0.1" placeholder="肌肉量 (kg)">
+    <button onclick="uploadWeight()">送出報到</button>
 </div>
 <div class="container">
     <h2>🏃 馬拉松玩家中心</h2>
@@ -233,6 +237,21 @@
             document.getElementById('daily_weight').value = '';
         }
     }
+    async function uploadWeight() {
+    const w = document.getElementById('weight').value;
+    const f = document.getElementById('fat_rate').value;
+    const m = document.getElementById('muscle_mass').value;
+    const { data: { user } } = await sb.auth.getUser();
+
+    const { error } = await sb.from('weight_records').upsert({
+        user_id: user.id,
+        date: new Date().toISOString().split('T')[0],
+        weight: w,
+        fat_rate: f,
+        muscle_mass: m
+    });
+    if(!error) alert("報到成功！");
+}
 
     // 登出
     async function signOut() {
