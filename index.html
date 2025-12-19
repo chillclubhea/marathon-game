@@ -203,73 +203,125 @@ async function showProfile(user) {
         }
     }
 }
-    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    window.onload = async () => {
-        const { data: { user } } = await sb.auth.getUser();
-        if (user) showProfile(user);
-    };
+// ⚡ 頁面載入時的唯一核心邏輯
+window.onload = async () => {
+    // 1. 快速取得目前 Session (這比 getUser 快，適合攔截頁面)
+    const { data: { session } } = await sb.auth.getSession();
+    
+    const authSection = document.getElementById('auth-section');
+    const profileSection = document.getElementById('profile-section');
 
-    function toggleProfileEdit() {
-        document.getElementById('setup-card').classList.toggle('hidden');
-    }
-
-    async function showProfile(user) {
-        const profileSection = document.getElementById('profile-section');
-    document.getElementById('auth-section').classList.add('hidden');
-    profileSection.classList.remove('hidden');
-    profileSection.classList.add('fade-in'); // 加入動效類別
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('profile-section').classList.remove('hidden');
-        document.getElementById('user-display').innerText = `帳號: ${user.email}`;
-
-        const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        if (data) {
-            document.getElementById('full_name').value = data.full_name || '';
-            document.getElementById('role').value = data.role || 'member';
-            document.getElementById('plan').value = data.plan || 'slow';
-            document.getElementById('team_id_input').value = data.current_team_id || '';
-            if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
-
-            // 如果已經有姓名和隊伍，隱藏設定卡片，顯示切換按鈕
-            if (data.full_name && data.current_team_id) {
-                document.getElementById('setup-card').classList.add('hidden');
-                document.getElementById('edit-profile-btn').classList.remove('hidden');
-            }
-        }
-    }
-
-    async function updateProfile() {
-        const { data: { user } } = await sb.auth.getUser();
-        const avatarFile = document.getElementById('avatar_file').files[0];
-        let avatarUrl = document.getElementById('avatar-img').src;
-
-        if (avatarFile) {
-            const fileName = `${user.id}_${Date.now()}.png`;
-            const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
-            if (!uploadError) {
-                const { data } = sb.storage.from('avatars').getPublicUrl(fileName);
-                avatarUrl = data.publicUrl;
-            }
-        }
-
-        const { error } = await sb.from('profiles').upsert({
-            id: user.id,
-            full_name: document.getElementById('full_name').value,
-            role: document.getElementById('role').value,
-            plan: document.getElementById('plan').value,
-            current_team_id: document.getElementById('team_id_input').value.trim(),
-            avatar_url: avatarUrl,
-            updated_at: new Date()
-        });
+    if (session && session.user) {
+        // --- [已登入狀態] ---
+        // 立即切換區塊顯示，防止閃過登入畫面
+        authSection.classList.add('hidden');
+        profileSection.classList.remove('hidden');
+        profileSection.classList.add('fade-in'); 
         
-        if (error) alert(error.message); 
-        else { alert("設定已儲存！"); location.reload(); }
+        // 非同步讀取完整資料 (不影響頁面切換)
+        await loadFullProfile(session.user);
+    } else {
+        // --- [未登入狀態] ---
+        authSection.classList.remove('hidden');
+        authSection.classList.add('fade-in');
+        profileSection.classList.add('hidden');
+    }
+};
+
+// 顯示並載入個人資料細節
+async function loadFullProfile(user) {
+    document.getElementById('user-display').innerText = `帳號: ${user.email}`;
+
+    // 抓取 Profiles 資料表中的擴充欄位
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+    
+    if (profile) {
+        // 更新 UI 顯示
+        const userNameDisplay = document.getElementById('user-name');
+        if (userNameDisplay) userNameDisplay.innerText = profile.full_name || "馬拉松選手";
+        
+        // 填充設定欄位
+        document.getElementById('full_name').value = profile.full_name || '';
+        document.getElementById('role').value = profile.role || 'member';
+        document.getElementById('plan').value = profile.plan || 'slow';
+        document.getElementById('team_id_input').value = profile.current_team_id || '';
+        
+        if (profile.avatar_url) {
+            document.getElementById('avatar-img').src = profile.avatar_url;
+        }
+
+        // 自動判斷是否需顯示設定卡片
+        if (profile.full_name && profile.current_team_id) {
+            document.getElementById('setup-card').classList.add('hidden');
+            document.getElementById('edit-profile-btn').classList.remove('hidden');
+        }
+    }
+}
+
+// 切換設定區塊顯示
+function toggleProfileEdit() {
+    document.getElementById('setup-card').classList.toggle('hidden');
+}
+
+// 登入邏輯 (保持 location.reload 確保初始化流程正確)
+async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message); 
+    else location.reload(); 
+}
+
+// 註冊邏輯
+async function signUp() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) alert(error.message); 
+    else alert("註冊成功，請登入！");
+}
+
+// 登出邏輯
+async function signOut() {
+    await sb.auth.signOut();
+    location.reload();
+}
+
+// 儲存個人設定
+async function updateProfile() {
+    const { data: { user } } = await sb.auth.getUser();
+    const avatarFile = document.getElementById('avatar_file').files[0];
+    let avatarUrl = document.getElementById('avatar-img').src;
+
+    if (avatarFile) {
+        const fileName = `${user.id}_${Date.now()}.png`;
+        const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
+        if (!uploadError) {
+            const { data } = sb.storage.from('avatars').getPublicUrl(fileName);
+            avatarUrl = data.publicUrl;
+        }
     }
 
-    async function saveDailyData() {
+    const { error } = await sb.from('profiles').upsert({
+        id: user.id,
+        full_name: document.getElementById('full_name').value,
+        role: document.getElementById('role').value,
+        plan: document.getElementById('plan').value,
+        current_team_id: document.getElementById('team_id_input').value.trim(),
+        avatar_url: avatarUrl,
+        updated_at: new Date()
+    });
+    
+    if (error) alert(error.message); 
+    else { alert("設定已儲存！"); location.reload(); }
+}
+
+// 儲存每日數據
+async function saveDailyData() {
     const { data: { user } } = await sb.auth.getUser();
     const weight = document.getElementById('weight').value;
     const fat = document.getElementById('fat_rate').value;
@@ -284,15 +336,12 @@ async function showProfile(user) {
         weight: parseFloat(weight),
         fat_rate: parseFloat(fat) || 0,
         muscle_mass: parseFloat(muscle) || 0
-    }, { 
-        onConflict: 'user_id, date' // 💡 明確告訴系統：這兩個欄位衝突時就覆蓋
-    });
+    }, { onConflict: 'user_id, date' });
 
     if (error) {
-        console.error(error);
         alert("儲存失敗：" + error.message);
     } else {
-        document.getElementById('status-msg').innerText = "✅ 數據已成功覆蓋！";
+        document.getElementById('status-msg').innerText = "✅ 數據已成功同步！";
         setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
     }
 }
