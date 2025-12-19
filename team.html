@@ -3,70 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>戰隊管理與榮譽榜</title>
+    <title>戰隊榮譽榜與管理</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root {
-            --primary: #3498db;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --gold: #f1c40f;
-            --body-bg: #f8f9fa;
-        }
+        :root { --primary: #3498db; --danger: #e74c3c; --success: #2ecc71; --gold: #f1c40f; --body-bg: #f8f9fa; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--body-bg); padding: 15px; text-align: center; }
         
-        #capture-area {
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 20px 10px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 20px;
-        }
+        /* 戰報圖片導出區域 */
+        #capture-area { max-width: 480px; margin: 0 auto; padding: 20px 10px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 20px; }
 
-        .grid-container { 
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
-            background: rgba(255, 255, 255, 0.4); padding: 10px; border-radius: 15px;
-        }
+        /* 全隊總和數據樣式 */
+        .team-summary { display: flex; justify-content: space-around; background: rgba(255,255,255,0.8); margin: 10px; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .summary-item { display: flex; flex-direction: column; gap: 2px; }
+        .summary-label { font-size: 10px; color: #7f8c8d; }
+        .summary-value { font-size: 16px; font-weight: bold; color: #2c3e50; }
+        .val-good { color: var(--success); }
 
-        .member-card { 
-            background: #fff; border-radius: 12px; padding: 15px 5px; 
-            display: flex; flex-direction: column; align-items: center; 
-            position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        /* 勳章樣式 */
-        .mvp-badge {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 24px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-            z-index: 5;
-        }
-
-        .btn-kick {
-            position: absolute; top: 5px; right: 5px; background: var(--danger);
-            color: white; border: none; border-radius: 50%; width: 18px; height: 18px;
-            font-size: 10px; cursor: pointer; display: none; z-index: 10;
-        }
-
-        .avatar-wrapper { position: relative; width: 60px; height: 60px; margin-bottom: 5px; }
-        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
-
-        .name { font-weight: bold; font-size: 13px; margin: 5px 0; color: #2c3e50; }
-        .data-box { width: 90%; font-size: 10px; margin-bottom: 2px; border-radius: 4px; }
+        .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(255, 255, 255, 0.4); padding: 10px; border-radius: 15px; }
+        .member-card { background: #fff; border-radius: 12px; padding: 15px 5px; display: flex; flex-direction: column; align-items: center; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .mvp-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 22px; z-index: 5; }
+        .btn-kick { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: none; z-index: 10; }
+        .avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+        .name { font-weight: bold; font-size: 13px; margin: 5px 0; }
+        .data-box { width: 90%; font-size: 10px; margin-bottom: 2px; }
         .diff { font-weight: bold; font-size: 9px; }
         .diff-good { color: var(--success); }
         .diff-bad { color: var(--danger); }
-        
         .status-tag { font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-top: 5px; }
         .tag-done { background: #d4edda; color: #155724; }
         .tag-none { background: #eee; color: #999; }
-
         .btn-main { background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 80%; }
-        .invite-info { background: #fff; border: 1px dashed var(--primary); padding: 10px; border-radius: 10px; margin-bottom: 15px; font-size: 12px; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -75,16 +43,27 @@
 
     <div id="capture-area">
         <div style="margin-bottom:15px;">
-            <h2 style="margin:0; font-size:22px;">🏃 馬拉松戰隊日報</h2>
+            <h2 id="team-title" style="margin:0; font-size:22px;">🏆 馬拉松戰隊進度</h2>
             <p id="date-display" style="margin:5px 0; font-size:12px; color:#666;"></p>
         </div>
 
-        <div id="grid-display" class="grid-container">
-            <p style="grid-column: span 3;">數據計算中...</p>
+        <div class="team-summary">
+            <div class="summary-item">
+                <span class="summary-label">全隊總減重</span>
+                <span id="total-weight" class="summary-value val-good">0.0 kg</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">全隊總減脂</span>
+                <span id="total-fat" class="summary-value val-good">0.0 %</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">全隊總增肌</span>
+                <span id="total-muscle" class="summary-value val-good">0.0 kg</span>
+            </div>
         </div>
-        
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:10px; font-size:10px; color:#555;">
-            <span>🔥 減重王</span> <span>💧 減脂王</span> <span>💪 增肌王</span>
+
+        <div id="grid-display" class="grid-container">
+            <p style="grid-column: span 3;">數據同步中...</p>
         </div>
     </div>
 
@@ -104,7 +83,7 @@
 
     async function loadTeamData() {
         const grid = document.getElementById('grid-display');
-        document.getElementById('date-display').innerText = new Date().toLocaleDateString() + " 榮譽榜";
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString() + " 戰報";
 
         try {
             const { data: { user } } = await sb.auth.getUser();
@@ -113,7 +92,7 @@
 
             if (isCaptain) {
                 document.getElementById('captain-tools').classList.remove('hidden');
-                document.getElementById('invite-area').innerHTML = `<div class="invite-info" onclick="copyText('${myProfile.current_team_id}')">隊伍邀請碼: <strong>${myProfile.current_team_id}</strong> (點擊複製)</div>`;
+                document.getElementById('invite-area').innerHTML = `<div style="background:#fff; border:1px dashed #3498db; padding:10px; border-radius:10px; margin-bottom:15px; font-size:12px;">邀請碼: <strong>${myProfile.current_team_id}</strong></div>`;
             }
 
             const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', myProfile.current_team_id);
@@ -121,28 +100,34 @@
             const yesterday = new Date(Date.now() - 864e5).toISOString().split('T')[0];
             const { data: records } = await sb.from('weight_records').select('*').in('user_id', members.map(m=>m.id)).in('date', [today, yesterday]);
 
-            // --- MVP 計算邏輯 ---
+            // --- MVP 與 總和 計算 ---
             let weightMVPs = [], fatMVPs = [], muscleMVPs = [];
             let minWeight = 0, minFat = 0, maxMuscle = 0;
+            let totalW = 0, totalF = 0, totalM = 0;
 
             members.forEach(m => {
                 const t = records.find(r => r.user_id === m.id && r.date === today);
                 const y = records.find(r => r.user_id === m.id && r.date === yesterday);
                 if (t && y) {
-                    const wDiff = t.weight - y.weight;
-                    const fDiff = t.fat_rate - y.fat_rate;
-                    const mDiff = t.muscle_mass - y.muscle_mass;
+                    const wD = t.weight - y.weight;
+                    const fD = t.fat_rate - y.fat_rate;
+                    const mD = t.muscle_mass - y.muscle_mass;
 
-                    if (wDiff < minWeight) { minWeight = wDiff; weightMVPs = [m.id]; }
-                    else if (wDiff === minWeight && wDiff < 0) { weightMVPs.push(m.id); }
+                    totalW += wD; totalF += fD; totalM += mD;
 
-                    if (fDiff < minFat) { minFat = fDiff; fatMVPs = [m.id]; }
-                    else if (fDiff === minFat && fDiff < 0) { fatMVPs.push(m.id); }
-
-                    if (mDiff > maxMuscle) { maxMuscle = mDiff; muscleMVPs = [m.id]; }
-                    else if (mDiff === maxMuscle && mDiff > 0) { muscleMVPs.push(m.id); }
+                    if (wD < minWeight) { minWeight = wD; weightMVPs = [m.id]; }
+                    else if (wD === minWeight && wD < 0) { weightMVPs.push(m.id); }
+                    if (fD < minFat) { minFat = fD; fatMVPs = [m.id]; }
+                    else if (fD === minFat && fD < 0) { fatMVPs.push(m.id); }
+                    if (mD > maxMuscle) { maxMuscle = mD; muscleMVPs = [m.id]; }
+                    else if (mD === maxMuscle && mD > 0) { muscleMVPs.push(m.id); }
                 }
             });
+
+            // 更新總和顯示
+            document.getElementById('total-weight').innerText = `${Math.abs(totalW).toFixed(1)} kg`;
+            document.getElementById('total-fat').innerText = `${Math.abs(totalF).toFixed(1)} %`;
+            document.getElementById('total-muscle').innerText = `${totalM.toFixed(1)} kg`;
 
             grid.innerHTML = "";
             for (let i = 0; i < 9; i++) {
@@ -153,12 +138,7 @@
                 if (member) {
                     const t = records.find(r => r.user_id === member.id && r.date === today);
                     const y = records.find(r => r.user_id === member.id && r.date === yesterday);
-                    
                     const wDiff = (t && y) ? (t.weight - y.weight).toFixed(1) : null;
-                    const fDiff = (t && y) ? (t.fat_rate - y.fat_rate).toFixed(1) : null;
-                    const mDiff = (t && y) ? (t.muscle_mass - y.muscle_mass).toFixed(1) : null;
-
-                    // 勳章判斷
                     let badges = "";
                     if (weightMVPs.includes(member.id)) badges += "🔥";
                     if (fatMVPs.includes(member.id)) badges += "💧";
@@ -167,42 +147,35 @@
                     card.innerHTML = `
                         ${(isCaptain && member.id !== user.id) ? `<button class="btn-kick" onclick="kickMember('${member.id}', '${member.full_name}')" style="display:block;">✕</button>` : ''}
                         ${badges ? `<div class="mvp-badge">${badges}</div>` : ''}
-                        <div class="avatar-wrapper">
-                            <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" crossorigin="anonymous">
-                        </div>
+                        <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" crossorigin="anonymous">
                         <div class="name">${member.full_name || '隊友'}</div>
-                        <div class="data-box">體重: ${t ? t.weight : '--'} <span class="diff ${wDiff < 0 ? 'diff-good' : 'diff-bad'}">${wDiff ? (wDiff>0?'+'+wDiff:wDiff) : ''}</span></div>
-                        <div class="data-box">體脂: ${t ? t.fat_rate : '--'}% <span class="diff ${fDiff < 0 ? 'diff-good' : 'diff-bad'}">${fDiff ? (fDiff>0?'+'+fDiff:fDiff) : ''}</span></div>
-                        <div class="data-box">肌肉: ${t ? t.muscle_mass : '--'} <span class="diff ${mDiff > 0 ? 'diff-good' : 'diff-bad'}">${mDiff ? (mDiff>0?'+'+mDiff:mDiff) : ''}</span></div>
+                        <div class="data-box">重: ${t ? t.weight : '--'} <span class="diff ${wDiff < 0 ? 'diff-good' : 'diff-bad'}">${wDiff || ''}</span></div>
                         <div class="status-tag ${t ? 'tag-done' : 'tag-none'}">${t ? '✅ 已報到' : '⏳ 待報到'}</div>
                     `;
                 } else {
-                    card.innerHTML = `<div style="margin-top:60px; color:#bdc3c7; font-size:12px;">待加入</div>`;
+                    card.innerHTML = `<div style="margin-top:50px; color:#bdc3c7; font-size:12px;">待加入</div>`;
                 }
                 grid.appendChild(card);
             }
         } catch (e) { grid.innerHTML = "載入失敗"; }
     }
 
-    async function kickMember(userId, name) {
-        if (!confirm(`確定要將隊員 ${name} 移出隊伍嗎？`)) return;
-        await sb.from('profiles').update({ current_team_id: null, role: 'member' }).eq('id', userId);
-        location.reload();
+    async function kickMember(id, name) {
+        if (confirm(`確定移除 ${name}？`)) {
+            await sb.from('profiles').update({ current_team_id: null }).eq('id', id);
+            location.reload();
+        }
     }
-
-    function copyText(txt) { navigator.clipboard.writeText(txt); alert("邀請碼已複製"); }
 
     async function generateImage() {
         const area = document.getElementById('capture-area');
         const kicks = document.querySelectorAll('.btn-kick');
         kicks.forEach(b => b.style.display = 'none');
-
         const canvas = await html2canvas(area, { useCORS: true, scale: 2 });
         const link = document.createElement('a');
-        link.href = canvas.toURL ? canvas.toDataURL() : canvas.toDataURL(); 
+        link.href = canvas.toDataURL();
         link.download = `戰報_${new Date().toLocaleDateString()}.png`;
         link.click();
-
         if (isCaptain) kicks.forEach(b => b.style.display = 'block');
     }
 </script>
