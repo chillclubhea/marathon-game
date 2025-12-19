@@ -3,71 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 10天馬拉松：小隊戰報板</title>
+    <title>🏆 10天健康馬拉松：玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; }
+        :root {
+            --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; --gold: #ffd700;
+        }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
         .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
-        .card { border: 1px solid #edf2f7; border-radius: 15px; padding: 15px; margin-bottom: 15px; }
-        .ticket-stats { display: flex; justify-content: space-around; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; padding: 15px; border-radius: 15px; margin-bottom: 15px; text-align: center; }
-        .ticket-stats b { font-size: 18px; display: block; }
-        .hidden { display: none !important; }
-        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 15px 0; }
+        h2 { color: #2c3e50; margin: 0; font-size: 24px; text-align: center; }
+        
+        /* 抽獎券看板 */
+        .ticket-stats { display: flex; justify-content: space-around; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; padding: 15px; border-radius: 15px; margin: 15px 0; text-align: center; }
+        .ticket-stats div b { font-size: 20px; display: block; }
+
+        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; position: relative; }
+        .card-title { font-weight: bold; color: #2d3748; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        /* 小隊九宮格 */
+        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
         .member-item { aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 11px; }
         .member-item.done { background: #dcfce7; border-color: #22c55e; color: #166534; font-weight: bold; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; border: none; font-weight: bold; color: white; margin-top: 5px; }
-        .lock-overlay { background: #fff5f5; color: #c53030; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; }
+
+        /* 輸入與按鈕 */
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+        
+        .referral-box { background: #fff9e6; border: 2px dashed #f1c40f; padding: 15px; border-radius: 10px; text-align: center; margin-top: 10px; }
+        .referral-box b { color: #e67e22; }
+
+        /* 門檻鎖定 */
+        .lock-notice { background: #fff5f5; color: #c53030; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; border: 1px solid #feb2b2; }
+
+        /* 攻略手冊彈窗 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .rules-card { background: white; width: 90%; max-width: 420px; max-height: 85vh; border-radius: 20px; overflow-y: auto; }
+        .rules-header { background: var(--primary); color: white; padding: 20px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; }
+        .rules-content { padding: 20px; line-height: 1.6; }
+        
+        .mission-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .mission-item.locked { color: #bdc3c7; background: #f9f9f9; }
+        .mission-item.active { background: #fff9e6; border-left: 5px solid #f1c40f; font-weight: bold; }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="auth-section">
-        <h2 style="text-align:center;">🔑 玩家登入</h2>
-        <div class="card"><form onsubmit="return false;">
+        <h2>🔑 登入馬拉松</h2>
+        <div class="card" style="margin-top: 20px;">
             <input type="email" id="email" placeholder="電子信箱">
             <input type="password" id="password" placeholder="密碼">
-            <button type="button" style="background:var(--primary)" onclick="signIn()">立即登入</button>
-        </form></div>
+            <button style="background:var(--primary)" onclick="signUp()">快速註冊</button>
+            <button style="background:var(--success)" onclick="signIn()">立即登入</button>
+        </div>
     </div>
 
     <div id="profile-section" class="hidden">
-        <div class="ticket-stats">
-            <div><span>馬拉松積分</span><b id="ticket-count">0</b></div>
-            <div><span>產品代用券</span><b id="voucher-display">$0</b></div>
+        <div class="header">
+            <h2>🏃 玩家中心</h2>
+            <div id="user-display" style="text-align: center; font-size: 12px; color: #999;"></div>
         </div>
+
+        <div class="ticket-stats">
+            <div><span style="font-size:12px">目前獎券</span><b id="ticket-count">0</b></div>
+            <div><span style="font-size:12px">當前進度</span><b id="day-progress">Day 0</b></div>
+            <div><span style="font-size:12px">產品抵用券</span><b id="voucher-display">$0</b></div>
+        </div>
+
+        <button style="background:#f39c12; box-shadow: 0 4px 0 #d35400; margin-bottom: 15px;" onclick="toggleRules()">📜 10天健康馬拉松攻略手冊</button>
 
         <div class="card">
-            <div style="font-weight:bold;">🏁 小隊今日戰報</div>
+            <div class="card-title">🏁 小隊今日戰報</div>
             <div class="team-grid" id="team-grid-container"></div>
+            <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">亮起代表隊友今日已完成報到</p>
         </div>
 
-        <div id="lock-notice" class="lock-overlay hidden">
-            ⚠️ 您目前的產品點數不足 60 分<br>請聯繫教練開啟報到資格
+        <button id="edit-profile-btn" class="hidden" onclick="toggleProfileEdit()" style="background: #edf2f7; color: #4a5568; font-size: 13px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">⚙️ 修改姓名/小隊碼</button>
+        <div id="setup-card" class="card">
+            <div class="card-title">👤 基本設定</div>
+            <input type="text" id="full_name" placeholder="隊友如何稱呼你">
+            <input type="text" id="team_id_input" placeholder="小隊邀請碼 (Team ID)">
+            <button style="background:var(--primary)" onclick="updateProfile()">儲存並開始</button>
         </div>
-        <div id="request-box" class="card hidden" style="background: #fff5f5; border: 1px solid #feb2b2;">
-    <p style="font-size: 13px; color: #c53030; font-weight: bold;">💎 提交產品點數開啟資格</p>
-    <input type="number" id="input_points" placeholder="輸入本次購買點數 (例如: 65)">
-    <button type="button" style="background:var(--danger)" onclick="requestPoints()">提交審核</button>
-</div>
+
+        <div id="lock-notice" class="lock-notice hidden">
+            ⚠️ 產品點數不足 60 分<br>請聯繫教練開啟報到資格
+        </div>
 
         <div id="checkin-box" class="card" style="border-left: 5px solid var(--warning);">
-            <div style="font-weight:bold; margin-bottom:10px;">⚖️ 今日體組成報到</div>
-            <input type="number" id="weight" step="0.1" placeholder="體重 (kg)">
-            <input type="number" id="fat_rate" step="0.1" placeholder="脂肪率 (%)">
-            <input type="number" id="muscle_mass" step="0.1" placeholder="肌肉量 (kg)">
-            <button type="button" style="background:var(--warning)" onclick="saveDailyData()">確認送出</button>
+            <div class="card-title">⚖️ 每日數據報到</div>
+            <p id="today-mission-tip" style="font-size: 13px; color: var(--primary); background: #e1f5fe; padding: 8px; border-radius: 8px; margin-bottom: 10px;"></p>
+            <input type="number" id="weight" step="0.1" placeholder="今日體重 (kg)">
+            <input type="number" id="fat_rate" step="0.1" placeholder="今日脂肪率 (%)">
+            <input type="number" id="muscle_mass" step="0.1" placeholder="今日肌肉量 (kg)">
+            <label style="font-size: 14px; display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="mission_check" style="width: auto; margin: 0;"> 🎯 我已完成今日任務挑戰
+            </label>
+            <button style="background:var(--warning)" onclick="saveDailyData()">送出報到</button>
         </div>
 
-        <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
-            <b style="color: #166534;">🎁 分享好友獎勵：</b>
-            <p style="font-size: 13px; margin: 5px 0;">每成功介紹一位好友參加，即可獲得 <b style="color:var(--danger);">$100 產品代用券</b>！</p>
-            <div style="font-size: 12px; color: #666;">目前已獲贈：<span id="voucher-count" style="font-weight:bold; color:#166534;">0</span> 張</div>
+        <div class="referral-box">
+            <b>🎁 推薦朋友獎勵</b><br>
+            <span style="font-size: 12px;">帶好友參加，立拿 10 張券 + <br><b>$100 產品抵用券！</b></span>
+            <button onclick="copyReferral()" style="font-size:12px; padding:5px; margin-top:5px; background:#f1c40f; color:#333;">點我複製推薦連結</button>
         </div>
 
-        <button type="button" style="background:var(--danger); opacity:0.6; font-size: 11px;" onclick="signOut()">登出</button>
+        <button style="background:var(--danger); opacity:0.5; margin-top:15px;" onclick="signOut()">安全登出</button>
+    </div>
+</div>
+
+<div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
+    <div class="rules-card" onclick="event.stopPropagation()">
+        <div class="rules-header">
+            <h3>🏆 馬拉松全攻略</h3>
+            <span style="cursor:pointer" onclick="toggleRules()">✕</span>
+        </div>
+        <div class="rules-content">
+            <h4>📅 10 天專屬關卡</h4>
+            <div id="mission-container"></div>
+            <h4>🎟️ 獎勵制度</h4>
+            <ul style="font-size: 13px; background: #f4f7f6; padding: 10px; border-radius: 8px; list-style:none;">
+                <li>✅ 基礎報到：1 張券</li>
+                <li>🎯 完成挑戰：+2 張券 (共3張)</li>
+                <li>👥 推薦好友：10 張 + $100 抵用券</li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -75,6 +138,14 @@
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const missions = [
+        "開賽打卡：拍燃料與體重，大喊我準備好了！", "彩虹午餐：午餐要有 3 種顏色的蔬菜。",
+        "分享愛：請家人喝一口奶昔或一起運動。", "飲水大王：拍下今天喝完的第 3 瓶水。",
+        "動起來：做 10 分鐘運動拍流汗照。", "聰明吃油：拍下餐盤裡的堅果或魚類。",
+        "小小網紅：將健康餐發到 FB/IG 限動。", "誇誇隊友：在群組對隊友說一句鼓勵的話。",
+        "變身見證：分享 10 天來身體精神的變化。", "帶好朋友：邀一位朋友測脂或參加下場比賽。"
+    ];
 
     window.onload = async () => {
         const { data: { session } } = await sb.auth.getSession();
@@ -89,74 +160,111 @@
         const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
         if (!profile) return;
 
-        // 1. 檢查產品分數門檻 (60分)
+        document.getElementById('user-display').innerText = user.email;
+        document.getElementById('full_name').value = profile.full_name || '';
+        document.getElementById('team_id_input').value = profile.team_id || '';
+        
+        if (profile.full_name && profile.team_id) {
+            document.getElementById('setup-card').classList.add('hidden');
+            document.getElementById('edit-profile-btn').classList.remove('hidden');
+        }
+
+        // 產品門檻檢查
         const hasMinPoints = (profile.product_points || 0) >= 60;
         if (!hasMinPoints) {
             document.getElementById('checkin-box').classList.add('hidden');
             document.getElementById('lock-notice').classList.remove('hidden');
         }
 
-        // 2. 更新代用券與積分顯示
-        const v_count = profile.referral_count || 0; // 介紹幾人就有幾張
-        document.getElementById('voucher-count').innerText = v_count;
-        document.getElementById('voucher-display').innerText = `$${v_count * 100}`;
+        // 天數與任務
+        const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
+        document.getElementById('day-progress').innerText = `Day ${dayNum}`;
+        document.getElementById('today-mission-tip').innerText = dayNum <= 10 ? `🎯 今日挑戰：${missions[dayNum-1]}` : "🎉 賽季圓滿結束！";
         
-        // 3. 載入九宮格
+        // 抵用券顯示 ($100 * 推薦人數)
+        document.getElementById('voucher-display').innerText = `$${(profile.referral_count || 0) * 100}`;
+
+        renderMissions(dayNum);
         loadTeamGrid(profile.team_id);
-        calculateTotalPoints(user.id);
+        updateTicketDisplay(user.id, profile);
     }
 
     async function loadTeamGrid(teamId) {
-        const gridContainer = document.getElementById('team-grid-container');
-        gridContainer.innerHTML = '';
+        const container = document.getElementById('team-grid-container');
+        container.innerHTML = '';
         const today = new Date().toISOString().split('T')[0];
-
-        const { data: members } = await sb.from('profiles').select('id, username').eq('team_id', teamId).limit(9);
+        const { data: members } = await sb.from('profiles').select('id, full_name').eq('team_id', teamId).limit(9);
         const { data: records } = await sb.from('weight_records').select('user_id').eq('date', today);
-        const recordSet = new Set(records?.map(r => r.user_id));
+        const doneSet = new Set(records?.map(r => r.user_id));
 
         for (let i = 0; i < 9; i++) {
-            const member = members?.[i];
-            const isDone = member && recordSet.has(member.id);
+            const m = members?.[i];
+            const isDone = m && doneSet.has(m.id);
             const div = document.createElement('div');
             div.className = `member-item ${isDone ? 'done' : ''}`;
-            div.innerHTML = `<b>${member ? (member.username || '玩家') : '待加入'}</b><span style="font-size:9px;">${isDone ? '已完成' : '未報到'}</span>`;
-            gridContainer.appendChild(div);
+            div.innerHTML = `<b>${m ? (m.full_name || '隊友') : '待加入'}</b><span>${isDone ? '已完成' : '未報到'}</span>`;
+            container.appendChild(div);
         }
     }
 
     async function saveDailyData() {
         const { data: { user } } = await sb.auth.getUser();
         const weight = document.getElementById('weight').value;
-        const fat = document.getElementById('fat_rate').value;
-        const muscle = document.getElementById('muscle_mass').value;
+        const isMission = document.getElementById('mission_check').checked;
 
-        if (!weight || !fat || !muscle) return alert("請填寫完整數據！");
+        if (!weight) return alert("請輸入今日體重！");
 
         const { error } = await sb.from('weight_records').upsert({
             user_id: user.id, date: new Date().toISOString().split('T')[0],
-            weight: parseFloat(weight), fat_rate: parseFloat(fat), muscle_mass: parseFloat(muscle)
+            weight: parseFloat(weight), fat_rate: parseFloat(document.getElementById('fat_rate').value),
+            muscle_mass: parseFloat(document.getElementById('muscle_mass').value),
+            mission_status: isMission
         });
 
         if (error) alert(error.message); else { alert("✅ 報到成功！"); location.reload(); }
     }
 
-    async function calculateTotalPoints(userId) {
-        const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).single();
-        const { data: records } = await sb.from('weight_records').select('*').eq('user_id', userId);
-        let pts = (profile.referral_count || 0) * 15 + (profile.seminar_status ? 2 : 0);
-        if (records) records.forEach(r => { if(r.weight && r.fat_rate && r.muscle_mass) pts += 1; });
-        document.getElementById('ticket-count').innerText = pts;
+    async function updateTicketDisplay(userId, profile) {
+        const { data: records } = await sb.from('weight_records').select('mission_status').eq('user_id', userId);
+        let total = (profile.referral_count || 0) * 10; // 推薦好友 10 張
+        if (records) {
+            records.forEach(r => {
+                total += 1; // 基礎 1
+                if (r.mission_status) total += 2; // 挑戰 +2
+            });
+        }
+        document.getElementById('ticket-count').innerText = total;
     }
 
-    async function signIn() {
-        const { error } = await sb.auth.signInWithPassword({
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value
+    function renderMissions(currentDay) {
+        const container = document.getElementById('mission-container');
+        container.innerHTML = "";
+        missions.forEach((m, i) => {
+            const d = i + 1;
+            const div = document.createElement('div');
+            div.className = `mission-item ${d > currentDay ? 'locked' : (d === currentDay ? 'active' : '')}`;
+            div.innerHTML = `<span style="width:40px">D${d}</span> <span>${d > currentDay ? '🔒 尚未解鎖' : m}</span>`;
+            container.appendChild(div);
         });
+    }
+
+    async function updateProfile() {
+        const { data: { user } } = await sb.auth.getUser();
+        await sb.from('profiles').update({ full_name: document.getElementById('full_name').value, team_id: document.getElementById('team_id_input').value }).eq('id', user.id);
+        location.reload();
+    }
+
+    function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
+    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
+    function copyReferral() { alert("推薦碼已複製！發送給好友註冊即可領取 $100 抵用券！"); }
+    async function signIn() { 
+        const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('email').value, password: document.getElementById('password').value });
         if (error) alert(error.message); else location.reload();
     }
-
+    async function signUp() {
+        const { error } = await sb.auth.signUp({ email: document.getElementById('email').value, password: document.getElementById('password').value });
+        if (error) alert(error.message); else alert("註冊成功，請登入！");
+    }
     async function signOut() { await sb.auth.signOut(); location.reload(); }
 </script>
 </body>
