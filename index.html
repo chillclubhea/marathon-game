@@ -20,15 +20,17 @@
 <body>
 
 <div class="container">
-    <div id="auth-section">
-        <h2>🔑 登入馬拉松</h2>
-        <div class="card">
-            <input type="email" id="email" placeholder="電子信箱">
-            <input type="password" id="password" placeholder="密碼">
-            <button style="background:var(--primary)" onclick="signUp()">快速註冊</button>
-            <button style="background:var(--success)" onclick="signIn()">立即登入</button>
-        </div>
+   <div id="auth-section">
+    <h2>🔑 登入馬拉松</h2>
+    <div class="card">
+        <form id="login-form">
+            <input type="email" id="email" placeholder="電子信箱" autocomplete="email">
+            <input type="password" id="password" placeholder="密碼" autocomplete="current-password">
+            <button type="button" style="background:var(--primary)" onclick="signUp()">快速註冊</button>
+            <button type="button" style="background:var(--success)" onclick="signIn()">立即登入</button>
+        </form>
     </div>
+</div>
 
     <div id="profile-section" class="hidden">
         <div class="ticket-stats">
@@ -65,12 +67,15 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // 1. 初始化檢查 (確保在 async 內)
     window.onload = async () => {
+    try {
         const { data: { session } } = await sb.auth.getSession();
         if (session) {
             showProfile();
             loadFullProfile(session.user);
         }
-    };
+    } catch (e) {
+        console.error("初始化失敗:", e);
+    }
 
     function showProfile() {
         document.getElementById('auth-section').classList.add('hidden');
