@@ -142,14 +142,17 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         if (!weight) return alert("請輸入體重！");
 
-        const { error } = await sb.from('weight_records').upsert({
-            user_id: user.id,
-            date: new Date().toISOString().split('T')[0],
-            weight: parseFloat(weight),
-            has_diet: hasDiet,
-            has_shake: hasShake,
-            has_live: hasLive
-        });
+      // 核心修正：確保使用的是 .upsert()
+const { error } = await sb.from('weight_records').upsert({
+    user_id: user.id,
+    date: new Date().toISOString().split('T')[0], // 今天的日期
+    weight: parseFloat(weight),
+    has_diet: hasDiet,
+    has_shake: hasShake,
+    has_live: hasLive
+}, { 
+    onConflict: 'user_id, date' // 告訴資料庫：如果這兩個欄位衝突，就執行更新
+})
 
         if (error) alert(error.message);
         else {
