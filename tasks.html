@@ -45,6 +45,9 @@
         .current-date { font-weight: bold; color: #2c3e50; }
         .error-message { background: #fee; color: #c33; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 4px solid #c33; }
         .retry-btn { background: var(--warning); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-left: 10px; }
+        .status-complete { background: var(--success); color: white; }
+        .status-pending { background: #f0f0f0; color: #7f8c8d; }
     </style>
 </head>
 <body>
@@ -53,7 +56,7 @@
     <div class="container">
         <div class="header">
             <h1>✅ 馬拉松任務區</h1>
-            <div class="subtitle">每日更新任務 • 完成任務獲得積分與抽獎券</div>
+            <div class="subtitle">查看任務完成狀態 • 副隊長負責標記完成</div>
         </div>
         
         <!-- 錯誤顯示區域 -->
@@ -61,9 +64,9 @@
         
         <!-- 日期導航 -->
         <div class="date-navigation">
-            <button class="date-btn" onclick="changeDate(-1)">← 前一天</button>
+            <button class="date-btn" onclick="window.changeDate(-1)">← 前一天</button>
             <div class="current-date" id="current-date"></div>
-            <button class="date-btn" onclick="changeDate(1)">後一天 →</button>
+            <button class="date-btn" onclick="window.changeDate(1)">後一天 →</button>
         </div>
         
         <!-- 統計卡片 -->
@@ -74,10 +77,10 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="total-tickets">0</div>
-                <div class="stat-label">累積抽獎券</div>
+                <div class="stat-label">可用抽獎券</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="completed-tasks">0/0</div>
+                <div class="stat-value" id="completed-tasks">0/5</div>
                 <div class="stat-label">完成任務</div>
             </div>
             <div class="stat-card">
@@ -89,12 +92,23 @@
         <!-- 抽獎券區 -->
         <div class="lottery-section">
             <div class="lottery-title">🎟️ 任務區抽獎系統</div>
-            <div>完成每日任務即可獲得抽獎券，每10天畢業典禮抽獎！</div>
-            <div class="lottery-ticket">抽獎券編號: <span id="ticket-number">--</span></div>
+            <div>完成任務獲得抽獎券，研討會中有更多抽獎機會！</div>
             <div class="lottery-count" id="ticket-count">0</div>
             <div>張可用抽獎券</div>
             <div style="margin-top: 15px; font-size: 14px; opacity: 0.9;">
-                抽獎券來源: 每日報到(1張) + 完成任務(1-3張) + 轉介紹(額外獎勵)
+                抽獎券來源: 完成每日任務 • 轉介紹 • 特別活動
+            </div>
+        </div>
+        
+        <!-- 注意事項 -->
+        <div class="task-card" style="border-left: 5px solid var(--warning);">
+            <div class="task-title">ℹ️ 重要說明</div>
+            <div class="task-desc">
+                <p><strong>任務完成狀態由副隊長標記</strong></p>
+                <p>• 此頁面僅供查看任務完成狀態</p>
+                <p>• 完成任務需經副隊長確認後標記</p>
+                <p>• 如有疑問請聯繫您的副隊長</p>
+                <p>• 抽獎券用於研討會抽獎活動</p>
             </div>
         </div>
         
@@ -104,7 +118,7 @@
                 <div class="task-title">📊 載入任務中...</div>
                 <div style="text-align: center; padding: 40px; color: #7f8c8d;">
                     <div style="font-size: 48px;">⏳</div>
-                    <div>正在載入今日任務</div>
+                    <div>正在載入任務狀態</div>
                 </div>
             </div>
         </div>
@@ -112,10 +126,17 @@
         <!-- 任務完成提示 -->
         <div id="completion-message" class="task-card hidden" style="background: #e8f6ef; border-left: 5px solid var(--success);">
             <div class="task-title">🎉 恭喜完成今日任務！</div>
-            <div>你已獲得 <strong id="earned-points">0</strong> 積分和 <strong id="earned-tickets">0</strong> 張抽獎券</div>
+            <div>你已獲得 <strong id="earned-points">0</strong> 積分</div>
             <div style="margin-top: 15px; font-size: 14px; color: #27ae60;">
-                記得明天繼續完成任務，保持連勝紀錄！
+                任務已由副隊長確認完成！
             </div>
+        </div>
+        
+        <!-- 聯繫副隊長按鈕 -->
+        <div class="task-card" style="text-align: center;">
+            <button class="task-btn" style="background: var(--primary); color: white;" onclick="contactDeputy()">
+                📞 聯繫副隊長
+            </button>
         </div>
     </div>
 
@@ -178,32 +199,14 @@
         document.getElementById('current-date').textContent = dateStr;
     }
     
-    // 變更日期（修正：確保這個函數在全局作用域中定義）
+    // 變更日期（全局函數）
     window.changeDate = function(days) {
         currentDate.setDate(currentDate.getDate() + days);
         updateDateDisplay();
         loadTasks();
     };
     
-    // 檢查並創建資料表（如果不存在）
-    async function checkAndCreateTables() {
-        try {
-            // 檢查 daily_scores 表是否存在
-            const { error: checkError } = await sb
-                .from('daily_scores')
-                .select('count')
-                .limit(1);
-            
-            // 如果表不存在，會返回錯誤，但我們不處理這個錯誤
-            // 因為如果表不存在，我們會在創建時處理
-            return true;
-        } catch (error) {
-            console.log('檢查表結構時發生錯誤:', error);
-            return false;
-        }
-    }
-    
-    // 載入任務
+    // 載入任務（僅供查看）
     async function loadTasks() {
         const container = document.getElementById('tasks-container');
         container.innerHTML = '<div class="task-card"><div class="task-title">📊 載入任務中...</div></div>';
@@ -212,12 +215,6 @@
         const dateStr = currentDate.toISOString().split('T')[0];
         
         try {
-            // 先檢查表是否存在
-            const tablesExist = await checkAndCreateTables();
-            if (!tablesExist) {
-                throw new Error('資料表尚未初始化');
-            }
-            
             // 嘗試獲取用戶今日的任務完成狀態
             let dailyScore = null;
             
@@ -229,7 +226,7 @@
                     .eq('date', dateStr)
                     .maybeSingle();
                 
-                if (error && error.code !== 'PGRST116') { // PGRST116 表示沒有找到資料
+                if (error && error.code !== 'PGRST116') {
                     console.warn('查詢 daily_scores 表時發生錯誤:', error);
                 } else if (!error) {
                     dailyScore = data;
@@ -238,7 +235,7 @@
                 console.warn('查詢任務狀態時發生錯誤:', queryError);
             }
             
-            // 定義任務列表（使用靜態定義，避免資料庫問題）
+            // 定義任務列表（使用靜態定義）
             dailyTasks = [
                 {
                     id: 'weight_check',
@@ -282,19 +279,21 @@
                 }
             ];
             
-            // 生成任務 HTML
+            // 生成任務 HTML（僅顯示狀態，無操作按鈕）
             let html = '';
             let completedCount = 0;
             
             dailyTasks.forEach(task => {
-                const isToday = currentDate.toDateString() === new Date().toDateString();
-                const canComplete = isToday || task.isCompleted;
+                const isCompleted = task.isCompleted;
+                completedCount += isCompleted ? 1 : 0;
                 
                 html += `
                 <div class="task-card">
                     <div class="task-title">
                         ${task.title}
-                        ${task.isCompleted ? '<span class="completed-badge">已完成</span>' : ''}
+                        <span class="status-badge ${isCompleted ? 'status-complete' : 'status-pending'}">
+                            ${isCompleted ? '✅ 已完成' : '⏳ 待確認'}
+                        </span>
                     </div>
                     <div class="task-desc">${task.description}</div>
                     <div class="task-meta">
@@ -303,20 +302,11 @@
                     </div>
                     
                     <div class="task-actions">
-                        <button class="task-btn ${task.isCompleted ? 'complete' : 'pending'} ${!canComplete ? 'disabled' : ''}" 
-                                onclick="toggleTask('${task.id}')"
-                                ${!canComplete ? 'disabled' : ''}>
-                            ${task.isCompleted ? '✅ 已完成' : '⬜ 標記完成'}
+                        <button class="task-btn ${isCompleted ? 'complete' : 'pending'}" disabled>
+                            ${isCompleted ? '✅ 已完成 (副隊長已確認)' : '⏳ 等待副隊長確認'}
                         </button>
-                        ${task.id === 'social_share' ? `
-                        <button class="task-btn" style="background: #4267B2; color: white;" onclick="shareToSocial()">
-                            📘 立即分享
-                        </button>
-                        ` : ''}
                     </div>
                 </div>`;
-                
-                if (task.isCompleted) completedCount++;
             });
             
             // 添加轉介紹任務（特殊任務）
@@ -341,10 +331,10 @@
             </div>`;
             
             container.innerHTML = html;
-            hideError(); // 載入成功，隱藏錯誤訊息
+            hideError();
             
-            // 更新統計
-            updateTaskStats(completedCount, dailyTasks.length);
+            // 更新任務統計
+            document.getElementById('completed-tasks').textContent = `${completedCount}/${dailyTasks.length}`;
             
             // 檢查是否所有必做任務都完成了
             const allRequiredCompleted = dailyTasks
@@ -356,7 +346,6 @@
             if (allRequiredCompleted && isToday) {
                 document.getElementById('completion-message').classList.remove('hidden');
                 document.getElementById('earned-points').textContent = dailyTasks.reduce((sum, task) => sum + (task.isCompleted ? task.points : 0), 0);
-                document.getElementById('earned-tickets').textContent = calculateTickets(completedCount);
             } else {
                 document.getElementById('completion-message').classList.add('hidden');
             }
@@ -364,7 +353,6 @@
         } catch (error) {
             console.error('載入任務錯誤:', error);
             
-            // 顯示友好的錯誤訊息
             let errorMessage = '載入任務失敗';
             if (error.message.includes('資料表尚未初始化')) {
                 errorMessage = '系統正在初始化，請稍後再試';
@@ -384,30 +372,6 @@
         }
     }
     
-    // 更新任務統計
-    function updateTaskStats(completed, total) {
-        document.getElementById('completed-tasks').textContent = `${completed}/${total}`;
-    }
-    
-    // 計算抽獎券數量
-    function calculateTickets(completedTasks) {
-        // 基礎：完成所有必做任務 = 1張
-        // 額外：每完成一個選做任務 = 0.5張（四捨五入）
-        const requiredTasks = dailyTasks.filter(task => task.required);
-        const optionalTasks = dailyTasks.filter(task => !task.required);
-        
-        const requiredCompleted = requiredTasks.filter(task => task.isCompleted).length;
-        const optionalCompleted = optionalTasks.filter(task => task.isCompleted).length;
-        
-        let tickets = 0;
-        if (requiredCompleted === requiredTasks.length) {
-            tickets += 1; // 完成所有必做任務
-        }
-        tickets += Math.round(optionalCompleted * 0.5); // 選做任務獎勵
-        
-        return tickets;
-    }
-    
     // 更新統計數據
     async function updateStats() {
         try {
@@ -419,7 +383,7 @@
                 .single();
             
             if (!error && profile) {
-                // 今日積分（簡化顯示）
+                // 今日積分
                 const today = new Date().toISOString().split('T')[0];
                 const { data: todayScore } = await sb
                     .from('daily_scores')
@@ -430,16 +394,13 @@
                 
                 document.getElementById('today-points').textContent = todayScore ? todayScore.total_points || '0' : '0';
                 
-                // 累積抽獎券（每100積分換1張抽獎券）
-                const tickets = Math.floor((profile.points || 0) / 100);
+                // 抽獎券數量（簡化計算：每50積分換1張抽獎券）
+                const tickets = Math.floor((profile.points || 0) / 50);
                 document.getElementById('total-tickets').textContent = tickets;
                 document.getElementById('ticket-count').textContent = tickets;
-                
-                // 抽獎券編號
-                document.getElementById('ticket-number').textContent = `T${currentUser.id.substring(0, 8).toUpperCase()}`;
             }
             
-            // 獲取連續完成天數（簡化版本）
+            // 獲取連續完成天數
             const { data: streakData } = await sb
                 .from('daily_scores')
                 .select('date')
@@ -453,112 +414,7 @@
             
         } catch (error) {
             console.error('更新統計錯誤:', error);
-            // 統計錯誤不顯示給用戶，使用默認值
         }
-    }
-    
-    // 切換任務完成狀態
-    window.toggleTask = async function(taskId) {
-        const task = dailyTasks.find(t => t.id === taskId);
-        if (!task) return;
-        
-        const isToday = currentDate.toDateString() === new Date().toDateString();
-        if (!isToday) {
-            alert('只能標記今日的任務');
-            return;
-        }
-        
-        const newStatus = !task.isCompleted;
-        const dateStr = currentDate.toISOString().split('T')[0];
-        
-        try {
-            // 首先嘗試獲取現有的 daily_scores 記錄
-            const { data: existingRecord } = await sb
-                .from('daily_scores')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('date', dateStr)
-                .maybeSingle();
-            
-            // 準備更新數據
-            let updateData = existingRecord || {
-                user_id: currentUser.id,
-                date: dateStr,
-                created_at: new Date().toISOString()
-            };
-            
-            // 根據任務ID更新對應欄位
-            switch(taskId) {
-                case 'weight_check':
-                    updateData.weight_recorded = newStatus;
-                    break;
-                case 'shake_used':
-                    updateData.shake_used = newStatus;
-                    break;
-                case 'live_session':
-                    updateData.task_completed = newStatus;
-                    break;
-                case 'exercise':
-                    updateData.exercise_done = newStatus;
-                    break;
-                case 'social_share':
-                    updateData.social_shared = newStatus;
-                    break;
-            }
-            
-            // 計算總分數（簡化版本）
-            updateData.total_points = calculateDailyPoints(updateData);
-            updateData.updated_at = new Date().toISOString();
-            
-            // 使用 upsert 更新或創建記錄
-            const { error } = await sb
-                .from('daily_scores')
-                .upsert(updateData, { 
-                    onConflict: 'user_id,date',
-                    returning: 'minimal'
-                });
-            
-            if (error) {
-                // 如果表不存在，嘗試創建簡單記錄
-                console.warn('更新 daily_scores 失敗，使用簡化模式:', error);
-                
-                // 更新本地任務狀態
-                task.isCompleted = newStatus;
-                loadTasks();
-                alert('任務狀態已更新（本地）');
-                return;
-            }
-            
-            // 更新本地任務狀態
-            task.isCompleted = newStatus;
-            
-            // 重新載入任務和更新統計
-            loadTasks();
-            updateStats();
-            
-        } catch (error) {
-            console.error('更新任務狀態錯誤:', error);
-            alert('更新失敗: ' + error.message);
-        }
-    };
-    
-    // 計算每日積分（簡化版本）
-    function calculateDailyPoints(data) {
-        let points = 0;
-        
-        // 完成一圈（體重+飲食+奶昔+直播）
-        if (data.weight_recorded && data.shake_used && data.task_completed) {
-            points += 1;
-        }
-        
-        // 其他任務各1分
-        if (data.weight_recorded) points += 1;
-        if (data.shake_used) points += 1;
-        if (data.exercise_done) points += 1;
-        if (data.social_shared) points += 1;
-        if (data.task_completed) points += 1;
-        
-        return points;
     }
     
     // 報告轉介紹
@@ -567,31 +423,13 @@
         const friendContact = prompt('請輸入朋友的聯絡方式 (電話/Email):');
         
         if (friendName && friendContact) {
-            alert(`已記錄轉介紹: ${friendName}\n我們會聯繫您的朋友，成功加入後您將獲得積分！`);
-            // 這裡應該發送到後端記錄轉介紹
+            alert(`已記錄轉介紹: ${friendName}\n副隊長會聯繫您的朋友，成功加入後您將獲得積分！`);
         }
     };
     
-    // 社交分享
-    window.shareToSocial = function() {
-        const shareText = encodeURIComponent('我正在參加馬拉松健康挑戰！每天完成任務獲得積分，一起來參加吧！');
-        const shareUrl = encodeURIComponent(window.location.origin);
-        
-        // 可以打開多個分享選項
-        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
-        const whatsappUrl = `https://wa.me/?text=${shareText}%20${shareUrl}`;
-        
-        if (confirm('選擇分享方式：\n確定 = Facebook\n取消 = WhatsApp')) {
-            window.open(facebookUrl, '_blank');
-        } else {
-            window.open(whatsappUrl, '_blank');
-        }
-        
-        // 標記社交分享任務為完成
-        const socialTask = dailyTasks.find(t => t.id === 'social_share');
-        if (socialTask && !socialTask.isCompleted) {
-            toggleTask('social_share');
-        }
+    // 聯繫副隊長
+    window.contactDeputy = function() {
+        alert('請通過以下方式聯繫副隊長：\n\n1. WhatsApp群組\n2. 電話聯繫\n3. 團隊聚會時當面確認\n\n副隊長會協助您確認任務完成狀態！');
     };
 </script>
 </body>
