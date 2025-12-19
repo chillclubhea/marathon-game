@@ -6,156 +6,6 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 讓區塊切換時有平滑感 */
-        /* 規則按鈕樣式 */
-.btn-info {
-    background: #f39c12;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 15px;
-    margin-bottom: 15px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 0 #d35400;
-    transition: all 0.2s;
-}
-.btn-info:active { transform: translateY(3px); box-shadow: none; }
-
-/* 彈窗背景 */
-.overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7); display: flex; align-items: center;
-    justify-content: center; z-index: 1000; backdrop-filter: blur(5px);
-}
-
-/* 規則卡片 */
-.rules-card {
-    background: white; width: 90%; max-width: 400px; max-height: 80vh;
-    border-radius: 20px; overflow-y: auto; position: relative;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-.rules-header {
-    background: #3498db; color: white; padding: 15px;
-    position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center;
-}
-.rules-header h3 { margin: 0; font-size: 16px; }
-.close-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-
-.rules-content { padding: 15px; text-align: left; line-height: 1.6; }
-.rules-content h4 { color: #2980b9; border-left: 4px solid #3498db; padding-left: 8px; margin: 15px 0 8px 0; }
-.rules-content ul { padding-left: 20px; margin: 0; font-size: 14px; }
-
-.task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-.task-grid span { background: #ecf0f1; padding: 5px; border-radius: 8px; font-size: 12px; text-align: center; }
-
-.rules-table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px; }
-.rules-table td { padding: 8px; border-bottom: 1px solid #eee; }
-.rules-table td:first-child { font-weight: bold; color: #e67e22; width: 40px; }
-
-.reward-list li { list-style: none; padding: 5px 0; font-size: 14px; }
-.hidden {
-    display: none !important;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.fade-in {
-    animation: slideUp 0.4s ease-out forwards;
-}
-
-/* 輕微的卡片陰影與過渡 */
-#profile-section {
-    transition: all 0.3s ease;
-}
-
-        <button class="btn-info" onclick="toggleRules()">📜 10天馬拉松手冊</button>
-
-<div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
-    <div class="rules-card" onclick="event.stopPropagation()">
-        <div class="rules-header">
-            <h3>🏆 10天健康馬拉松：全攻略</h3>
-            <button class="close-btn" onclick="toggleRules()">✕</button>
-        </div>
-        <div class="rules-content">
-            <section>
-                <h4>🎮 第一步：進入遊戲前準備 (Day 0)</h4>
-                <ul>
-                    <li><strong>燃料準備：</strong> 找教練準備「10天份營養奶昔」。</li>
-                    <li><strong>模式選擇：</strong> 慢跑(60分) / 快跑(100分)。</li>
-                    <li><strong>加入公會：</strong> 進入【小隊群】(9人) 與 【大任務區】(300人)。</li>
-                </ul>
-            </section>
-
-            <section>
-                <h4>⚔️ 第二步：每日任務 (Day 1-10)</h4>
-                <p>完成以下 4 件事領取抽獎券：</p>
-                <div class="task-grid">
-                    <span>⚖️ 拍體重</span>
-                    <span>🥛 拍奶昔合照</span>
-                    <span>🥗 拍健康午餐</span>
-                    <span>🎯 完成今日挑戰</span>
-                </div>
-            </section>
-
-            <section>
-                <h4>📅 第三步：10 天任務關卡</h4>
-                <table class="rules-table">
-                    <tr><td>D1</td><td>開賽打卡：曬燃料與初始體重</td></tr>
-                    <tr><td>D2</td><td>彩虹午餐：3種顏色蔬菜</td></tr>
-                    <tr><td>D3</td><td>分享愛：邀家人喝奶昔/運動</td></tr>
-                    <tr><td>D4</td><td>飲水大王：喝完第3瓶水</td></tr>
-                    <tr><td>D5</td><td>動起來：10分鐘運動流汗照</td></tr>
-                    <tr><td>D6</td><td>聰明吃油：攝取堅果或好魚</td></tr>
-                    <tr><td>D7</td><td>小小網紅：發FB/IG限動</td></tr>
-                    <tr><td>D8</td><td>誇誇隊友：給隊友一句鼓勵</td></tr>
-                    <tr><td>D9</td><td>變身見證：分享身體正向變化</td></tr>
-                    <tr><td>D10</td><td>帶好朋友：邀好友測脂或參賽</td></tr>
-                </table>
-            </section>
-
-            <section>
-                <h4>🎟️ 第四步：獎勵制度</h4>
-                <ul class="reward-list">
-                    <li>✅ 每日報榜：<strong>+1 張</strong>券</li>
-                    <li>🎯 每日任務：<strong>+2 張</strong>券</li>
-                    <li>💻 Zoom 派對：<strong>+5 張</strong>券</li>
-                    <li>👥 推薦好友：<strong>+10 張</strong>券</li>
-                </ul>
-            </section>
-        </div>
-    </div>
-</div>
-        /* 定義進入動畫 */
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.fade-in {
-    animation: fadeInUp 0.5s ease-out forwards;
-}
-
-/* 讓卡片更有彈性 */
-.card {
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
-}
-.card:active {
-    transform: scale(0.98);
-}
         :root {
             --primary: #3498db;
             --success: #2ecc71;
@@ -163,24 +13,47 @@
             --danger: #e74c3c;
             --bg: #f4f7f6;
         }
+
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
         .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
         .header { text-align: center; margin-bottom: 25px; }
         h2 { color: #2c3e50; margin: 0; font-size: 24px; }
         #user-display { font-size: 12px; color: #95a5a6; margin-top: 5px; }
-        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        
+        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; transition: transform 0.2s; }
+        .card:active { transform: scale(0.98); }
         .card-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; color: #4a5568; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        .row { display: flex; gap: 10px; }
-        .row .form-group { flex: 1; }
-        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
+
+        /* 動畫效果 */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        .hidden { display: none !important; }
+
+        /* 按鈕與輸入框 */
+        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
         .btn-primary { background-color: var(--primary); }
         .btn-success { background-color: var(--success); }
         .btn-warning { background-color: var(--warning); }
         .btn-danger { background-color: var(--danger); }
-        .hidden { display: none !important; }
+        .btn-info { background: #f39c12; box-shadow: 0 4px 0 #d35400; margin-bottom: 15px; }
+        .btn-info:active { transform: translateY(3px); box-shadow: none; }
+
+        /* 規則彈窗樣式 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .rules-card { background: white; width: 90%; max-width: 400px; max-height: 80vh; border-radius: 20px; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: popUp 0.3s ease-out; }
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .rules-header { background: #3498db; color: white; padding: 15px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; }
+        .rules-content { padding: 15px; text-align: left; font-size: 14px; }
+        .rules-content h4 { color: #2980b9; border-left: 4px solid #3498db; padding-left: 8px; margin: 15px 0 5px; }
+        .task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .task-grid span { background: #ecf0f1; padding: 5px; border-radius: 8px; font-size: 12px; text-align: center; }
+        .rules-table { width: 100%; border-collapse: collapse; }
+        .rules-table td { padding: 6px; border-bottom: 1px dotted #eee; }
         .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -190,16 +63,10 @@
     <div id="auth-section">
         <h2>🔑 登入馬拉松</h2>
         <div class="card" style="margin-top: 20px;">
-            <div class="form-group">
-                <label>電子信箱</label>
-                <input type="email" id="email" placeholder="Email">
-            </div>
-            <div class="form-group">
-                <label>密碼</label>
-                <input type="password" id="password" placeholder="Password">
-            </div>
-            <button class="btn-primary" onclick="signUp()">註冊</button>
-            <button class="btn-success" onclick="signIn()">登入</button>
+            <input type="email" id="email" placeholder="電子信箱">
+            <input type="password" id="password" placeholder="密碼">
+            <button class="btn-primary" onclick="signUp()">快速註冊</button>
+            <button class="btn-success" onclick="signIn()">立即登入</button>
         </div>
     </div>
 
@@ -209,274 +76,168 @@
             <div id="user-display"></div>
         </div>
 
+        <button class="btn-info" onclick="toggleRules()">📜 10天馬拉松手冊</button>
+
         <button id="edit-profile-btn" class="hidden" onclick="toggleProfileEdit()" 
-                style="background: #edf2f7; color: #4a5568; font-size: 14px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">
+                style="background: #edf2f7; color: #4a5568; font-size: 13px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">
             ⚙️ 修改個人資料或更換隊伍
         </button>
 
         <div id="setup-card" class="card">
             <div class="card-title">👤 個人設定 & 加入隊伍</div>
             <img id="avatar-img" class="avatar-preview" src="https://via.placeholder.com/80">
-            <div class="form-group">
-                <label>更換頭像</label>
-                <input type="file" id="avatar_file" accept="image/*">
+            <input type="file" id="avatar_file" accept="image/*">
+            <input type="text" id="full_name" placeholder="你的稱呼">
+            <div style="display:flex; gap:10px;">
+                <select id="role"><option value="member">學員</option><option value="captain">隊長</option></select>
+                <select id="plan"><option value="slow">慢跑</option><option value="fast">快跑</option></select>
             </div>
-            <div class="form-group">
-                <label>真實姓名</label>
-                <input type="text" id="full_name" placeholder="隊友如何稱呼你">
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>角色</label>
-                    <select id="role">
-                        <option value="member">學員</option>
-                        <option value="captain">隊長</option>
-                        <option value="deputy">副隊長</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>計畫</label>
-                    <select id="plan">
-                        <option value="slow">慢跑</option>
-                        <option value="fast">快跑</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <label>加入隊伍邀請碼 (Team ID)</label>
-                <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
-            </div>
-            <button class="btn-primary" onclick="updateProfile()">儲存並開始遊戲</button>
+            <input type="text" id="team_id_input" placeholder="隊伍邀請碼" style="margin-top:10px;">
+            <button class="btn-primary" onclick="updateProfile()">儲存並進入遊戲</button>
         </div>
 
         <div class="card" style="border-left: 5px solid var(--warning);">
             <div class="card-title">⚖️ 每日數據報到</div>
-            <div class="form-group">
-                <label>今日體重 (kg)</label>
-                <input type="number" id="weight" step="0.1" placeholder="0.0">
+            <input type="number" id="weight" step="0.1" placeholder="今日體重 (kg)">
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="fat_rate" step="0.1" placeholder="體脂 %">
+                <input type="number" id="muscle_mass" step="0.1" placeholder="肌肉 kg">
             </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>體脂率 (%)</label>
-                    <input type="number" id="fat_rate" step="0.1" placeholder="0.0">
-                </div>
-                <div class="form-group">
-                    <label>肌肉量 (kg)</label>
-                    <input type="number" id="muscle_mass" step="0.1" placeholder="0.0">
-                </div>
-            </div>
-            <button class="btn-warning" onclick="saveDailyData()">送出今日報到</button>
-            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold;"></p>
+            <button class="btn-warning" onclick="saveDailyData()">送出報到</button>
+            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; margin-top:10px;"></p>
         </div>
 
-        <div class="card">
-            <button class="btn-success" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
-        </div>
+        <button class="btn-success" onclick="window.location.href='team.html'">🏆 查看九宮格戰況</button>
+        <button class="btn-danger" style="margin-top:20px; opacity: 0.6;" onclick="signOut()">安全登出</button>
+    </div>
+</div>
 
-        <button class="btn-danger" style="margin-top:20px;" onclick="signOut()">安全登出</button>
+<div id="rules-overlay" class="overlay hidden" onclick="toggleRules()">
+    <div class="rules-card" onclick="event.stopPropagation()">
+        <div class="rules-header">
+            <h3>🏆 10天健康馬拉松：全攻略</h3>
+            <span style="cursor:pointer" onclick="toggleRules()">✕</span>
+        </div>
+        <div class="rules-content">
+            <h4>🎮 第一步：準備 (Day 0)</h4>
+            <ul>
+                <li>準備 10 天份營養奶昔。</li>
+                <li>加入小隊群 (9人) 與大任務區。</li>
+            </ul>
+            <h4>⚔️ 第二步：每日任務</h4>
+            <div class="task-grid">
+                <span>⚖️ 拍體重</span><span>🥛 拍奶昔</span>
+                <span>🥗 拍午餐</span><span>🎯 今日挑戰</span>
+            </div>
+            <h4>📅 第三步：10 天關卡</h4>
+            <table class="rules-table">
+                <tr><td>D1</td><td>開賽打卡</td><td>D6</td><td>聰明吃油</td></tr>
+                <tr><td>D2</td><td>彩虹午餐</td><td>D7</td><td>社交分享</td></tr>
+                <tr><td>D3</td><td>分享愛</td><td>D8</td><td>誇誇隊友</td></tr>
+                <tr><td>D4</td><td>飲水大王</td><td>D9</td><td>變身見證</td></tr>
+                <tr><td>D5</td><td>動起來</td><td>D10</td><td>帶好朋友</td></tr>
+            </table>
+            <h4>🎟️ 獎勵</h4>
+            <div style="font-size: 12px; margin-top: 10px; color: #666;">
+                報榜 +1張 | 任務 +2張 | 推薦好友 +10張
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-  window.onload = async () => {
-    // 取得目前 session
-    const { data: { session } } = await sb.auth.getSession();
-    
-    const authSection = document.getElementById('auth-section');
-    const profileSection = document.getElementById('profile-section');
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    if (session && session.user) {
-        // --- 已登入狀態 ---
-        authSection.classList.add('hidden'); // 隱藏登入框
-        profileSection.classList.remove('hidden'); // 顯示中心
-        profileSection.classList.add('fade-in'); // 加上剛才提到的自然跳動效果
-        
-        // 載入該使用者的資料
-        showProfile(session.user);
-    } else {
-        // --- 未登入狀態 ---
-        authSection.classList.remove('hidden');
-        authSection.classList.add('fade-in');
-        profileSection.classList.add('hidden');
-    }
-};
-
-// 顯示個人中心內容的函數
-async function showProfile(user) {
-    // 這裡放原本抓取姓名、體重、頭像的邏輯...
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    if (profile) {
-        document.getElementById('user-name').innerText = profile.full_name || "馬拉松選手";
-        if (profile.avatar_url) {
-            document.getElementById('avatar-img').src = profile.avatar_url;
+    window.onload = async () => {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('profile-section').classList.remove('hidden');
+            document.getElementById('profile-section').classList.add('fade-in');
+            loadFullProfile(session.user);
         }
-    }
-}
-const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    };
 
-// ⚡ 頁面載入時的唯一核心邏輯
-window.onload = async () => {
-    // 1. 快速取得目前 Session (這比 getUser 快，適合攔截頁面)
-    const { data: { session } } = await sb.auth.getSession();
-    
-    const authSection = document.getElementById('auth-section');
-    const profileSection = document.getElementById('profile-section');
-
-    if (session && session.user) {
-        // --- [已登入狀態] ---
-        // 立即切換區塊顯示，防止閃過登入畫面
-        authSection.classList.add('hidden');
-        profileSection.classList.remove('hidden');
-        profileSection.classList.add('fade-in'); 
-        
-        // 非同步讀取完整資料 (不影響頁面切換)
-        await loadFullProfile(session.user);
-    } else {
-        // --- [未登入狀態] ---
-        authSection.classList.remove('hidden');
-        authSection.classList.add('fade-in');
-        profileSection.classList.add('hidden');
-    }
-};
-
-// 顯示並載入個人資料細節
-async function loadFullProfile(user) {
-    document.getElementById('user-display').innerText = `帳號: ${user.email}`;
-
-    // 抓取 Profiles 資料表中的擴充欄位
-    const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-    
-    if (profile) {
-        // 更新 UI 顯示
-        const userNameDisplay = document.getElementById('user-name');
-        if (userNameDisplay) userNameDisplay.innerText = profile.full_name || "馬拉松選手";
-        
-        // 填充設定欄位
-        document.getElementById('full_name').value = profile.full_name || '';
-        document.getElementById('role').value = profile.role || 'member';
-        document.getElementById('plan').value = profile.plan || 'slow';
-        document.getElementById('team_id_input').value = profile.current_team_id || '';
-        
-        if (profile.avatar_url) {
-            document.getElementById('avatar-img').src = profile.avatar_url;
-        }
-
-        // 自動判斷是否需顯示設定卡片
-        if (profile.full_name && profile.current_team_id) {
-            document.getElementById('setup-card').classList.add('hidden');
-            document.getElementById('edit-profile-btn').classList.remove('hidden');
-        }
-    }
-}
-
-// 切換設定區塊顯示
-function toggleProfileEdit() {
-    document.getElementById('setup-card').classList.toggle('hidden');
-}
-
-// 登入邏輯 (保持 location.reload 確保初始化流程正確)
-async function signIn() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message); 
-    else location.reload(); 
-}
-
-// 註冊邏輯
-async function signUp() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { error } = await sb.auth.signUp({ email, password });
-    if (error) alert(error.message); 
-    else alert("註冊成功，請登入！");
-}
-
-// 登出邏輯
-async function signOut() {
-    await sb.auth.signOut();
-    location.reload();
-}
-
-// 儲存個人設定
-async function updateProfile() {
-    const { data: { user } } = await sb.auth.getUser();
-    const avatarFile = document.getElementById('avatar_file').files[0];
-    let avatarUrl = document.getElementById('avatar-img').src;
-
-    if (avatarFile) {
-        const fileName = `${user.id}_${Date.now()}.png`;
-        const { error: uploadError } = await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
-        if (!uploadError) {
-            const { data } = sb.storage.from('avatars').getPublicUrl(fileName);
-            avatarUrl = data.publicUrl;
+    async function loadFullProfile(user) {
+        document.getElementById('user-display').innerText = `帳號: ${user.email}`;
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        if (profile) {
+            document.getElementById('full_name').value = profile.full_name || '';
+            document.getElementById('role').value = profile.role || 'member';
+            document.getElementById('plan').value = profile.plan || 'slow';
+            document.getElementById('team_id_input').value = profile.current_team_id || '';
+            if (profile.avatar_url) document.getElementById('avatar-img').src = profile.avatar_url;
+            if (profile.full_name && profile.current_team_id) {
+                document.getElementById('setup-card').classList.add('hidden');
+                document.getElementById('edit-profile-btn').classList.remove('hidden');
+            }
         }
     }
 
-    const { error } = await sb.from('profiles').upsert({
-        id: user.id,
-        full_name: document.getElementById('full_name').value,
-        role: document.getElementById('role').value,
-        plan: document.getElementById('plan').value,
-        current_team_id: document.getElementById('team_id_input').value.trim(),
-        avatar_url: avatarUrl,
-        updated_at: new Date()
-    });
-    
-    if (error) alert(error.message); 
-    else { alert("設定已儲存！"); location.reload(); }
-}
-
-// 儲存每日數據
-async function saveDailyData() {
-    const { data: { user } } = await sb.auth.getUser();
-    const weight = document.getElementById('weight').value;
-    const fat = document.getElementById('fat_rate').value;
-    const muscle = document.getElementById('muscle_mass').value;
-    const today = new Date().toISOString().split('T')[0];
-
-    if(!weight) { alert("請輸入體重"); return; }
-
-    const { error } = await sb.from('weight_records').upsert({
-        user_id: user.id,
-        date: today,
-        weight: parseFloat(weight),
-        fat_rate: parseFloat(fat) || 0,
-        muscle_mass: parseFloat(muscle) || 0
-    }, { onConflict: 'user_id, date' });
-
-    if (error) {
-        alert("儲存失敗：" + error.message);
-    } else {
-        document.getElementById('status-msg').innerText = "✅ 數據已成功同步！";
-        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
-    }
-}
-
-    async function signUp() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { error } = await sb.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("註冊成功，請登入！");
-    }
+    function toggleRules() { document.getElementById('rules-overlay').classList.toggle('hidden'); }
+    function toggleProfileEdit() { document.getElementById('setup-card').classList.toggle('hidden'); }
 
     async function signIn() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else showProfile(data.user);
+        const { data, error } = await sb.auth.signInWithPassword({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        });
+        if (error) alert(error.message); else location.reload();
     }
 
-    async function signOut() {
-        await sb.auth.signOut();
+    async function signUp() {
+        const { error } = await sb.auth.signUp({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        });
+        if (error) alert(error.message); else alert("註冊成功！");
+    }
+
+    async function signOut() { await sb.auth.signOut(); location.reload(); }
+
+    async function saveDailyData() {
+        const { data: { user } } = await sb.auth.getUser();
+        const weight = document.getElementById('weight').value;
+        if(!weight) return alert("請輸入體重");
+        
+        const { error } = await sb.from('weight_records').upsert({
+            user_id: user.id,
+            date: new Date().toISOString().split('T')[0],
+            weight: parseFloat(weight),
+            fat_rate: parseFloat(document.getElementById('fat_rate').value) || 0,
+            muscle_mass: parseFloat(document.getElementById('muscle_mass').value) || 0
+        });
+
+        if (error) alert(error.message);
+        else {
+            document.getElementById('status-msg').innerText = "✅ 數據已同步！";
+            setTimeout(() => document.getElementById('status-msg').innerText = "", 3000);
+        }
+    }
+
+    async function updateProfile() {
+        const { data: { user } } = await sb.auth.getUser();
+        const avatarFile = document.getElementById('avatar_file').files[0];
+        let avatarUrl = document.getElementById('avatar-img').src;
+
+        if (avatarFile) {
+            const fileName = `${user.id}_avatar.png`;
+            await sb.storage.from('avatars').upload(fileName, avatarFile, { upsert: true });
+            avatarUrl = sb.storage.from('avatars').getPublicUrl(fileName).data.publicUrl;
+        }
+
+        await sb.from('profiles').upsert({
+            id: user.id,
+            full_name: document.getElementById('full_name').value,
+            role: document.getElementById('role').value,
+            plan: document.getElementById('plan').value,
+            current_team_id: document.getElementById('team_id_input').value.trim(),
+            avatar_url: avatarUrl
+        });
         location.reload();
     }
-    function toggleRules() {
-    const overlay = document.getElementById('rules-overlay');
-    overlay.classList.toggle('hidden');
-}
 </script>
 </body>
 </html>
