@@ -76,6 +76,7 @@
 
     window.onload = function() {
         loadTeamData();
+        <button id="captain-tools" class="btn-capture hidden" onclick="generateImage()">生成戰況圖片</button>
     };
 
    async function loadTeamData() {
@@ -89,9 +90,27 @@
     const yesterday = yesterdayDate.toISOString().split('T')[0];
 
     // 2. 取得團隊成員
-    const { data: profile } = await sb.from('profiles').select('current_team_id').eq('id', user.id).single();
+    const { data: myProfile } = await sb.from('profiles').select('role, current_team_id').eq('id', user.id).single();
     const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', profile.current_team_id);
+    const { data: myProfile } = await sb.from('profiles').select('role, current_team_id').eq('id', user.id).single();
+    
+    // 如果是隊長，則顯示生成圖片按鈕
+    if (myProfile && myProfile.role === 'captain') {
+        document.getElementById('captain-tools').classList.remove('hidden');
+    }
+       // 在標題旁邊顯示隊伍邀請碼 (方便隊長複製)
+    if (myProfile && myProfile.role === 'captain') {
+        const inviteDiv = document.createElement('div');
+        inviteDiv.style = "font-size:12px; color:#7f8c8d; margin-bottom:10px; background:#fff; padding:5px; border-radius:5px;";
+        inviteDiv.innerHTML = `📢 隊伍邀請碼: <strong>${myProfile.current_team_id}</strong> (點擊可複製)`;
+        inviteDiv.onclick = () => {
+            navigator.clipboard.writeText(myProfile.current_team_id);
+            alert("邀請碼已複製！");
+        };
+        gridElement.parentNode.insertBefore(inviteDiv, gridElement);
+    }
 
+       
     // 3. 取得所有成員「今天」與「昨天」的紀錄
     const memberIds = members.map(m => m.id);
     const { data: allRecords } = await sb.from('weight_records')
