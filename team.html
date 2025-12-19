@@ -3,69 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="馬拉松戰況">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
-    <link rel="icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
-    
     <title>隊伍九宮格戰況</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
     <style>
         body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f2f5; padding: 20px; text-align: center; }
-        h2 { color: #2c3e50; }
         .grid-container { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            max-width: 450px; 
-            margin: 20px auto; 
-            background-color: #f0f2f5; /* 確保截圖背景一致 */
-            padding: 10px;
-            border-radius: 12px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; 
+            max-width: 450px; margin: 20px auto; padding: 10px; background: #fff; border-radius: 15px;
         }
         .member-card { 
-            background: white; 
-            border-radius: 12px; 
-            padding: 15px 10px; 
-            text-align: center; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            min-height: 130px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: #f8f9fa; border-radius: 10px; padding: 10px 5px; 
+            display: flex; flex-direction: column; align-items: center; min-height: 140px;
         }
-        .avatar { 
-            width: 65px; height: 65px; 
-            border-radius: 50%; 
-            background: #eee; 
-            margin-bottom: 8px;
-            object-fit: cover;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .name { font-weight: bold; font-size: 14px; color: #333; margin-bottom: 5px; }
-        .weight-status { font-size: 12px; padding: 4px 8px; border-radius: 20px; width: 80%; }
-        .done { background-color: #d4edda; color: #155724; font-weight: bold; }
-        .pending { background-color: #f8d7da; color: #721c24; }
-        .btn-home { display: block; width: 150px; margin: 10px auto; padding: 12px; text-align: center; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
-        .btn-capture { width: 150px; padding: 12px; background-color: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .avatar { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .name { font-weight: bold; font-size: 13px; margin-bottom: 5px; }
+        .data-row { font-size: 10px; width: 95%; margin-bottom: 2px; padding: 2px; border-radius: 4px; }
+        .diff { font-size: 9px; font-weight: normal; }
+        .done { background-color: #d4edda; color: #155724; }
+        .pending { background-color: #ffeeba; color: #856404; }
+        .btn-capture { background: #e67e22; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .btn-home { display: block; width: 120px; margin: 10px auto; color: #3498db; text-decoration: none; font-size: 14px; }
+        .hidden { display: none !important; }
+        .invite-box { font-size: 12px; color: #7f8c8d; background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px dashed #ccc; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2>🏆 戰隊九宮格</h2>
+    <h2 id="team-title">🏆 戰隊九宮格</h2>
     
+    <div id="invite-area"></div>
+
     <div id="grid-display" class="grid-container">
         <p style="grid-column: span 3;">資料讀取中...</p>
     </div>
 
-    <div id="action-buttons">
-        <button class="btn-capture" onclick="generateImage()">生成戰況圖片</button>
+    <div id="controls">
+        <button id="captain-tools" class="btn-capture hidden" onclick="generateImage()">生成戰報圖片</button>
         <a href="index.html" class="btn-home">回個人中心</a>
     </div>
 
@@ -74,123 +48,39 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    window.onload = function() {
-        loadTeamData();
-        <button id="captain-tools" class="btn-capture hidden" onclick="generateImage()">生成戰況圖片</button>
-    };
+    window.onload = loadTeamData;
 
-   async function loadTeamData() {
-    const gridElement = document.getElementById('grid-display');
-    const { data: { user } } = await sb.auth.getUser();
-    
-    // 1. 取得日期
-    const today = new Date().toISOString().split('T')[0];
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterday = yesterdayDate.toISOString().split('T')[0];
-
-    // 2. 取得團隊成員
-    const { data: myProfile } = await sb.from('profiles').select('role, current_team_id').eq('id', user.id).single();
-    const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', profile.current_team_id);
-    const { data: myProfile } = await sb.from('profiles').select('role, current_team_id').eq('id', user.id).single();
-    
-    // 如果是隊長，則顯示生成圖片按鈕
-    if (myProfile && myProfile.role === 'captain') {
-        document.getElementById('captain-tools').classList.remove('hidden');
-    }
-       // 在標題旁邊顯示隊伍邀請碼 (方便隊長複製)
-    if (myProfile && myProfile.role === 'captain') {
-        const inviteDiv = document.createElement('div');
-        inviteDiv.style = "font-size:12px; color:#7f8c8d; margin-bottom:10px; background:#fff; padding:5px; border-radius:5px;";
-        inviteDiv.innerHTML = `📢 隊伍邀請碼: <strong>${myProfile.current_team_id}</strong> (點擊可複製)`;
-        inviteDiv.onclick = () => {
-            navigator.clipboard.writeText(myProfile.current_team_id);
-            alert("邀請碼已複製！");
-        };
-        gridElement.parentNode.insertBefore(inviteDiv, gridElement);
-    }
-
-       
-    // 3. 取得所有成員「今天」與「昨天」的紀錄
-    const memberIds = members.map(m => m.id);
-    const { data: allRecords } = await sb.from('weight_records')
-        .select('*')
-        .in('user_id', memberIds)
-        .in('date', [today, yesterday]);
-
-    gridElement.innerHTML = ""; 
-
-    for (let i = 0; i < 9; i++) {
-        const member = members[i] || null;
-        const card = document.createElement('div');
-        card.className = "member-card";
-
-        if (member) {
-            const todayData = allRecords.find(r => r.user_id === member.id && r.date === today);
-            const yesterdayData = allRecords.find(r => r.user_id === member.id && r.date === yesterday);
-
-            // 計算變化函數
-            const getDiff = (now, prev) => {
-                if (!now || !prev) return '--';
-                const diff = (now - prev).toFixed(1);
-                return diff > 0 ? `+${diff}` : diff; // 加上正負號
-            };
-
-            card.innerHTML = `
-                <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" crossorigin="anonymous">
-                <div class="name">${member.full_name || '隊友'}</div>
-                
-                <div style="font-size: 11px; width: 100%;">
-                    <div class="${todayData ? 'done' : 'pending'}" style="margin-bottom:2px; border-radius:4px;">
-                        體重: ${todayData ? todayData.weight : '--'} (${getDiff(todayData?.weight, yesterdayData?.weight)})
-                    </div>
-                    <div style="color: #666;">
-                        體脂: ${todayData?.fat_rate || '--'}% (${getDiff(todayData?.fat_rate, yesterdayData?.fat_rate)})
-                    </div>
-                    <div style="color: #666;">
-                        肌肉: ${todayData?.muscle_mass || '--'}kg (${getDiff(todayData?.muscle_mass, yesterdayData?.muscle_mass)})
-                    </div>
-                </div>
-            `;
-        } else {
-            card.innerHTML = `<div style="color: #ccc;">待加入</div>`;
-        }
-        gridElement.appendChild(card);
-    }
-}
-
-    async function generateImage() {
-        const element = document.getElementById('grid-display');
-        const buttons = document.getElementById('action-buttons');
+    async function loadTeamData() {
+        const gridElement = document.getElementById('grid-display');
         
-        // 隱藏按鈕
-        buttons.style.display = 'none';
-
         try {
-            const canvas = await html2canvas(element, {
-                useCORS: true,
-                scale: 2,
-                backgroundColor: '#f0f2f5',
-                logging: false
-            });
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) {
+                gridElement.innerHTML = "<p style='grid-column: span 3;'>請先登入</p>";
+                return;
+            }
 
-            const imgData = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = imgData;
-            link.download = `馬拉松戰況_${new Date().toLocaleDateString()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // 1. 抓取我的資料與團隊 ID
+            const { data: myProfile } = await sb.from('profiles').select('*').eq('id', user.id).single();
+            if (!myProfile?.current_team_id) {
+                gridElement.innerHTML = "<p style='grid-column: span 3;'>尚未加入隊伍</p>";
+                return;
+            }
+
+            // 2. 如果是隊長，顯示工具
+            if (myProfile.role === 'captain') {
+                document.getElementById('captain-tools').classList.remove('hidden');
+                document.getElementById('invite-area').innerHTML = `
+                    <div class="invite-box" onclick="copyInvite('${myProfile.current_team_id}')">
+                        📢 邀請碼：${myProfile.current_team_id} (點擊複製)
+                    </div>`;
+            }
+
+            // 3. 抓取隊友資料
+            const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', myProfile.current_team_id);
             
-            alert("圖片已生成！");
-        } catch (error) {
-            console.error('圖片生成失敗:', error);
-            alert("生成失敗，請確認是否已上傳頭像或網路正常。");
-        } finally {
-            // 顯示回按鈕
-            buttons.style.display = 'block';
-        }
-    }
-</script>
-</body>
-</html>
+            // 4. 抓取今天與昨天日期
+            const today = new Date().toISOString().split('T')[0];
+            const yesterdayDate = new Date();
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterday = yesterdayDate.toISOString
