@@ -67,16 +67,14 @@
         </div>
         <button onclick="updateProfile()">儲存個人設定</button>
 
-        <div class="weight-section">
-            <h3>⚖️ 每日體重報到</h3>
-            <div class="form-group">
-                <label for="daily_weight">今日體重 (kg)</label>
-                <input type="number" id="daily_weight" step="0.1" placeholder="例如: 65.5">
-            </div>
-            <button onclick="saveWeight()" style="background-color: #f39c12;">送出今日數據</button>
-            <p id="weight-status" class="success-text"></p>
-        </div>
-
+       <div class="weight-section" style="background: #eef2f3; padding: 15px; border-radius: 10px;">
+    <h3>團體戰：加入隊伍</h3>
+    <div class="form-group">
+        <label for="team_id_input">隊伍邀請碼 (Team ID)</label>
+        <input type="text" id="team_id_input" placeholder="請貼上隊長提供的 ID">
+    </div>
+    <button onclick="joinTeam()" style="background-color: #9b59b6;">確認加入隊伍</button>
+</div>
         <button class="logout-btn" onclick="signOut()">安全登出</button>
     </div>
 </div>
@@ -99,6 +97,19 @@
             showProfile(user);
         }
     };
+    async function joinTeam() {
+    const { data: { user } } = await sb.auth.getUser();
+    const teamId = document.getElementById('team_id_input').value.trim();
+
+    if (!teamId) return alert("請輸入邀請碼");
+
+    const { error } = await sb.from('profiles').update({ 
+        current_team_id: teamId 
+    }).eq('id', user.id);
+
+    if (error) alert("加入失敗，請檢查邀請碼是否正確");
+    else alert("成功加入隊伍！快去九宮格看看吧。");
+}
 
     // 註冊
     async function signUp() {
