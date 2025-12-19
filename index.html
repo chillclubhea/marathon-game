@@ -157,35 +157,46 @@
     };
 
     async function loadDashboard(user) {
-        const { data: profile } = await sb.from('profiles').select('*').eq('id', user.id).single();
-        if (!profile) return;
+        const { data: profile, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        
+        if (error || !profile) {
+            console.error("讀取 Profile 失敗:", error);
+            return;
+        }
 
         document.getElementById('user-display').innerText = user.email;
         document.getElementById('full_name').value = profile.full_name || '';
         document.getElementById('team_id_input').value = profile.team_id || '';
         
+        // 只有在資料完整時才隱藏設定卡
         if (profile.full_name && profile.team_id) {
             document.getElementById('setup-card').classList.add('hidden');
             document.getElementById('edit-profile-btn').classList.remove('hidden');
         }
 
-        // 產品門檻檢查
+        // 產品門檻檢查 (如果還沒手動加分，這會是 false)
         const hasMinPoints = (profile.product_points || 0) >= 60;
-        if (!hasMinPoints) {
+        if (hasMinPoints) {
+            document.getElementById('checkin-box').classList.remove('hidden');
+            document.getElementById('lock-notice').classList.add('hidden');
+        } else {
             document.getElementById('checkin-box').classList.add('hidden');
             document.getElementById('lock-notice').classList.remove('hidden');
         }
 
-        // 天數與任務
+        // 避免 team_id 為空時調用 API 導致 400 錯誤
+        if (profile.team_id) {
+            loadTeamGrid(profile.team_id);
+        } else {
+            document.getElementById('team-grid-container').innerHTML = '<div style="grid-column: span 3; color:#999; font-size:12px;">尚未加入小隊</div>';
+        }
+
         const dayNum = Math.ceil(Math.abs(new Date() - new Date(profile.created_at)) / (1000 * 60 * 60 * 24));
         document.getElementById('day-progress').innerText = `Day ${dayNum}`;
-        document.getElementById('today-mission-tip').innerText = dayNum <= 10 ? `🎯 今日挑戰：${missions[dayNum-1]}` : "🎉 賽季圓滿結束！";
-        
-        // 抵用券顯示 ($100 * 推薦人數)
+        document.getElementById('today-mission-tip').innerText = dayNum <= 10 ? `🎯 今日挑戰：${missions[dayNum-1]}` : "🎉 賽季結束";
         document.getElementById('voucher-display').innerText = `$${(profile.referral_count || 0) * 100}`;
 
         renderMissions(dayNum);
-        loadTeamGrid(profile.team_id);
         updateTicketDisplay(user.id, profile);
     }
 
