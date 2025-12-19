@@ -22,7 +22,10 @@
     </style>
 </head>
 <body>
-
+<div class="form-group">
+    <label for="avatar_file">上傳我的頭像</label>
+    <input type="file" id="avatar_file" accept="image/*">
+</div>
 <div class="container">
     <h2>🏃 馬拉松玩家中心</h2>
 
@@ -137,22 +140,64 @@
 
     // 更新 Profile
     async function updateProfile() {
-        const { data: { user } } = await sb.auth.getUser();
-        const full_name = document.getElementById('full_name').value;
-        const role = document.getElementById('role').value;
-        const plan = document.getElementById('plan').value;
+    const { data: { user } } = await sb.auth.getUser();
+    const full_name = document.getElementById('full_name').value;
+    const role = document.getElementById('role').value;
+    const plan = document.getElementById('plan').value;
+    const avatarFile = document.getElementById('avatar_file').files[0];
+    
+    let avatarUrl = "";
 
-        const { error } = await sb.from('profiles').upsert({
-            id: user.id,
-            full_name: full_name,
-            role: role,
-            plan: plan,
-            updated_at: new Date()
-        });
+    // 1. 如果有選擇檔案，則執行上傳
+    if (avatarFile) {
+        // 幫檔案取名：使用 user_id 確保唯一性
+        const fileExt = avatarFile.name.split('.').pop();
+        const filePath = `${user.id}.${fileExt}`;
 
-        if (error) alert("儲存失敗: " + error.message);
-        else alert("設定更新成功！");
+        // 上傳到你建立的 avatars bucket
+        const { error: uploadError } = await sb.storage
+            .from('avatars')
+            .upload(filePath, avatarFile, { upsert: true });
+
+        if (uploadError) {
+            alert("圖片上傳失敗: " + uploadError.message);
+            return;
+        }
+
+        // 取得圖片的公開網址
+        const { data: publicUrlData } = sb.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+        
+        avatarUrl = publicUrlData.publicUrl;
+        console.log("圖片網址：", avatarUrl);
     }
+
+    // 2. 準備更新到 profiles 的資料
+    const updateData = {
+        id: user.id,
+        full_name: full_name,
+        role: role,
+        plan: plan,
+        updated_at: new Date()
+    };
+
+    // 只有在有上傳新圖時，才加入 avatar_url 欄位
+    if (avatarUrl) {
+        updateData.avatar_url = avatarUrl;
+    }
+
+    // 3. 執行 Upsert (更新或新增)
+    const { error } = await sb.from('profiles').upsert(updateData);
+
+    if (error) {
+        alert("儲存失敗: " + error.message);
+    } else {
+        alert("個人資料與頭像已更新！");
+        // 更新成功後重新讀取，讓畫面上能看到新頭像（選做）
+        showProfile(user); 
+    }
+}
 
     // 儲存體重
     async function saveWeight() {
