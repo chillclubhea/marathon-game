@@ -6,14 +6,8 @@
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --primary: #3498db;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --bg: #f4f7f6;
-        }
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
         .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
         .header { text-align: center; margin-bottom: 25px; }
         h2 { color: #2c3e50; margin: 0; font-size: 24px; }
@@ -23,6 +17,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 6px; font-weight: bold; color: #4a5568; font-size: 14px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        input:disabled, select:disabled { background-color: #f8fafc; color: #94a3b8; cursor: not-allowed; }
         .row { display: flex; gap: 10px; }
         .row .form-group { flex: 1; }
         button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
@@ -39,18 +34,18 @@
 <div class="container">
     <div id="auth-section">
         <h2>🔑 登入馬拉松</h2>
-        <div class="card" style="margin-top: 20px;">
+        <form onsubmit="signIn(); return false;" class="card" style="margin-top: 20px;">
             <div class="form-group">
                 <label>電子信箱</label>
-                <input type="email" id="email" placeholder="Email">
+                <input type="email" id="email" placeholder="Email" required>
             </div>
             <div class="form-group">
                 <label>密碼</label>
-                <input type="password" id="password" placeholder="Password">
+                <input type="password" id="password" placeholder="Password" required>
             </div>
-            <button class="btn-primary" onclick="signUp()">註冊</button>
-            <button class="btn-success" onclick="signIn()">登入</button>
-        </div>
+            <button type="button" class="btn-primary" onclick="signUp()">註冊</button>
+            <button type="submit" class="btn-success">登入</button>
+        </form>
     </div>
 
     <div id="profile-section" class="hidden">
@@ -66,7 +61,7 @@
 
         <div id="setup-card" class="card">
             <div class="card-title">👤 個人設定 & 加入隊伍</div>
-            <img id="avatar-img" class="avatar-preview" src="https://via.placeholder.com/80">
+            <img id="avatar-img" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random">
             <div class="form-group">
                 <label>更換頭像</label>
                 <input type="file" id="avatar_file" accept="image/*">
@@ -133,12 +128,19 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     window.onload = async () => {
-        const { data: { user } } = await sb.auth.getUser();
-        if (user) showProfile(user);
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) showProfile(session.user);
     };
 
     function toggleProfileEdit() {
-        document.getElementById('setup-card').classList.toggle('hidden');
+        const setupCard = document.getElementById('setup-card');
+        const inputs = setupCard.querySelectorAll('input, select');
+        const isHidden = setupCard.classList.toggle('hidden');
+        
+        // 切換時解除/恢復鎖定
+        inputs.forEach(input => {
+            if (input.id !== 'avatar_file') input.disabled = isHidden;
+        });
     }
 
     async function showProfile(user) {
@@ -146,18 +148,30 @@
         document.getElementById('profile-section').classList.remove('hidden');
         document.getElementById('user-display').innerText = `帳號: ${user.email}`;
 
-        const { data } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        const { data, error } = await sb.from('profiles').select('*').eq('id', user.id).single();
+        
         if (data) {
             document.getElementById('full_name').value = data.full_name || '';
             document.getElementById('role').value = data.role || 'member';
             document.getElementById('plan').value = data.plan || 'slow';
             document.getElementById('team_id_input').value = data.current_team_id || '';
-            if (data.avatar_url) document.getElementById('avatar-img').src = data.avatar_url;
+            
+            if (data.avatar_url) {
+                document.getElementById('avatar-img').src = data.avatar_url;
+            } else if (data.full_name) {
+                document.getElementById('avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=random`;
+            }
 
-            // 如果已經有姓名和隊伍，隱藏設定卡片，顯示切換按鈕
+            // --- 鎖定邏輯 ---
             if (data.full_name && data.current_team_id) {
                 document.getElementById('setup-card').classList.add('hidden');
                 document.getElementById('edit-profile-btn').classList.remove('hidden');
+                
+                // 鎖定所有輸入框
+                document.getElementById('full_name').disabled = true;
+                document.getElementById('role').disabled = true;
+                document.getElementById('plan').disabled = true;
+                document.getElementById('team_id_input').disabled = true;
             }
         }
     }
@@ -176,6 +190,7 @@
             }
         }
 
+        // 修正 400 錯誤：確保欄位名稱與資料庫 profiles 表完全一致
         const { error } = await sb.from('profiles').upsert({
             id: user.id,
             full_name: document.getElementById('full_name').value,
@@ -186,37 +201,39 @@
             updated_at: new Date()
         });
         
-        if (error) alert(error.message); 
-        else { alert("設定已儲存！"); location.reload(); }
+        if (error) {
+            console.error("Profiles Upsert Error:", error);
+            alert("儲存失敗，請檢查資料庫 profiles 欄位設定。");
+        } else {
+            alert("✅ 設定已儲存並鎖定！");
+            location.reload();
+        }
     }
 
     async function saveDailyData() {
-    const { data: { user } } = await sb.auth.getUser();
-    const weight = document.getElementById('weight').value;
-    const fat = document.getElementById('fat_rate').value;
-    const muscle = document.getElementById('muscle_mass').value;
-    const today = new Date().toISOString().split('T')[0];
+        const { data: { user } } = await sb.auth.getUser();
+        const weight = document.getElementById('weight').value;
+        const fat = document.getElementById('fat_rate').value;
+        const muscle = document.getElementById('muscle_mass').value;
+        const today = new Date().toISOString().split('T')[0];
 
-    if(!weight) { alert("請輸入體重"); return; }
+        if(!weight) { alert("請輸入體重"); return; }
 
-    const { error } = await sb.from('weight_records').upsert({
-        user_id: user.id,
-        date: today,
-        weight: parseFloat(weight),
-        fat_rate: parseFloat(fat) || 0,
-        muscle_mass: parseFloat(muscle) || 0
-    }, { 
-        onConflict: 'user_id, date' // 💡 明確告訴系統：這兩個欄位衝突時就覆蓋
-    });
+        const { error } = await sb.from('weight_records').upsert({
+            user_id: user.id,
+            date: today,
+            weight: parseFloat(weight),
+            fat_rate: parseFloat(fat) || 0,
+            muscle_mass: parseFloat(muscle) || 0
+        });
 
-    if (error) {
-        console.error(error);
-        alert("儲存失敗：" + error.message);
-    } else {
-        document.getElementById('status-msg').innerText = "✅ 數據已成功覆蓋！";
-        setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
+        if (error) {
+            alert("儲存失敗：" + error.message);
+        } else {
+            document.getElementById('status-msg').innerText = "✅ 今日數據已更新！";
+            setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
+        }
     }
-}
 
     async function signUp() {
         const email = document.getElementById('email').value;
@@ -229,7 +246,7 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const { data, error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else showProfile(data.user);
+        if (error) alert(error.message); else location.reload();
     }
 
     async function signOut() {
