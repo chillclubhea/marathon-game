@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬拉松排行榜</title>
+    <title>馬拉松任務區</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
@@ -12,34 +12,37 @@
         .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         h1 { color: #2c3e50; margin: 0; font-size: 28px; }
         .subtitle { color: #7f8c8d; margin-top: 8px; font-size: 14px; }
-        .nav { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
-        .nav-btn { padding: 12px 24px; background: white; border: 2px solid #e0e0e0; border-radius: 50px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .nav-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
-        .ranking-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .ranking-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .ranking-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; }
-        .ranking-item:last-child { border-bottom: none; }
-        .rank { width: 40px; text-align: center; font-weight: bold; font-size: 20px; }
-        .rank-1 { color: #ffd700; }
-        .rank-2 { color: #c0c0c0; }
-        .rank-3 { color: #cd7f32; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; margin: 0 15px; object-fit: cover; }
-        .user-info { flex: 1; }
-        .user-name { font-weight: bold; color: #2c3e50; }
-        .user-detail { font-size: 12px; color: #7f8c8d; }
-        .score { font-size: 24px; font-weight: bold; color: var(--primary); min-width: 80px; text-align: right; }
-        .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .team-item { background: #f8f9fa; border-radius: 10px; padding: 15px; text-align: center; }
-        .team-rank { font-size: 24px; font-weight: bold; color: var(--primary); }
-        .team-name { font-weight: bold; margin: 10px 0; }
-        .team-score { color: #7f8c8d; font-size: 14px; }
-        .medal { font-size: 24px; margin-right: 5px; }
-        .refresh-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; margin: 20px auto; display: block; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 32px; font-weight: bold; color: var(--primary); }
+        .stat-label { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+        .task-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .task-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .task-desc { color: #5d6d7e; margin-bottom: 20px; line-height: 1.5; }
+        .task-meta { display: flex; justify-content: space-between; color: #7f8c8d; font-size: 14px; margin-bottom: 15px; }
+        .task-points { background: #e8f4fc; color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .task-actions { display: flex; gap: 10px; }
+        .task-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .task-btn.complete { background: var(--success); color: white; }
+        .task-btn.pending { background: #f0f0f0; color: #7f8c8d; }
+        .task-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .task-btn:hover:not(.disabled) { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .checklist { margin: 20px 0; }
+        .checklist-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .checklist-item:last-child { border-bottom: none; }
+        .checklist-checkbox { width: 24px; height: 24px; margin-right: 12px; cursor: pointer; }
+        .checklist-label { flex: 1; }
+        .checklist-points { color: var(--primary); font-weight: bold; }
         .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .lottery-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; text-align: center; }
+        .lottery-title { font-size: 24px; font-weight: bold; margin-bottom: 15px; }
+        .lottery-ticket { background: white; color: #333; border-radius: 10px; padding: 15px; margin: 15px 0; display: inline-block; font-size: 20px; font-weight: bold; }
+        .lottery-count { font-size: 48px; font-weight: bold; margin: 10px 0; }
         .hidden { display: none; }
-        @media (max-width: 768px) { .team-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .team-grid { grid-template-columns: 1fr; } }
+        .completed-badge { background: var(--success); color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; margin-left: 10px; }
+        .date-navigation { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .date-btn { background: white; border: 2px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 50px; cursor: pointer; font-weight: bold; }
+        .current-date { font-weight: bold; color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -47,50 +50,68 @@
     
     <div class="container">
         <div class="header">
-            <h1>🏆 馬拉松排行榜</h1>
-            <div class="subtitle">每小時自動更新 • 最後更新: <span id="last-update">--:--</span></div>
+            <h1>✅ 馬拉松任務區</h1>
+            <div class="subtitle">每日更新任務 • 完成任務獲得積分與抽獎券</div>
         </div>
         
-        <div class="nav">
-            <button class="nav-btn active" onclick="showTab('individual')">個人積分榜</button>
-            <button class="nav-btn" onclick="showTab('team')">團隊積分榜</button>
-            <button class="nav-btn" onclick="showTab('weight')">減重排行榜</button>
+        <!-- 日期導航 -->
+        <div class="date-navigation">
+            <button class="date-btn" onclick="changeDate(-1)">← 前一天</button>
+            <div class="current-date" id="current-date"></div>
+            <button class="date-btn" onclick="changeDate(1)">後一天 →</button>
         </div>
         
-        <!-- 個人排行榜 -->
-        <div id="individual-ranking" class="ranking-card">
-            <div class="ranking-title">🥇 個人積分排行榜</div>
-            <div id="individual-list">
+        <!-- 統計卡片 -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="today-points">0</div>
+                <div class="stat-label">今日積分</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-tickets">0</div>
+                <div class="stat-label">累積抽獎券</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completed-tasks">0/0</div>
+                <div class="stat-label">完成任務</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="task-streak">0</div>
+                <div class="stat-label">連續完成天數</div>
+            </div>
+        </div>
+        
+        <!-- 抽獎券區 -->
+        <div class="lottery-section">
+            <div class="lottery-title">🎟️ 任務區抽獎系統</div>
+            <div>完成每日任務即可獲得抽獎券，每10天畢業典禮抽獎！</div>
+            <div class="lottery-ticket">抽獎券編號: <span id="ticket-number">--</span></div>
+            <div class="lottery-count" id="ticket-count">0</div>
+            <div>張可用抽獎券</div>
+            <div style="margin-top: 15px; font-size: 14px; opacity: 0.9;">
+                抽獎券來源: 每日報到(1張) + 完成任務(1-3張) + 轉介紹(額外獎勵)
+            </div>
+        </div>
+        
+        <!-- 任務列表 -->
+        <div id="tasks-container">
+            <div class="task-card">
+                <div class="task-title">📊 載入任務中...</div>
                 <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                    <div style="font-size: 48px;">📊</div>
-                    <div>載入中...</div>
+                    <div style="font-size: 48px;">⏳</div>
+                    <div>正在載入今日任務</div>
                 </div>
             </div>
         </div>
         
-        <!-- 團隊排行榜 -->
-        <div id="team-ranking" class="ranking-card hidden">
-            <div class="ranking-title">👥 團隊積分排行榜</div>
-            <div id="team-list" class="team-grid">
-                <div style="text-align: center; padding: 40px; color: #7f8c8d; grid-column: 1 / -1;">
-                    <div style="font-size: 48px;">🏆</div>
-                    <div>載入中...</div>
-                </div>
+        <!-- 任務完成提示 -->
+        <div id="completion-message" class="task-card hidden" style="background: #e8f6ef; border-left: 5px solid var(--success);">
+            <div class="task-title">🎉 恭喜完成今日任務！</div>
+            <div>你已獲得 <strong id="earned-points">0</strong> 積分和 <strong id="earned-tickets">0</strong> 張抽獎券</div>
+            <div style="margin-top: 15px; font-size: 14px; color: #27ae60;">
+                記得明天繼續完成任務，保持連勝紀錄！
             </div>
         </div>
-        
-        <!-- 減重排行榜 -->
-        <div id="weight-ranking" class="ranking-card hidden">
-            <div class="ranking-title">⚖️ 減重排行榜</div>
-            <div id="weight-list">
-                <div style="text-align: center; padding: 40px; color: #7f8c8d;">
-                    <div style="font-size: 48px;">📉</div>
-                    <div>載入中...</div>
-                </div>
-            </div>
-        </div>
-        
-        <button class="refresh-btn" onclick="loadAllRankings()">🔄 重新整理</button>
     </div>
 
 <script>
@@ -101,6 +122,8 @@
     
     // 全局變數
     let currentUser = null;
+    let currentDate = new Date();
+    let dailyTasks = [];
     
     // 頁面載入
     window.onload = async () => {
@@ -113,242 +136,341 @@
         }
         currentUser = session.user;
         
-        // 載入排行榜
-        loadAllRankings();
+        // 載入任務
+        loadTasks();
+        updateStats();
         
-        // 更新時間顯示
-        updateTime();
-        setInterval(updateTime, 60000); // 每分鐘更新一次時間
+        // 設置當前日期顯示
+        updateDateDisplay();
     };
     
-    // 更新時間顯示
-    function updateTime() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('zh-TW', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
+    // 更新日期顯示
+    function updateDateDisplay() {
+        const dateStr = currentDate.toLocaleDateString('zh-TW', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'long'
         });
-        document.getElementById('last-update').textContent = timeStr;
+        document.getElementById('current-date').textContent = dateStr;
     }
     
-    // 切換頁籤
-    function showTab(tabName) {
-        // 更新按鈕狀態
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        event.target.classList.add('active');
+    // 變更日期
+    function changeDate(days) {
+        currentDate.setDate(currentDate.getDate() + days);
+        updateDateDisplay();
+        loadTasks();
+    }
+    
+    // 載入任務
+    async function loadTasks() {
+        const container = document.getElementById('tasks-container');
+        container.innerHTML = '<div class="task-card"><div class="task-title">📊 載入任務中...</div></div>';
         
-        // 顯示對應的內容
-        document.getElementById('individual-ranking').classList.add('hidden');
-        document.getElementById('team-ranking').classList.add('hidden');
-        document.getElementById('weight-ranking').classList.add('hidden');
-        document.getElementById(tabName + '-ranking').classList.remove('hidden');
-    }
-    
-    // 載入所有排行榜
-    async function loadAllRankings() {
-        await loadIndividualRanking();
-        await loadTeamRanking();
-        await loadWeightRanking();
-    }
-    
-    // 載入個人積分排行榜
-    async function loadIndividualRanking() {
-        const container = document.getElementById('individual-list');
-        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
+        // 獲取今日日期字串
+        const dateStr = currentDate.toISOString().split('T')[0];
         
         try {
-            // 獲取所有用戶，按積分排序
-            const { data: users, error } = await sb
-                .from('profiles')
-                .select('id, full_name, avatar_url, points, role, plan')
-                .order('points', { ascending: false })
-                .limit(50);
+            // 獲取用戶今日的任務完成狀態
+            const { data: dailyScore, error: scoreError } = await sb
+                .from('daily_scores')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('date', dateStr)
+                .maybeSingle();
             
-            if (error) throw error;
+            if (scoreError) throw scoreError;
             
-            if (!users || users.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無數據</div>';
-                return;
-            }
-            
-            let html = '';
-            users.forEach((user, index) => {
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-                const isCurrentUser = currentUser && user.id === currentUser.id;
-                
-                html += `
-                <div class="ranking-item" style="${isCurrentUser ? 'background: #e8f4fc; border-left: 4px solid var(--primary);' : ''}">
-                    <div class="rank ${rankClass}">
-                        ${medal} ${index + 1}
-                    </div>
-                    <img class="avatar" src="${user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User') + '&background=random'}" alt="${user.full_name}">
-                    <div class="user-info">
-                        <div class="user-name">
-                            ${user.full_name || '未設定姓名'}
-                            ${isCurrentUser ? ' (您)' : ''}
-                        </div>
-                        <div class="user-detail">
-                            ${user.role === 'captain' ? '👑 隊長' : user.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
-                            ${user.plan === 'slow_run' ? '慢跑' : user.plan === 'fast_run' ? '快跑' : 'VIP'}
-                        </div>
-                    </div>
-                    <div class="score">${user.points || 0} 分</div>
-                </div>`;
-            });
-            
-            container.innerHTML = html;
-        } catch (error) {
-            console.error('載入個人排行榜錯誤:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
-        }
-    }
-    
-    // 載入團隊積分排行榜
-    async function loadTeamRanking() {
-        const container = document.getElementById('team-list');
-        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
-        
-        try {
-            // 獲取所有團隊及其成員
-            const { data: teams, error } = await sb
-                .from('teams')
-                .select(`
-                    id,
-                    team_name,
-                    captain:profiles!teams_captain_id_fkey(full_name, avatar_url),
-                    members:team_members(
-                        member:profiles(points)
-                    )
-                `)
-                .order('created_at', { ascending: true });
-            
-            if (error) throw error;
-            
-            if (!teams || teams.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無團隊數據</div>';
-                return;
-            }
-            
-            // 計算每個團隊的平均分數
-            const teamsWithScore = teams.map(team => {
-                const totalPoints = team.members.reduce((sum, member) => {
-                    return sum + (member.member?.points || 0);
-                }, 0);
-                
-                const avgPoints = team.members.length > 0 ? Math.round(totalPoints / team.members.length) : 0;
-                
-                return {
-                    ...team,
-                    avg_points: avgPoints,
-                    member_count: team.members.length
-                };
-            });
-            
-            // 按平均分數排序
-            teamsWithScore.sort((a, b) => b.avg_points - a.avg_points);
-            
-            // 生成 HTML
-            let html = '';
-            teamsWithScore.forEach((team, index) => {
-                const medal = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-                
-                html += `
-                <div class="team-item">
-                    <div class="team-rank">${medal} ${index + 1}</div>
-                    <div class="team-name">${team.team_name || '未命名團隊'}</div>
-                    <div class="team-score">
-                        隊長: ${team.captain?.full_name || '未設定'}<br>
-                        平均積分: <strong>${team.avg_points} 分</strong><br>
-                        成員: ${team.member_count}/9 人
-                    </div>
-                </div>`;
-            });
-            
-            container.innerHTML = html;
-        } catch (error) {
-            console.error('載入團隊排行榜錯誤:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
-        }
-    }
-    
-    // 載入減重排行榜
-    async function loadWeightRanking() {
-        const container = document.getElementById('weight-list');
-        container.innerHTML = '<div style="text-align: center; padding: 20px;">載入中...</div>';
-        
-        try {
-            // 獲取所有用戶的體重記錄
-            const { data: profiles, error } = await sb
-                .from('profiles')
-                .select(`
-                    id,
-                    full_name,
-                    avatar_url,
-                    total_weight_lost,
-                    role,
-                    plan,
-                    weight_records(weight, date)
-                `)
-                .not('total_weight_lost', 'is', null)
-                .order('total_weight_lost', { ascending: false })
-                .limit(20);
-            
-            if (error) throw error;
-            
-            if (!profiles || profiles.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">暫無減重數據</div>';
-                return;
-            }
-            
-            let html = '';
-            profiles.forEach((user, index) => {
-                const weightLost = user.total_weight_lost || 0;
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-                const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : '';
-                const isCurrentUser = currentUser && user.id === currentUser.id;
-                
-                // 獲取最新體重記錄
-                let latestWeight = null;
-                let latestDate = null;
-                if (user.weight_records && user.weight_records.length > 0) {
-                    const latestRecord = user.weight_records.reduce((latest, record) => {
-                        return new Date(record.date) > new Date(latest.date) ? record : latest;
-                    }, user.weight_records[0]);
-                    
-                    latestWeight = latestRecord.weight;
-                    latestDate = new Date(latestRecord.date).toLocaleDateString('zh-TW');
+            // 定義任務列表（可從資料庫獲取或靜態定義）
+            dailyTasks = [
+                {
+                    id: 'weight_check',
+                    title: '⚖️ 完成磅磅 + 打卡飲食',
+                    description: '測量體重並記錄今日飲食內容，需配合 shake + 直播',
+                    points: 1,
+                    isCompleted: dailyScore ? dailyScore.weight_recorded : false,
+                    required: true
+                },
+                {
+                    id: 'shake_used',
+                    title: '🥤 使用營養奶昔 (Shake)',
+                    description: '今日使用康寶萊營養奶昔至少一次',
+                    points: 1,
+                    isCompleted: dailyScore ? dailyScore.shake_used : false,
+                    required: true
+                },
+                {
+                    id: 'live_session',
+                    title: '📹 完成直播或觀看',
+                    description: '完成團隊直播活動或觀看直播回放',
+                    points: 1,
+                    isCompleted: dailyScore ? dailyScore.task_completed : false,
+                    required: true
+                },
+                {
+                    id: 'exercise',
+                    title: '🏃 完成運動任務',
+                    description: '完成當日指定運動項目至少30分鐘',
+                    points: 1,
+                    isCompleted: dailyScore ? dailyScore.exercise_done : false,
+                    required: false
+                },
+                {
+                    id: 'social_share',
+                    title: '📱 社交媒體分享',
+                    description: '在社交媒體分享你的馬拉松進度或成果',
+                    points: 1,
+                    isCompleted: dailyScore ? dailyScore.social_shared : false,
+                    required: false
                 }
+            ];
+            
+            // 生成任務 HTML
+            let html = '';
+            let completedCount = 0;
+            
+            dailyTasks.forEach(task => {
+                const isToday = currentDate.toDateString() === new Date().toDateString();
+                const canComplete = isToday || task.isCompleted;
                 
                 html += `
-                <div class="ranking-item" style="${isCurrentUser ? 'background: #e8f4fc; border-left: 4px solid var(--success);' : ''}">
-                    <div class="rank ${rankClass}">
-                        ${medal} ${index + 1}
+                <div class="task-card">
+                    <div class="task-title">
+                        ${task.title}
+                        ${task.isCompleted ? '<span class="completed-badge">已完成</span>' : ''}
                     </div>
-                    <img class="avatar" src="${user.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.full_name || 'User') + '&background=random'}" alt="${user.full_name}">
-                    <div class="user-info">
-                        <div class="user-name">
-                            ${user.full_name || '未設定姓名'}
-                            ${isCurrentUser ? ' (您)' : ''}
-                        </div>
-                        <div class="user-detail">
-                            ${user.role === 'captain' ? '👑 隊長' : user.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'} • 
-                            累計減重: <strong>${weightLost.toFixed(1)} kg</strong>
-                            ${latestWeight ? ` • 最新體重: ${latestWeight} kg` : ''}
-                            ${latestDate ? ` (${latestDate})` : ''}
-                        </div>
+                    <div class="task-desc">${task.description}</div>
+                    <div class="task-meta">
+                        <div>${task.required ? '必做任務' : '選做任務'}</div>
+                        <div class="task-points">+${task.points} 積分</div>
                     </div>
-                    <div class="score" style="color: var(--success);">-${weightLost.toFixed(1)} kg</div>
+                    
+                    <div class="task-actions">
+                        <button class="task-btn ${task.isCompleted ? 'complete' : 'pending'} ${!canComplete ? 'disabled' : ''}" 
+                                onclick="toggleTask('${task.id}')"
+                                ${!canComplete ? 'disabled' : ''}>
+                            ${task.isCompleted ? '✅ 已完成' : '⬜ 標記完成'}
+                        </button>
+                        ${task.id === 'social_share' ? `
+                        <button class="task-btn" style="background: #4267B2; color: white;" onclick="shareToSocial()">
+                            📘 立即分享
+                        </button>
+                        ` : ''}
+                    </div>
                 </div>`;
+                
+                if (task.isCompleted) completedCount++;
             });
             
+            // 添加轉介紹任務（特殊任務）
+            html += `
+            <div class="task-card" style="border-left: 5px solid #9b59b6;">
+                <div class="task-title">👥 轉介紹任務 (額外獎勵)</div>
+                <div class="task-desc">
+                    介紹1位朋友參加馬拉松並介紹使用慢跑計算，可獲得 <strong>15積分</strong><br>
+                    邀請新朋友參加研討會：<strong>2積分</strong><br>
+                    朋友首次參加研討會：<strong>2積分</strong>
+                </div>
+                <div class="task-meta">
+                    <div>特別任務</div>
+                    <div class="task-points">最高 +19 積分</div>
+                </div>
+                
+                <div class="task-actions">
+                    <button class="task-btn" style="background: #9b59b6; color: white;" onclick="reportReferral()">
+                        📝 報告轉介紹
+                    </button>
+                </div>
+            </div>`;
+            
             container.innerHTML = html;
+            
+            // 更新統計
+            updateTaskStats(completedCount, dailyTasks.length);
+            
+            // 檢查是否所有必做任務都完成了
+            const allRequiredCompleted = dailyTasks
+                .filter(task => task.required)
+                .every(task => task.isCompleted);
+            
+            if (allRequiredCompleted && isToday) {
+                document.getElementById('completion-message').classList.remove('hidden');
+                document.getElementById('earned-points').textContent = dailyTasks.reduce((sum, task) => sum + (task.isCompleted ? task.points : 0), 0);
+                document.getElementById('earned-tickets').textContent = calculateTickets(completedCount);
+            } else {
+                document.getElementById('completion-message').classList.add('hidden');
+            }
+            
         } catch (error) {
-            console.error('載入減重排行榜錯誤:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
+            console.error('載入任務錯誤:', error);
+            container.innerHTML = '<div class="task-card" style="text-align: center; color: #e74c3c;">載入任務失敗，請重新整理</div>';
+        }
+    }
+    
+    // 更新任務統計
+    function updateTaskStats(completed, total) {
+        document.getElementById('completed-tasks').textContent = `${completed}/${total}`;
+    }
+    
+    // 計算抽獎券數量
+    function calculateTickets(completedTasks) {
+        // 基礎：完成所有必做任務 = 1張
+        // 額外：每完成一個選做任務 = 0.5張（四捨五入）
+        const requiredTasks = dailyTasks.filter(task => task.required);
+        const optionalTasks = dailyTasks.filter(task => !task.required);
+        
+        const requiredCompleted = requiredTasks.filter(task => task.isCompleted).length;
+        const optionalCompleted = optionalTasks.filter(task => task.isCompleted).length;
+        
+        let tickets = 0;
+        if (requiredCompleted === requiredTasks.length) {
+            tickets += 1; // 完成所有必做任務
+        }
+        tickets += Math.round(optionalCompleted * 0.5); // 選做任務獎勵
+        
+        return tickets;
+    }
+    
+    // 更新統計數據
+    async function updateStats() {
+        try {
+            // 獲取用戶資料
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('points')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (!error && profile) {
+                // 今日積分（簡化顯示，實際應從 daily_scores 計算）
+                document.getElementById('today-points').textContent = '--';
+                
+                // 累積抽獎券（假設每100積分換1張抽獎券）
+                const tickets = Math.floor((profile.points || 0) / 100);
+                document.getElementById('total-tickets').textContent = tickets;
+                document.getElementById('ticket-count').textContent = tickets;
+                
+                // 抽獎券編號
+                document.getElementById('ticket-number').textContent = `T${currentUser.id.substring(0, 8).toUpperCase()}`;
+            }
+            
+            // 獲取連續完成天數
+            const { data: streakData } = await sb
+                .from('daily_scores')
+                .select('date')
+                .eq('user_id', currentUser.id)
+                .eq('task_completed', true)
+                .order('date', { ascending: false });
+            
+            if (streakData && streakData.length > 0) {
+                // 簡單計算連續天數（實際需要更複雜的邏輯）
+                document.getElementById('task-streak').textContent = Math.min(streakData.length, 30);
+            }
+            
+        } catch (error) {
+            console.error('更新統計錯誤:', error);
+        }
+    }
+    
+    // 切換任務完成狀態
+    async function toggleTask(taskId) {
+        const task = dailyTasks.find(t => t.id === taskId);
+        if (!task) return;
+        
+        const isToday = currentDate.toDateString() === new Date().toDateString();
+        if (!isToday) {
+            alert('只能標記今日的任務');
+            return;
+        }
+        
+        const newStatus = !task.isCompleted;
+        const dateStr = currentDate.toISOString().split('T')[0];
+        
+        try {
+            // 更新 daily_scores 表中的對應欄位
+            const updateData = {};
+            switch(taskId) {
+                case 'weight_check':
+                    updateData.weight_recorded = newStatus;
+                    break;
+                case 'shake_used':
+                    updateData.shake_used = newStatus;
+                    break;
+                case 'live_session':
+                    updateData.task_completed = newStatus;
+                    break;
+                case 'exercise':
+                    updateData.exercise_done = newStatus;
+                    break;
+                case 'social_share':
+                    updateData.social_shared = newStatus;
+                    break;
+            }
+            
+            // 計算總分數
+            let totalPoints = 0;
+            if (updateData.weight_recorded && updateData.shake_used && updateData.task_completed) {
+                totalPoints += 1; // 完成一圈
+            }
+            if (updateData.weight_recorded) totalPoints += 1;
+            if (updateData.shake_used) totalPoints += 1;
+            if (updateData.exercise_done) totalPoints += 1;
+            if (updateData.social_shared) totalPoints += 1;
+            
+            updateData.total_points = totalPoints;
+            updateData.updated_at = new Date().toISOString();
+            
+            // 更新或創建記錄
+            const { error } = await sb
+                .from('daily_scores')
+                .upsert({
+                    user_id: currentUser.id,
+                    date: dateStr,
+                    ...updateData
+                }, { onConflict: 'user_id,date' });
+            
+            if (error) throw error;
+            
+            // 重新載入任務
+            loadTasks();
+            updateStats();
+            
+        } catch (error) {
+            console.error('更新任務狀態錯誤:', error);
+            alert('更新失敗: ' + error.message);
+        }
+    }
+    
+    // 報告轉介紹
+    function reportReferral() {
+        const friendName = prompt('請輸入您介紹的朋友姓名:');
+        const friendContact = prompt('請輸入朋友的聯絡方式 (電話/Email):');
+        
+        if (friendName && friendContact) {
+            alert(`已記錄轉介紹: ${friendName}\n我們會聯繫您的朋友，成功加入後您將獲得積分！`);
+            // 這裡應該發送到後端記錄轉介紹
+        }
+    }
+    
+    // 社交分享
+    function shareToSocial() {
+        const shareText = encodeURIComponent('我正在參加馬拉松健康挑戰！每天完成任務獲得積分，一起來參加吧！');
+        const shareUrl = encodeURIComponent(window.location.origin);
+        
+        // 可以打開多個分享選項
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}&quote=${shareText}`;
+        const whatsappUrl = `https://wa.me/?text=${shareText}%20${shareUrl}`;
+        
+        if (confirm('選擇分享方式：\n確定 = Facebook\n取消 = WhatsApp')) {
+            window.open(facebookUrl, '_blank');
+        } else {
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // 標記社交分享任務為完成
+        const socialTask = dailyTasks.find(t => t.id === 'social_share');
+        if (socialTask && !socialTask.isCompleted) {
+            toggleTask('social_share');
         }
     }
 </script>
