@@ -170,16 +170,19 @@
         // 獲取今日日期字串
         const dateStr = currentDate.toISOString().split('T')[0];
         
-        try {
-            // 獲取用戶今日的任務完成狀態
-            const { data: dailyScore, error: scoreError } = await sb
-                .from('daily_scores')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('date', dateStr)
-                .maybeSingle();
-            
-            if (scoreError) throw scoreError;
+         try {
+       // 獲取用戶今日的任務完成狀態
+       const { data: dailyScore, error: scoreError } = await sb
+           .from('daily_scores')
+           .select('*')
+           .eq('user_id', currentUser.id)
+           .eq('date', dateStr)
+           .maybeSingle();
+       
+       if (scoreError) {
+           console.error('查詢 daily_scores 表錯誤:', scoreError);
+           throw scoreError;
+       }
             
             // 定義任務列表（可從資料庫獲取或靜態定義）
             dailyTasks = [
@@ -301,11 +304,17 @@
                 document.getElementById('completion-message').classList.add('hidden');
             }
             
-        } catch (error) {
-            console.error('載入任務錯誤:', error);
-            container.innerHTML = '<div class="task-card" style="text-align: center; color: #e74c3c;">載入任務失敗，請重新整理</div>';
-        }
-    }
+       } catch (error) {
+       console.error('載入任務錯誤:', error);
+       container.innerHTML = `
+           <div class="task-card" style="text-align: center; color: #e74c3c;">
+               <h3>載入任務失敗</h3>
+               <p>錯誤訊息: ${error.message}</p>
+               <p>請檢查控制台獲取更多信息，或聯絡管理員。</p>
+               <button onclick="location.reload()">重新整理頁面</button>
+           </div>
+       `;
+   }
     
     // 更新任務統計
     function updateTaskStats(completed, total) {
