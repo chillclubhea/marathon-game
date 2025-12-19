@@ -205,13 +205,15 @@
         weight: parseFloat(weight),
         fat_rate: parseFloat(fat) || 0,
         muscle_mass: parseFloat(muscle) || 0
+    }, { 
+        onConflict: 'user_id, date' // 💡 明確告訴系統：這兩個欄位衝突時就覆蓋
     });
 
     if (error) {
+        console.error(error);
         alert("儲存失敗：" + error.message);
     } else {
-        // 提示文字改為「已更新」
-        document.getElementById('status-msg').innerText = "✅ 今日數據已成功儲存/覆蓋！";
+        document.getElementById('status-msg').innerText = "✅ 數據已成功覆蓋！";
         setTimeout(() => { document.getElementById('status-msg').innerText = ""; }, 3000);
     }
 }
