@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>副隊長管理</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .subtitle { color: #7f8c8d; margin-top: 8px; font-size: 14px; }
+        .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 16px; margin: 10px 5px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .hidden { display: none; }
+        .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>⭐ 副隊長管理</h1>
+            <div class="subtitle" id="team-info">載入中...</div>
+        </div>
+        
+        <div class="card">
+            <h3>📋 副隊長主要功能</h3>
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="window.location.href='deputy-tasks.html'">
+                    ✅ 任務狀態管理
+                </button>
+                <button class="btn btn-primary" onclick="viewTeamMembers()">
+                    👥 查看團隊成員
+                </button>
+                <button class="btn btn-primary" onclick="viewTeamProgress()">
+                    📊 團隊進度報告
+                </button>
+                <button class="btn btn-success" onclick="contactCaptain()">
+                    👑 聯繫隊長
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📢 今日提醒</h3>
+            <div id="today-tasks" style="margin-top: 15px;">
+                <div class="loading">載入中...</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>📞 快速聯繫</h3>
+            <div style="margin-top: 15px;">
+                <p>隊長: <span id="captain-info">載入中...</span></p>
+                <p>團隊ID: <span id="team-id">載入中...</span></p>
+                <button class="btn btn-primary" onclick="copyTeamId()">
+                    📋 複製團隊ID
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 全局變數
+    let currentUser = null;
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = session.user;
+        
+        // 檢查副隊長權限
+        await checkDeputyPermission();
+        
+        // 載入團隊資料
+        await loadTeamInfo();
+    };
+    
+    // 檢查副隊長權限
+    async function checkDeputyPermission() {
+        try {
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('role')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (profile.role !== 'deputy' && profile.role !== 'captain' && profile.role !== 'admin') {
+                alert('只有副隊長、隊長或管理員可以訪問此頁面');
+                window.location.href = 'index.html';
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('檢查副隊長權限錯誤:', error);
+            window.location.href = 'index.html';
+            return false;
+        }
+    }
+    
+    // 載入團隊資料
+    async function loadTeamInfo() {
+        try {
+            // 獲取副隊長資料
+            const { data: deputyProfile, error } = await sb
+                .from('profiles')
+                .select('current_team_id, full_name')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) throw error;
+            
+            if (!deputyProfile.current_team_id) {
+                document.getElementById('team-info').textContent = '您目前沒有加入團隊';
+                return;
+            }
+            
+            const teamId = deputyProfile.current_team_id;
+            document.getElementById('team-id').textContent = teamId;
+            document.getElementById('team-info').textContent = `副隊長: ${deputyProfile.full_name} | 團隊ID: ${teamId}`;
+            
+            // 獲取隊長資訊
+            const { data: captain } = await sb
+                .from('profiles')
+                .select('full_name, email')
+                .eq('current_team_id', teamId)
+                .eq('role', 'captain')
+                .maybeSingle();
+            
+            if (captain) {
+                document.getElementById('captain-info').textContent = `${captain.full_name} (${captain.email})`;
+            }
+            
+            // 載入今日任務提醒
+            await loadTodayTasks();
+            
+        } catch (error) {
+            console.error('載入團隊資料錯誤:', error);
+        }
+    }
+    
+    // 載入今日任務
+    async function loadTodayTasks() {
+        const today = new Date().toISOString().split('T')[0];
+        const container = document.getElementById('today-tasks');
+        
+        try {
+            // 獲取團隊成員
+            const { data: deputyProfile } = await sb
+                .from('profiles')
+                .select('current_team_id')
+                .eq('id', currentUser.id)
+                .single();
+            
+            const teamId = deputyProfile.current_team_id;
+            
+            const { data: members } = await sb
+                .from('profiles')
+                .select('id, full_name')
+                .eq('current_team_id', teamId);
+            
+            if (!members || members.length === 0) {
+                container.innerHTML = '<p>團隊暫無成員</p>';
+                return;
+            }
+            
+            // 檢查未報到成員
+            const memberIds = members.map(m => m.id);
+            const { data: todayRecords } = await sb
+                .from('weight_records')
+                .select('user_id')
+                .in('user_id', memberIds)
+                .eq('date', today);
+            
+            const checkedInIds = todayRecords ? todayRecords.map(r => r.user_id) : [];
+            const pendingMembers = members.filter(m => !checkedInIds.includes(m.id));
+            
+            if (pendingMembers.length === 0) {
+                container.innerHTML = '<p>✅ 所有成員今日已報到！</p>';
+            } else {
+                let html = '<p>⏳ 以下成員今日尚未報到：</p><ul style="margin-left: 20px;">';
+                pendingMembers.forEach(member => {
+                    html += `<li>${member.full_name || '未命名'}</li>`;
+                });
+                html += '</ul>';
+                container.innerHTML = html;
+            }
+            
+        } catch (error) {
+            console.error('載入今日任務錯誤:', error);
+            container.innerHTML = '<p>無法載入任務狀態</p>';
+        }
+    }
+    
+    // 查看團隊成員
+    function viewTeamMembers() {
+        window.location.href = 'team.html';
+    }
+    
+    // 查看團隊進度
+    function viewTeamProgress() {
+        window.location.href = 'leaderboard.html';
+    }
+    
+    // 聯繫隊長
+    function contactCaptain() {
+        const captainInfo = document.getElementById('captain-info').textContent;
+        alert(`隊長資訊：\n${captainInfo}\n\n建議聯繫方式：\n1. WhatsApp\n2. 電話\n3. 團隊會議`);
+    }
+    
+    // 複製團隊ID
+    function copyTeamId() {
+        const teamId = document.getElementById('team-id').textContent;
+        navigator.clipboard.writeText(teamId).then(() => {
+            alert('團隊ID已複製到剪貼簿！');
+        });
+    }
+</script>
+</body>
+</html>
