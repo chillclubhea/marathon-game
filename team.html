@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="馬拉松戰況">
-
-<link rel="apple-touch-icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
-<link rel="icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
+    <link rel="icon" href="https://via.placeholder.com/192/3498db/ffffff?text=Run">
+    
     <title>隊伍九宮格戰況</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script> <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f2f5; padding: 20px; }
-        h2 { text-align: center; color: #2c3e50; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f0f2f5; padding: 20px; text-align: center; }
+        h2 { color: #2c3e50; }
         .grid-container { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
             gap: 12px; 
             max-width: 450px; 
             margin: 20px auto; 
+            background-color: #f0f2f5; /* 確保截圖背景一致 */
+            padding: 10px;
+            border-radius: 12px;
         }
         .member-card { 
             background: white; 
@@ -48,140 +52,103 @@
         .weight-status { font-size: 12px; padding: 4px 8px; border-radius: 20px; width: 80%; }
         .done { background-color: #d4edda; color: #155724; font-weight: bold; }
         .pending { background-color: #f8d7da; color: #721c24; }
-        .btn-home { display: block; width: 150px; margin: 20px auto; padding: 10px; text-align: center; background: #3498db; color: white; text-decoration: none; border-radius: 8px; }
+        .btn-home { display: block; width: 150px; margin: 10px auto; padding: 12px; text-align: center; background: #3498db; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        .btn-capture { width: 150px; padding: 12px; background-color: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
     </style>
-        
-    
 </head>
 <body>
 
     <h2>🏆 戰隊九宮格</h2>
     
     <div id="grid-display" class="grid-container">
-        </div>
-</div> <button onclick="generateImage()" style="background-color: #e67e22; margin-top: 20px;">生成今日戰況圖片</button>
-    <a href="index.html" class="btn-home">回個人中心</a>
+        <p style="grid-column: span 3;">資料讀取中...</p>
+    </div>
+
+    <div id="action-buttons">
+        <button class="btn-capture" onclick="generateImage()">生成戰況圖片</button>
+        <a href="index.html" class="btn-home">回個人中心</a>
+    </div>
 
 <script>
-    // 1. 設定資訊
     const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 2. 啟動載入
     window.onload = function() {
         loadTeamData();
     };
-    // ... loadTeamData 函數的結束 ...
-
-async function generateImage() {
-    // 找到要截圖的範圍，就是我們的九宮格容器
-    const element = document.getElementById('grid-display'); 
-
-    // 暫時隱藏一些不希望出現在圖片上的元素 (例如按鈕)
-    const button = document.querySelector('button[onclick="generateImage()"]');
-    if (button) button.style.display = 'none';
-    const homeLink = document.querySelector('.btn-home');
-    if (homeLink) homeLink.style.display = 'none';
-
-    // 確保圖片在截圖前完全載入
-    const images = element.querySelectorAll('img');
-    const imageLoadPromises = Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve; // 錯誤也算載入完成
-        });
-    });
-    await Promise.all(imageLoadPromises);
-
-
-    html2canvas(element, {
-        useCORS: true, // 允許跨域圖片 (例如你的 Supabase 頭像)
-        scale: 2,      // 提高圖片解析度 (讓圖片更清晰)
-        backgroundColor: '#f0f2f5' // 截圖背景色，與 body 的背景色一致
-    }).then(canvas => {
-        // 將 canvas 轉換成圖片的 Data URL
-        const imgData = canvas.toDataURL('image/png');
-
-        // 建立一個連結，讓使用者可以下載圖片
-        const link = document.createElement('a');
-        link.href = imgData;
-        link.download = '馬拉松戰況_' + new Date().toISOString().split('T')[0] + '.png'; // 下載的檔名
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // 顯示回之前隱藏的元素
-        if (button) button.style.display = 'block';
-        if (homeLink) homeLink.style.display = 'block';
-
-        alert("今日戰況圖片已生成，請檢查你的下載內容！");
-    }).catch(error => {
-        console.error('圖片生成失敗:', error);
-        alert("圖片生成失敗，請稍後再試。");
-
-        // 失敗也要顯示回按鈕
-        if (button) button.style.display = 'block';
-        if (homeLink) homeLink.style.display = 'block';
-    });
-}
 
     async function loadTeamData() {
         const gridElement = document.getElementById('grid-display');
-        gridElement.innerHTML = "<p style='grid-column: span 3; text-align:center;'>資料讀取中...</p>";
-
-        // A. 檢查是否登入
         const { data: { user } } = await sb.auth.getUser();
         if (!user) {
-            gridElement.innerHTML = "<p style='grid-column: span 3; text-align:center;'>請先登入帳號</p>";
+            gridElement.innerHTML = "<p style='grid-column: span 3;'>請先登入帳號</p>";
             return;
         }
 
-        // B. 抓取個人的 team_id
         const { data: profile } = await sb.from('profiles').select('current_team_id').eq('id', user.id).single();
-        
-        if (!profile || !profile.current_team_id) {
-            gridElement.innerHTML = "<p style='grid-column: span 3; text-align:center;'>你還沒有加入任何隊伍唷！</p>";
+        if (!profile?.current_team_id) {
+            gridElement.innerHTML = "<p style='grid-column: span 3;'>尚未加入隊伍</p>";
             return;
         }
 
-        const myTeamId = profile.current_team_id;
-
-        // C. 抓取同隊所有成員
-        const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', myTeamId);
-
-        // D. 抓取今天的體重紀錄
+        const { data: members } = await sb.from('profiles').select('*').eq('current_team_id', profile.current_team_id);
         const today = new Date().toISOString().split('T')[0];
         const { data: weights } = await sb.from('weight_records').select('*').eq('date', today);
 
-        // E. 開始渲染 9 個格子
-        gridElement.innerHTML = ""; // 清空讀取中字樣
+        gridElement.innerHTML = ""; 
 
         for (let i = 0; i < 9; i++) {
-            const member = members[i] || null; // 如果該格沒人就給 null
+            const member = members[i] || null;
             const card = document.createElement('div');
             card.className = "member-card";
 
             if (member) {
-                // 檢查這個人今天有沒有填體重
                 const weightData = weights.find(w => w.user_id === member.id);
-                
                 card.innerHTML = `
-                    <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" onerror="this.src='https://via.placeholder.com/60'">
+                    <img class="avatar" src="${member.avatar_url || 'https://via.placeholder.com/60'}" crossorigin="anonymous">
                     <div class="name">${member.full_name || '隊友'}</div>
                     <div class="weight-status ${weightData ? 'done' : 'pending'}">
                         ${weightData ? weightData.weight + ' kg' : '未報到'}
                     </div>
                 `;
             } else {
-                // 空格子
-                card.innerHTML = `
-                    <div style="width: 60px; height: 60px; border-radius: 50%; background: #f9f9f9; border: 2px dashed #ddd; margin-bottom: 8px;"></div>
-                    <div style="color: #ccc; font-size: 12px;">待加入</div>
-                `;
+                card.innerHTML = `<div style="width: 60px; height: 60px; border-radius: 50%; background: #f9f9f9; border: 2px dashed #ddd; margin-bottom: 8px;"></div><div style="color: #ccc; font-size: 12px;">待加入</div>`;
             }
             gridElement.appendChild(card);
+        }
+    }
+
+    async function generateImage() {
+        const element = document.getElementById('grid-display');
+        const buttons = document.getElementById('action-buttons');
+        
+        // 隱藏按鈕
+        buttons.style.display = 'none';
+
+        try {
+            const canvas = await html2canvas(element, {
+                useCORS: true,
+                scale: 2,
+                backgroundColor: '#f0f2f5',
+                logging: false
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `馬拉松戰況_${new Date().toLocaleDateString()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert("圖片已生成！");
+        } catch (error) {
+            console.error('圖片生成失敗:', error);
+            alert("生成失敗，請確認是否已上傳頭像或網路正常。");
+        } finally {
+            // 顯示回按鈕
+            buttons.style.display = 'block';
         }
     }
 </script>
