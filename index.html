@@ -502,6 +502,28 @@ async function showMultiRoleContent(profile) {
     document.getElementById('personal-progress-section').classList.remove('hidden');
 }
 
+    // 修改 loadTeamProgress 函數以支援管理員查看
+async function loadTeamProgress(teamId, isCaptain) {
+    const container = document.getElementById('team-progress-list');
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
+    
+    try {
+        // 獲取當前用戶資料
+        const { data: currentProfile } = await sb
+            .from('profiles')
+            .select('primary_role, is_super_admin')
+            .eq('id', currentUser.id)
+            .single();
+        
+        const isAdmin = currentProfile.primary_role === 'admin' || 
+                       currentProfile.primary_role === 'super_admin' || 
+                       currentProfile.is_super_admin;
+        
+        // 獲取團隊成員（如果是管理員，可以看到所有團隊）
+        let membersQuery = sb
+            .from('profiles')
+            .select('id, full_name, avatar_url, primary_role, team_members!
+
 // 修改 updateProfile 函數以支援多重角色
 async function updateProfile() {
     const { data: { user }, error: authError } = await sb.auth.getUser();
