@@ -329,9 +329,9 @@
                 
                 // 檢查各種可能的 Team ID 欄位
                 const possibleTeamIdFields = [
+                    'current_team_id', // 優先檢查這個欄位
                     'team_id',
                     'team',
-                    'current_team_id',
                     'teamId',
                     'current_team',
                     'team_uuid'
@@ -452,9 +452,9 @@
         
         // 獲取 Team ID（使用與 showProfile 相同的邏輯）
         const possibleTeamIdFields = [
+            'current_team_id',
             'team_id',
             'team',
-            'current_team_id',
             'teamId',
             'current_team',
             'team_uuid'
@@ -517,96 +517,138 @@
         document.getElementById('personal-progress-section').classList.remove('hidden');
     }
 
-    // 載入團隊進度
+    // 載入團隊進度 - 修正版本，避免欄位不存在錯誤
     async function loadTeamProgress(teamId, isCaptain) {
         const container = document.getElementById('team-progress-list');
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
         
         try {
-            // 嘗試用不同的欄位名稱查詢團隊成員
-            const possibleTeamFields = ['team_id', 'team', 'current_team_id', 'teamId'];
-            let members = [];
-            let error = null;
+            // 首先檢查 profiles 表的結構
+            console.log("開始查詢團隊成員，Team ID:", teamId);
             
-            for (const field of possibleTeamFields) {
-                console.log(`嘗試使用欄位 "${field}" 查詢團隊 ${teamId}`);
-                const result = await sb
+            // 嘗試不同的查詢方式
+            let members = [];
+            
+            try {
+                // 先嘗試使用 current_team_id 欄位
+                console.log("嘗試使用 current_team_id 欄位查詢...");
+                const result1 = await sb
                     .from('profiles')
                     .select('id, full_name, avatar_url, role')
-                    .eq(field, teamId);
+                    .eq('current_team_id', teamId);
                 
-                if (result.data && result.data.length > 0) {
-                    members = result.data;
-                    console.log(`使用欄位 "${field}" 找到 ${members.length} 個團隊成員`);
-                    break;
+                if (result1.data && result1.data.length > 0) {
+                    members = result1.data;
+                    console.log("使用 current_team_id 找到成員:", members.length);
                 }
-                error = result.error;
+            } catch (err) {
+                console.log("current_team_id 查詢失敗:", err.message);
             }
             
-            if (error) {
-                console.error("載入團隊數據錯誤:", error);
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入失敗</div>';
-                return;
+            // 如果沒有找到，嘗試其他欄位
+            if (members.length === 0) {
+                try {
+                    console.log("嘗試使用 team_id 欄位查詢...");
+                    const result2 = await sb
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, role')
+                        .eq('team_id', teamId);
+                    
+                    if (result2.data && result2.data.length > 0) {
+                        members = result2.data;
+                        console.log("使用 team_id 找到成員:", members.length);
+                    }
+                } catch (err) {
+                    console.log("team_id 查詢失敗:", err.message);
+                }
+            }
+            
+            // 如果還是沒有找到，嘗試直接從資料庫獲取所有用戶，然後在客戶端過濾
+            if (members.length === 0) {
+                console.log("嘗試獲取所有用戶資料進行客戶端過濾...");
+                try {
+                    const allProfiles = await sb
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, role, current_team_id, team_id');
+                    
+                    if (allProfiles.data) {
+                        // 在客戶端過濾 Team ID
+                        members = allProfiles.data.filter(profile => {
+                            // 檢查多個可能的 Team ID 欄位
+                            return profile.current_team_id === teamId || 
+                                   profile.team_id === teamId ||
+                                   (profile.team && profile.team === teamId) ||
+                                   (profile.teamId && profile.teamId === teamId);
+                        });
+                        console.log("客戶端過濾找到成員:", members.length);
+                    }
+                } catch (err) {
+                    console.log("獲取所有用戶資料失敗:", err.message);
+                }
             }
             
             if (!members || members.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">暫無團隊成員數據</div>';
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">暫無團隊成員數據<br><small>或團隊ID無效</small></div>';
                 return;
             }
             
             // 顯示團隊成員數據
             let html = '';
             for (const member of members) {
-                // 獲取每個成員的今日數據
-                const today = getHKTime().toISOString().split('T')[0];
-                const { data: weightData } = await sb
-                    .from('weight_records')
-                    .select('weight, fat_rate, muscle_mass')
-                    .eq('user_id', member.id)
-                    .eq('date', today)
-                    .maybeSingle();
-                
-                const { data: scoreData } = await sb
-                    .from('daily_scores')
-                    .select('total_points')
-                    .eq('user_id', member.id)
-                    .eq('date', today)
-                    .maybeSingle();
-                
-                const avatarUrl = member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random`;
-                
-                html += `
-                    <div class="progress-item">
-                        <div class="progress-header">
-                            <div class="progress-name">
-                                <img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
-                                ${member.full_name || '未設定'}
+                try {
+                    // 獲取每個成員的今日數據
+                    const today = getHKTime().toISOString().split('T')[0];
+                    const { data: weightData } = await sb
+                        .from('weight_records')
+                        .select('weight, fat_rate, muscle_mass')
+                        .eq('user_id', member.id)
+                        .eq('date', today)
+                        .maybeSingle();
+                    
+                    const { data: scoreData } = await sb
+                        .from('daily_scores')
+                        .select('total_points')
+                        .eq('user_id', member.id)
+                        .eq('date', today)
+                        .maybeSingle();
+                    
+                    const avatarUrl = member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random`;
+                    
+                    html += `
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <div class="progress-name">
+                                    <img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
+                                    ${member.full_name || '未設定'}
+                                </div>
+                                <div class="progress-date">${member.role || '學員'}</div>
                             </div>
-                            <div class="progress-date">${member.role || '學員'}</div>
+                            <div class="progress-details">
+                                <div class="progress-detail">
+                                    <div class="progress-label">今日積分</div>
+                                    <div class="progress-value">${scoreData?.total_points || 0}</div>
+                                </div>
+                                <div class="progress-detail">
+                                    <div class="progress-label">今日體重</div>
+                                    <div class="progress-value">${weightData?.weight ? weightData.weight.toFixed(1) + 'kg' : '未記錄'}</div>
+                                </div>
+                                <div class="progress-detail">
+                                    <div class="progress-label">今日體脂</div>
+                                    <div class="progress-value">${weightData?.fat_rate ? weightData.fat_rate.toFixed(1) + '%' : '未記錄'}</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="progress-details">
-                            <div class="progress-detail">
-                                <div class="progress-label">今日積分</div>
-                                <div class="progress-value">${scoreData?.total_points || 0}</div>
-                            </div>
-                            <div class="progress-detail">
-                                <div class="progress-label">今日體重</div>
-                                <div class="progress-value">${weightData?.weight ? weightData.weight.toFixed(1) + 'kg' : '未記錄'}</div>
-                            </div>
-                            <div class="progress-detail">
-                                <div class="progress-label">今日體脂</div>
-                                <div class="progress-value">${weightData?.fat_rate ? weightData.fat_rate.toFixed(1) + '%' : '未記錄'}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    `;
+                } catch (err) {
+                    console.error(`處理成員 ${member.id} 數據時出錯:`, err);
+                }
             }
             
             container.innerHTML = html;
             
         } catch (err) {
             console.error("載入團隊進度錯誤:", err);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入錯誤</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入錯誤<br><small>請檢查控制台查看詳細信息</small></div>';
         }
     }
 
@@ -636,9 +678,11 @@
         }
     }
 
-    // 檢查今日是否已報到
+    // 檢查今日是否已報到 - 修正版本，確保能讀取 weight_records 表
     async function checkDailyCheckin(userId) {
         const today = getHKTime().toISOString().split('T')[0];
+        
+        console.log(`檢查用戶 ${userId} 在 ${today} 的報到記錄`);
         
         try {
             const { data, error } = await sb
@@ -650,8 +694,12 @@
             
             if (error) {
                 console.error("查詢今日報到錯誤:", error);
+                // 檢查表是否存在
+                console.log("嘗試檢查 weight_records 表結構...");
                 return;
             }
+            
+            console.log("查詢到的體重記錄:", data);
             
             if (data) {
                 document.getElementById('weight').value = data.weight || '';
@@ -691,6 +739,8 @@
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
             const startDate = sevenDaysAgo.toISOString().split('T')[0];
             
+            console.log(`載入用戶 ${userId} 從 ${startDate} 起的體重記錄`);
+            
             const { data, error } = await sb
                 .from('weight_records')
                 .select('date, weight, fat_rate, muscle_mass')
@@ -702,6 +752,8 @@
                 console.error("載入圖表數據錯誤:", error);
                 throw error;
             }
+            
+            console.log("載入的體重記錄數據:", data);
             
             const dates = [];
             const weights = [];
@@ -777,7 +829,7 @@
         } catch (error) {
             console.error("載入個人圖表錯誤:", error);
             document.getElementById('personal-progress-chart').parentElement.innerHTML = 
-                '<div style="text-align: center; padding: 40px; color: #7f8c8d;">無法載入圖表數據</div>';
+                '<div style="text-align: center; padding: 40px; color: #7f8c8d;">無法載入圖表數據<br><small>可能尚未有體重記錄</small></div>';
         }
     }
 
@@ -870,9 +922,9 @@
             if (existingProfile) {
                 // 檢查現有的 profile 有哪些 Team ID 相關欄位
                 const possibleTeamFields = [
+                    'current_team_id', // 優先使用這個欄位
                     'team_id',
                     'team',
-                    'current_team_id',
                     'teamId',
                     'current_team',
                     'team_uuid'
@@ -896,13 +948,15 @@
                         updateData[existingTeamField] = null;
                     }
                 } else {
-                    // 如果沒有現有的欄位，嘗試使用常見的欄位名稱
-                    updateData.team_id = teamId || null;
+                    // 如果沒有現有的欄位，嘗試使用最常見的欄位名稱
+                    updateData.current_team_id = teamId || null;
                 }
             } else {
                 // 如果沒有現有記錄，使用預設的欄位名稱
-                updateData.team_id = teamId || null;
+                updateData.current_team_id = teamId || null;
             }
+            
+            console.log("準備更新的資料:", updateData);
             
             // 更新或創建個人資料
             const { error } = await sb
@@ -922,7 +976,7 @@
         }
     }
 
-    // 儲存每日數據
+    // 儲存每日數據 - 修正版本，確保能正確儲存到 weight_records 表
     async function saveDailyData() {
         const { data: { user } } = await sb.auth.getUser();
         if (!user) {
@@ -946,19 +1000,55 @@
         const hasDiet = document.getElementById('task_diet').checked;
         const hasExercise = document.getElementById('task_exercise').checked;
 
-        try {
-            // 儲存體重記錄
-            const { error: weightError } = await sb
-                .from('weight_records')
-                .upsert({
-                    user_id: user.id,
-                    date: today,
-                    weight: weight,
-                    fat_rate: fatRate,
-                    muscle_mass: muscleMass
-                }, { onConflict: 'user_id,date' });
+        console.log("準備儲存每日數據:", {
+            user_id: user.id,
+            date: today,
+            weight,
+            fatRate,
+            muscleMass,
+            tasks: { hasShake, hasLive, hasDiet, hasExercise }
+        });
 
-            if (weightError) throw weightError;
+        try {
+            // 首先檢查 weight_records 表是否存在並有正確的欄位
+            console.log("嘗試儲存體重記錄到 weight_records 表...");
+            
+            // 準備體重記錄數據
+            const weightRecordData = {
+                user_id: user.id,
+                date: today,
+                weight: weight,
+                fat_rate: fatRate,
+                muscle_mass: muscleMass,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            
+            console.log("體重記錄數據:", weightRecordData);
+            
+            // 儲存體重記錄 - 使用 upsert，如果已存在則更新
+            const { data: weightResult, error: weightError } = await sb
+                .from('weight_records')
+                .upsert(weightRecordData, { 
+                    onConflict: 'user_id,date',
+                    ignoreDuplicates: false 
+                });
+
+            if (weightError) {
+                console.error("儲存體重記錄錯誤詳細信息:", weightError);
+                
+                // 嘗試不同的錯誤處理
+                if (weightError.code === '42P01') {
+                    alert("錯誤：weight_records 表不存在，請在 Supabase 中創建該表");
+                } else if (weightError.code === '42703') {
+                    alert("錯誤：weight_records 表的欄位名稱不匹配，請檢查表結構");
+                } else {
+                    throw weightError;
+                }
+                return;
+            }
+            
+            console.log("體重記錄儲存成功:", weightResult);
 
             // 計算今日積分
             let dailyPoints = 0;
@@ -968,23 +1058,44 @@
             if (hasExercise) dailyPoints += 1;
             if (hasShake) dailyPoints += 1;
 
-            // 儲存每日分數
-            const { error: scoreError } = await sb
-                .from('daily_scores')
-                .upsert({
-                    user_id: user.id,
-                    date: today,
-                    weight_recorded: weight > 0,
-                    shake_used: hasShake,
-                    exercise_done: hasExercise,
-                    task_completed: hasLive,
-                    social_shared: false,
-                    referral_made: false,
-                    total_points: dailyPoints,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id,date' });
+            console.log("計算出的今日積分:", dailyPoints);
 
-            if (scoreError) throw scoreError;
+            // 準備每日分數數據
+            const dailyScoreData = {
+                user_id: user.id,
+                date: today,
+                weight_recorded: weight > 0,
+                shake_used: hasShake,
+                exercise_done: hasExercise,
+                task_completed: hasLive,
+                social_shared: false,
+                referral_made: false,
+                total_points: dailyPoints,
+                updated_at: new Date().toISOString()
+            };
+            
+            console.log("每日分數數據:", dailyScoreData);
+            
+            // 儲存每日分數
+            const { data: scoreResult, error: scoreError } = await sb
+                .from('daily_scores')
+                .upsert(dailyScoreData, { 
+                    onConflict: 'user_id,date',
+                    ignoreDuplicates: false 
+                });
+
+            if (scoreError) {
+                console.error("儲存每日分數錯誤:", scoreError);
+                
+                // 嘗試創建表（如果不存在）
+                if (scoreError.code === '42P01') {
+                    console.log("daily_scores 表不存在，跳過分數儲存");
+                } else {
+                    throw scoreError;
+                }
+            } else {
+                console.log("每日分數儲存成功:", scoreResult);
+            }
 
             // 更新狀態訊息
             document.getElementById('status-msg').textContent = "✅ 今日數據已成功報到！";
@@ -995,7 +1106,17 @@
 
         } catch (error) {
             console.error("儲存數據錯誤:", error);
-            alert("儲存失敗：" + error.message);
+            
+            // 提供更詳細的錯誤信息
+            let errorMsg = "儲存失敗：" + error.message;
+            
+            if (error.message.includes('weight_records')) {
+                errorMsg += "\n\n請在 Supabase 中檢查：\n1. weight_records 表是否存在\n2. 表結構是否包含：user_id, date, weight, fat_rate, muscle_mass 欄位";
+            } else if (error.message.includes('daily_scores')) {
+                errorMsg += "\n\n請在 Supabase 中檢查 daily_scores 表";
+            }
+            
+            alert(errorMsg);
         }
     }
 
