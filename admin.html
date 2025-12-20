@@ -1077,33 +1077,40 @@ async function checkAdminPermission() {
     }
     
     // 顯示/隱藏區塊
-    function showSection(sectionId) {
-        // 隱藏所有區塊
-        document.querySelectorAll('[id$="-section"]').forEach(section => {
-            section.classList.add('hidden');
-        });
-        
-        // 顯示目標區塊
-        document.getElementById(sectionId + '-section').classList.remove('hidden');
-        
-        // 更新導航選項
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        event.target.classList.add('active');
-        
-        // 根據區塊載入數據
-        switch(sectionId) {
-            case 'dashboard':
-                loadDashboardData();
-                break;
-            case 'users':
-                loadUsers();
-                break;
-            case 'role-requests':
-                loadRoleRequests();
-                break;
-            // 其他區塊...
+   // 顯示/隱藏區塊
+function showSection(sectionId) {
+    // 隱藏所有區塊
+    document.querySelectorAll('[id$="-section"]').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // 顯示目標區塊
+    document.getElementById(sectionId + '-section').classList.remove('hidden');
+    
+    // 更新導航選項
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // 根據區塊載入數據
+    switch(sectionId) {
+        case 'dashboard':
+            loadDashboardData();
+            break;
+        case 'users':
+            loadUsers();
+            break;
+        case 'teams':
+            loadTeamsManagement();
+            break;
+        case 'admin-management':
+            showAdminManagement();
+            break;
+        case 'role-requests':
+            loadRoleRequests();
+            break;
+
         }
     }
     
