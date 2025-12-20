@@ -503,6 +503,7 @@ async function showMultiRoleContent(profile) {
 }
 
     // 修改 loadTeamProgress 函數以支援管理員查看
+// 修正 loadTeamProgress 函數 - 替換掉未完成的程式碼
 async function loadTeamProgress(teamId, isCaptain) {
     const container = document.getElementById('team-progress-list');
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
@@ -519,11 +520,314 @@ async function loadTeamProgress(teamId, isCaptain) {
                        currentProfile.primary_role === 'super_admin' || 
                        currentProfile.is_super_admin;
         
-        // 獲取團隊成員（如果是管理員，可以看到所有團隊）
-        let membersQuery = sb
+             // 獲取團隊成員
+        let query = sb
             .from('profiles')
-            .select('id, full_name, avatar_url, primary_role, team_members!
+            .select('id, full_name, avatar_url, primary_role')
+            .eq('team_id', teamId);
+        
+        // 如果不是管理員或隊長，只顯示基本資訊
+        if (!isAdmin && !isCaptain) {
+            query = query.limit(20); // 限制顯示數量
+        }
+   const { data: members, error } = await query;
+        
+        if (error) {
+            console.error("載入團隊數據錯誤:", error);
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入失敗</div>';
+            return;
+        }
+        
+        if (!members || members.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">暫無團隊成員數據</div>';
+            return;
+        }
+        
+        // 顯示團隊成員數據
+        let html = '';
+        for (const member of members) {
+            // 獲取每個成員的今日數據
+            const today = getHKTime().toISOString().split('T')[0];
+            const { data: weightData } = await sb
+                .from('weight_records')
+                .select('weight, fat_rate, muscle_mass')
+                .eq('user_id', member.id)
+                .eq('date', today)
+                .maybeSingle();
+            
+            const { data: scoreData } = await sb
+                .from('daily_scores')
+                .select('total_points')
+                .eq('user_id', member.id)
+                .eq('date', today)
+                .maybeSingle();
+            
+            // 獲取昨天的數據來計算變化
+            const yesterday = new Date(getHKTime());
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            const { data: yesterdayWeightData } = await sb
+                .from('weight_records')
+                .select('weight')
+                .eq('user_id', member.id)
+                .eq('date', yesterdayStr)
+                .maybeSingle();
+            
+            // 計算體重變化
+            let weightChange = 0;
+            if (weightData && weightData.weight && yesterdayWeightData && yesterdayWeightData.weight) {
+                weightChange = yesterdayWeightData.weight - weightData.weight;
+            }
+            
+            // 計算任務完成度
+            let completionRate = 0;
+            if (scoreData && scoreData.total_points) {
+                completionRate = Math.min(100, (scoreData.total_points / 3) * 100);
+            }
+            
+            const avatarUrl = member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random`;
+            const weightChangeText = weightChange > 0 ? `+${weightChange.toFixed(1)}kg` : `${weightChange.toFixed(1)}kg`;
+            const changeClass = weightChange > 0 ? 'change-negative' : (weightChange < 0 ? 'change-positive' : '');
+            
+            html += `
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <div class="progress-name">
+                            <img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
+                            ${member.full_name || '未設定'}
+                        </div>
+                        <div class="progress-date">${member.primary_role || '學員'}</div>
+                    </div>
+                    <div class="progress-details">
+                        <div class="progress-detail">
+                            <div class="progress-label">今日積分</div>
+                            <div class="progress-value">${scoreData?.total_points || 0}</div>
+                        </div>
+                        <div class="progress-detail">
+                            <div class="progress-label">體重變化</div>
+                            <div class="progress-value">${weightChange.toFixed(1)}kg</div>
+                            <div class="progress-change ${changeClass}">${weightChangeText}</div>
+                        </div>
+                        <div class="progress-detail">
+                            <div class="progress-label">完成度</div>
+                            <div class="progress-value">${completionRate.toFixed(0)}%</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (err) {
+        console.error("載入團隊進度錯誤:", err);
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入錯誤</div>';
+    }
+}
 
+    // 添加其他缺失的函數
+function toggleProfileEdit() {
+    const setupCard = document.getElementById('setup-card');
+    const isHidden = setupCard.classList.contains('hidden');
+    
+    if (isHidden) {
+        setupCard.classList.remove('hidden');
+        document.getElementById('edit-profile-btn').textContent = '取消編輯';
+        
+        // 啟用輸入欄位
+        document.getElementById('full_name').disabled = false;
+        document.getElementById('role').disabled = false;
+        document.getElementById('plan').disabled = false;
+        document.getElementById('team_id_input').disabled = false;
+    } else {
+        setupCard.classList.add('hidden');
+        document.getElementById('edit-profile-btn').textContent = '⚙️ 修改個人資料或更換隊伍';
+        
+        // 禁用輸入欄位
+        document.getElementById('full_name').disabled = true;
+        document.getElementById('role').disabled = true;
+        document.getElementById('plan').disabled = true;
+        document.getElementById('team_id_input').disabled = true;
+    }
+}
+
+    // 檢查今日是否已報到
+async function checkDailyCheckin(userId) {
+    const today = getHKTime().toISOString().split('T')[0];
+    
+    try {
+        const { data, error } = await sb
+            .from('weight_records')
+            .select('weight')
+            .eq('user_id', userId)
+            .eq('date', today)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.weight) {
+            document.getElementById('weight').value = data.weight;
+            
+            // 獲取體脂率和肌肉量
+            const { data: additionalData } = await sb
+                .from('weight_records')
+                .select('fat_rate, muscle_mass')
+                .eq('user_id', userId)
+                .eq('date', today)
+                .maybeSingle();
+            
+            if (additionalData) {
+                document.getElementById('fat_rate').value = additionalData.fat_rate || '';
+                document.getElementById('muscle_mass').value = additionalData.muscle_mass || '';
+            }
+            
+            // 檢查任務狀態
+            const { data: taskData } = await sb
+                .from('daily_scores')
+                .select('shake_used, exercise_done, task_completed')
+                .eq('user_id', userId)
+                .eq('date', today)
+                .maybeSingle();
+            
+            if (taskData) {
+                document.getElementById('task_shake').checked = taskData.shake_used || false;
+                document.getElementById('task_live').checked = taskData.task_completed || false;
+                document.getElementById('task_exercise').checked = taskData.exercise_done || false;
+            }
+            
+            // 提醒用戶今日已報到
+            document.getElementById('status-msg').textContent = "✅ 今日已報到，可更新數據";
+        }
+        
+    } catch (error) {
+        console.error("檢查報到狀態錯誤:", error);
+    }
+}
+
+    // 載入個人數據變化圖表
+async function loadPersonalProgressChart(userId) {
+    try {
+        // 獲取最近7天的數據
+        const sevenDaysAgo = new Date(getHKTime());
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const startDate = sevenDaysAgo.toISOString().split('T')[0];
+        
+        const { data, error } = await sb
+            .from('weight_records')
+            .select('date, weight, fat_rate, muscle_mass')
+            .eq('user_id', userId)
+            .gte('date', startDate)
+            .order('date', { ascending: true });
+        
+        if (error) throw error;
+        
+        const dates = [];
+        const weights = [];
+        const fatRates = [];
+        const muscleMasses = [];
+        
+        if (data && data.length > 0) {
+            data.forEach(record => {
+                dates.push(record.date.substring(5)); // 顯示 MM-DD 格式
+                weights.push(record.weight);
+                fatRates.push(record.fat_rate || 0);
+                muscleMasses.push(record.muscle_mass || 0);
+            });
+        }
+        
+        // 如果已有圖表實例，先銷毀
+        if (personalChart) {
+            personalChart.destroy();
+        }
+        
+        // 創建圖表
+        const ctx = document.getElementById('personal-progress-chart').getContext('2d');
+        personalChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: '體重 (kg)',
+                        data: weights,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: '體脂率 (%)',
+                        data: fatRates,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: '體重 (kg)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: '體脂率 (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        }
+                    }
+                }
+            }
+        });
+        
+    } catch (error) {
+        console.error("載入個人圖表錯誤:", error);
+        document.getElementById('personal-progress-chart').parentElement.innerHTML = 
+            '<div style="text-align: center; padding: 40px; color: #7f8c8d;">無法載入圖表數據</div>';
+    }
+}
+    // 計算總積分
+async function calculateTotalPoints(userId) {
+    try {
+        const { data, error } = await sb
+            .from('daily_scores')
+            .select('total_points')
+            .eq('user_id', userId);
+        
+        if (error) throw error;
+        
+        let totalPoints = 0;
+        if (data) {
+            data.forEach(record => {
+                totalPoints += record.total_points || 0;
+            });
+        }
+        
+        document.getElementById('ticket-count').textContent = totalPoints;
+        
+        // 計算進度天數
+        const dayProgress = data ? data.length : 0;
+        document.getElementById('day-progress').textContent = `Day ${dayProgress}`;
+        
+    } catch (error) {
+        console.error("計算積分錯誤:", error);
+    }
+}
 // 修改 updateProfile 函數以支援多重角色
 async function updateProfile() {
     const { data: { user }, error: authError } = await sb.auth.getUser();
