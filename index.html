@@ -296,7 +296,7 @@
         return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
     }
 
-    // 顯示用戶資料 - 簡化版本，專注於讀取現有資料
+    // 顯示用戶資料
     async function showProfile(user) {
         console.log("顯示用戶資料:", user.email);
         
@@ -309,7 +309,7 @@
         document.getElementById('user-display').innerText = `帳號: ${user.email}`;
 
         try {
-            // 查詢用戶資料 - 使用正確的欄位名稱
+            // 查詢用戶資料 - 使用更廣泛的查詢，獲取所有欄位
             const { data: profile, error } = await sb
                 .from('profiles')
                 .select('*')
@@ -321,15 +321,49 @@
                 return;
             }
 
-            console.log("查詢到的用戶資料:", profile);
+            console.log("查詢到的用戶資料完整對象:", profile);
 
             if (profile) {
-                // 檢查 profile 中的欄位名稱，使用正確的欄位
-                const fullName = profile.full_name || profile.name || '';
+                // 顯示所有欄位名稱，幫助調試
+                console.log("Profile 所有欄位:", Object.keys(profile));
+                
+                // 檢查各種可能的 Team ID 欄位
+                const possibleTeamIdFields = [
+                    'team_id',
+                    'team',
+                    'current_team_id',
+                    'teamId',
+                    'current_team',
+                    'team_uuid'
+                ];
+                
+                let teamId = '';
+                for (const field of possibleTeamIdFields) {
+                    if (profile[field]) {
+                        console.log(`找到 Team ID 欄位 "${field}":`, profile[field]);
+                        teamId = profile[field];
+                        break;
+                    }
+                }
+                
+                // 如果沒有找到，嘗試尋找包含 team 或 uuid 的欄位
+                if (!teamId) {
+                    for (const key in profile) {
+                        if (key.toLowerCase().includes('team') && profile[key]) {
+                            console.log(`在欄位 "${key}" 中找到 Team ID:`, profile[key]);
+                            teamId = profile[key];
+                            break;
+                        }
+                    }
+                }
+                
+                // 檢查 profile 中的其他欄位
+                const fullName = profile.full_name || profile.name || profile.display_name || '';
                 const plan = profile.plan || 'slow_run';
                 const role = profile.role || 'member';
-                const teamId = profile.team_id || profile.team || '';
                 const avatarUrl = profile.avatar_url || '';
+                
+                console.log("解析出的資料:", { fullName, plan, role, teamId });
                 
                 // 更新表單資料
                 document.getElementById('full_name').value = fullName;
@@ -386,7 +420,7 @@
                 } else {
                     document.getElementById('setup-card').classList.remove('hidden');
                     document.getElementById('edit-profile-btn').classList.add('hidden');
-                    document.getElementById('team-status').textContent = '未加入';
+                    document.getElementById('team-status').textContent = teamId ? '已加入但資料不完整' : '未加入';
                 }
             } else {
                 // 如果沒有個人資料，顯示設定卡片
@@ -415,7 +449,33 @@
         
         // 獲取用戶角色
         const userRole = profile.role || 'member';
-        const teamId = profile.team_id || profile.team || '';
+        
+        // 獲取 Team ID（使用與 showProfile 相同的邏輯）
+        const possibleTeamIdFields = [
+            'team_id',
+            'team',
+            'current_team_id',
+            'teamId',
+            'current_team',
+            'team_uuid'
+        ];
+        
+        let teamId = '';
+        for (const field of possibleTeamIdFields) {
+            if (profile[field]) {
+                teamId = profile[field];
+                break;
+            }
+        }
+        
+        if (!teamId) {
+            for (const key in profile) {
+                if (key.toLowerCase().includes('team') && profile[key]) {
+                    teamId = profile[key];
+                    break;
+                }
+            }
+        }
         
         console.log('角色判斷:', { userRole, teamId });
         
@@ -463,21 +523,23 @@
         container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
         
         try {
-            // 先嘗試用 team_id 欄位查詢
-            let { data: members, error } = await sb
-                .from('profiles')
-                .select('id, full_name, avatar_url, role')
-                .eq('team_id', teamId);
+            // 嘗試用不同的欄位名稱查詢團隊成員
+            const possibleTeamFields = ['team_id', 'team', 'current_team_id', 'teamId'];
+            let members = [];
+            let error = null;
             
-            // 如果沒有結果，嘗試用 team 欄位查詢
-            if ((!members || members.length === 0) && error) {
-                console.log("嘗試使用 team 欄位查詢...");
+            for (const field of possibleTeamFields) {
+                console.log(`嘗試使用欄位 "${field}" 查詢團隊 ${teamId}`);
                 const result = await sb
                     .from('profiles')
                     .select('id, full_name, avatar_url, role')
-                    .eq('team', teamId);
+                    .eq(field, teamId);
                 
-                members = result.data;
+                if (result.data && result.data.length > 0) {
+                    members = result.data;
+                    console.log(`使用欄位 "${field}" 找到 ${members.length} 個團隊成員`);
+                    break;
+                }
                 error = result.error;
             }
             
@@ -750,7 +812,7 @@
         }
     }
 
-    // 更新個人資料
+    // 更新個人資料 - 支援多種 Team ID 欄位名稱
     async function updateProfile() {
         const { data: { user }, error: authError } = await sb.auth.getUser();
         if (authError || !user) {
@@ -787,7 +849,14 @@
         }
 
         try {
-            // 準備更新資料 - 包含可能的不同欄位名稱
+            // 先查詢現有的 profile 來確定資料庫結構
+            const { data: existingProfile } = await sb
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
+            
+            // 準備更新資料
             const updateData = {
                 id: user.id,
                 full_name: fullName,
@@ -797,13 +866,42 @@
                 updated_at: new Date().toISOString()
             };
             
-            // 同時更新 team_id 和 team 欄位，確保兼容性
-            if (teamId) {
-                updateData.team_id = teamId;
-                updateData.team = teamId; // 如果資料庫中有 team 欄位
+            // 根據現有的 profile 結構決定如何儲存 Team ID
+            if (existingProfile) {
+                // 檢查現有的 profile 有哪些 Team ID 相關欄位
+                const possibleTeamFields = [
+                    'team_id',
+                    'team',
+                    'current_team_id',
+                    'teamId',
+                    'current_team',
+                    'team_uuid'
+                ];
+                
+                // 找出現有 profile 中已有的 Team ID 欄位
+                let existingTeamField = null;
+                for (const field of possibleTeamFields) {
+                    if (field in existingProfile) {
+                        existingTeamField = field;
+                        console.log(`找到現有的 Team ID 欄位: ${existingTeamField}`);
+                        break;
+                    }
+                }
+                
+                // 如果有現有的欄位，使用它
+                if (existingTeamField) {
+                    if (teamId) {
+                        updateData[existingTeamField] = teamId;
+                    } else {
+                        updateData[existingTeamField] = null;
+                    }
+                } else {
+                    // 如果沒有現有的欄位，嘗試使用常見的欄位名稱
+                    updateData.team_id = teamId || null;
+                }
             } else {
-                updateData.team_id = null;
-                updateData.team = null;
+                // 如果沒有現有記錄，使用預設的欄位名稱
+                updateData.team_id = teamId || null;
             }
             
             // 更新或創建個人資料
