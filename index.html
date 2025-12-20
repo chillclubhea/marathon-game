@@ -291,8 +291,7 @@
         return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
     }
 
-
-// 修正 showProfile 函數中的SQL查詢
+   // 修改 showProfile 函數以支援多重角色
 async function showProfile(user) {
     console.log("顯示用戶資料:", user.email);
     
@@ -305,15 +304,12 @@ async function showProfile(user) {
     document.getElementById('user-display').innerText = `帳號: ${user.email}`;
 
     try {
-        // 查詢用戶資料 - 修正SQL語法
+        // 查詢用戶資料（包含團隊角色）
         const { data: profile, error } = await sb
             .from('profiles')
             .select(`
                 *,
-                team_members (
-                    role,
-                    team_id
-                )
+                team_members!inner(role as team_role, team_id)
             `)
             .eq('id', user.id)
             .maybeSingle();
@@ -386,19 +382,22 @@ async function showProfile(user) {
     }
 }
 
-// 修正 setupRoleSelection 函數
+// 設定角色選擇（支援多重角色）
 async function setupRoleSelection(profile) {
     const roleSelect = document.getElementById('role');
     
     // 清空現有選項
     roleSelect.innerHTML = '';
     
-    // 安全地獲取用戶角色
-    const userRole = profile.role || 'member';
-    const isSuperAdmin = profile.is_super_admin || false;
-    const isAdmin = userRole === 'admin' || isSuperAdmin;
+    // 取得當前用戶的權限
+    const { data: permissions } = await sb
+        .from('role_permissions')
+        .select('*')
+        .eq('role', profile.primary_role || 'member')
+        .single();
     
-    console.log('用戶角色:', { userRole, isSuperAdmin, isAdmin });
+    const isSuperAdmin = profile.is_super_admin || profile.primary_role === 'super_admin';
+    const isAdmin = profile.primary_role === 'admin' || isSuperAdmin;
     
     // 基本角色選項（所有用戶都可以選擇）
     const basicOptions = [
@@ -427,8 +426,8 @@ async function setupRoleSelection(profile) {
         opt.textContent = option.label;
         
         // 如果用戶已經是這個角色，設為選中
-        if (userRole === option.value || 
-            (userRole === 'super_admin' && option.value === 'admin')) {
+        if (profile.primary_role === option.value || 
+            (profile.primary_role === 'super_admin' && option.value === 'admin')) {
             opt.selected = true;
         }
         
@@ -439,7 +438,7 @@ async function setupRoleSelection(profile) {
     document.getElementById('team_id_input').value = profile.team_id || '';
 }
 
-// 修正 showMultiRoleContent 函數
+// 根據多重角色顯示專屬內容
 async function showMultiRoleContent(profile) {
     const roleButtons = document.getElementById('role-buttons');
     const adminBtn = document.getElementById('admin-btn');
@@ -452,26 +451,16 @@ async function showMultiRoleContent(profile) {
     deputyBtn.classList.add('hidden');
     roleButtons.classList.add('hidden');
     
-    // 獲取用戶角色信息
-    const userRole = profile.role || 'member';
-    const teamRole = profile.team_members && profile.team_members.length > 0 
-        ? profile.team_members[0].role 
-        : 'member';
-    const teamId = profile.team_id || '';
+    // 獲取用戶在團隊中的角色
+    const teamRole = profile.team_members?.[0]?.team_role || 'member';
+    const teamId = profile.team_members?.[0]?.team_id || profile.team_id;
     
-    const isSuperAdmin = profile.is_super_admin || false;
-    const isAdmin = userRole === 'admin' || isSuperAdmin;
-    const isCaptain = teamRole === 'captain' || userRole === 'captain';
-    const isDeputy = teamRole === 'deputy' || userRole === 'deputy';
+    const isSuperAdmin = profile.is_super_admin || profile.primary_role === 'super_admin';
+    const isAdmin = profile.primary_role === 'admin' || isSuperAdmin;
+    const isCaptain = teamRole === 'captain' || profile.primary_role === 'captain';
+    const isDeputy = teamRole === 'deputy' || profile.primary_role === 'deputy';
     
-    console.log('角色判斷:', { 
-        userRole, 
-        teamRole, 
-        isAdmin, 
-        isCaptain, 
-        isDeputy, 
-        teamId 
-    });
+    console.log('角色判斷:', { isAdmin, isCaptain, isDeputy, teamRole, primaryRole: profile.primary_role });
     
     // 顯示管理員按鈕（如果用戶是管理員）
     if (isAdmin) {
@@ -481,7 +470,7 @@ async function showMultiRoleContent(profile) {
         // 管理員也可以查看團隊數據
         if (teamId) {
             document.getElementById('team-progress-section').classList.remove('hidden');
-            await loadTeamProgress(teamId, isCaptain);
+            await loadTeamProgress(teamId, isCaptain); // isCaptain 參數決定是否顯示隊長統計
         }
     }
     
@@ -493,7 +482,7 @@ async function showMultiRoleContent(profile) {
         // 顯示團隊數據
         if (teamId) {
             document.getElementById('team-progress-section').classList.remove('hidden');
-            await loadTeamProgress(teamId, true);
+            await loadTeamProgress(teamId, true); // true 表示是隊長
         }
     }
     
@@ -505,7 +494,7 @@ async function showMultiRoleContent(profile) {
         // 顯示團隊數據
         if (teamId) {
             document.getElementById('team-progress-section').classList.remove('hidden');
-            await loadTeamProgress(teamId, false);
+            await loadTeamProgress(teamId, false); // false 表示是副隊長
         }
     }
     
@@ -513,7 +502,7 @@ async function showMultiRoleContent(profile) {
     document.getElementById('personal-progress-section').classList.remove('hidden');
 }
 
-// 修正 updateProfile 函數中的 null 檢查
+// 修改 updateProfile 函數以支援多重角色
 async function updateProfile() {
     const { data: { user }, error: authError } = await sb.auth.getUser();
     if (authError || !user) {
@@ -550,19 +539,15 @@ async function updateProfile() {
     }
 
     try {
-        // 先獲取當前用戶資料 - 使用 maybeSingle 並處理 null 情況
-        const { data: currentProfile, error: fetchError } = await sb
+        // 先獲取當前用戶資料
+        const { data: currentProfile } = await sb
             .from('profiles')
-            .select('role, is_super_admin')
+            .select('primary_role, is_super_admin')
             .eq('id', user.id)
-            .maybeSingle();
+            .single();
         
-        if (fetchError) {
-            console.error("獲取用戶資料錯誤:", fetchError);
-        }
-        
-        const currentRole = currentProfile?.role || 'member';
-        const isSuperAdmin = currentProfile?.is_super_admin || false;
+        const currentRole = currentProfile.primary_role;
+        const isSuperAdmin = currentProfile.is_super_admin;
         
         // 檢查角色修改權限
         if (selectedRole !== currentRole) {
@@ -585,7 +570,8 @@ async function updateProfile() {
         const updateData = {
             id: user.id,
             full_name: fullName,
-            role: selectedRole,
+            primary_role: selectedRole,
+            role: selectedRole, // 保持向後兼容
             plan: plan,
             avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
@@ -643,6 +629,7 @@ async function updateProfile() {
         alert("儲存失敗：" + error.message);
     }
 }
+
     // 儲存每日數據
     async function saveDailyData() {
         const { data: { user } } = await sb.auth.getUser();
@@ -739,85 +726,29 @@ async function updateProfile() {
     }
 
     // 登入
-// 登入（改進版本）
-async function signIn() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        alert("請填寫信箱和密碼");
-        return;
-    }
-    
-    console.log("嘗試登入:", email);
-    
-    try {
-        const { data, error } = await sb.auth.signInWithPassword({ 
-            email: email, 
-            password: password 
-        });
+    async function signIn() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
         
+        if (!email || !password) {
+            alert("請填寫信箱和密碼");
+            return;
+        }
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-            console.error("登入錯誤詳情:", error);
-            
-            // 提供更詳細的錯誤訊息
-            if (error.message.includes('Invalid login credentials')) {
-                alert("登入失敗：帳號或密碼錯誤");
-            } else if (error.message.includes('Email not confirmed')) {
-                alert("請先驗證您的電子郵件地址");
-            } else {
-                alert("登入失敗：" + error.message);
-            }
+            alert("登入失敗：" + error.message);
         } else {
-            console.log("登入成功，重新載入頁面");
             // 登入成功，重新載入頁面
             location.reload();
         }
-    } catch (err) {
-        console.error("登入異常:", err);
-        alert("登入過程中發生錯誤");
     }
-}
 
     // 登出
     async function signOut() {
         await sb.auth.signOut();
         location.reload();
     }
-        // 測試 Supabase 連接
-async function testConnection() {
-    try {
-        const { data, error } = await sb.auth.getSession();
-        if (error) {
-            console.warn("Supabase 連接警告:", error);
-        } else {
-            console.log("Supabase 連接正常");
-        }
-    } catch (err) {
-        console.error("Supabase 連接測試失敗:", err);
-    }
-}
-
-        
-// 在 window.onload 中調用
-window.onload = async () => {
-    await testConnection(); // 先測試連接
-    
-    const { data: { session }, error } = await sb.auth.getSession();
-    if (error) {
-        console.error("檢查登入狀態錯誤:", error);
-        document.getElementById('auth-section').classList.remove('hidden');
-        return;
-    }
-    
-    if (session) {
-        console.log("已登入，用戶:", session.user.email);
-        await showProfile(session.user);
-    } else {
-        console.log("未登入，顯示登入表單");
-        document.getElementById('auth-section').classList.remove('hidden');
-    }
-};
 </script>
 </body>
 </html>
