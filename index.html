@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>馬拉松玩家中心</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
@@ -25,6 +26,9 @@
         .btn-success { background-color: var(--success); }
         .btn-warning { background-color: var(--warning); }
         .btn-danger { background-color: var(--danger); }
+        .btn-admin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-captain { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .btn-deputy { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
         .hidden { display: none !important; }
         .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .ticket-stats { display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; }
@@ -33,19 +37,34 @@
         .ticket-stats b { display: block; font-size: 24px; color: #0ea5e9; }
         .mission-item { background: #f1f5f9; padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 14px; }
         .mission-item.active { background: #dbeafe; border-left: 4px solid #3b82f6; }
+        
+        /* 新增：數據變化樣式 */
+        .progress-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; border-left: 5px solid var(--success); }
+        .progress-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .progress-list { max-height: 300px; overflow-y: auto; }
+        .progress-item { padding: 10px; border-bottom: 1px solid #f0f0f0; }
+        .progress-item:last-child { border-bottom: none; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .progress-name { font-weight: bold; color: #2d3748; font-size: 14px; }
+        .progress-date { font-size: 12px; color: #94a3b8; }
+        .progress-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+        .progress-detail { text-align: center; }
+        .progress-label { font-size: 11px; color: #64748b; }
+        .progress-value { font-size: 14px; font-weight: bold; }
+        .progress-change { font-size: 12px; }
+        .change-positive { color: var(--success); }
+        .change-negative { color: var(--danger); }
+        
+        /* 圖表容器 */
+        .chart-container { height: 200px; margin-top: 15px; }
+        
+        /* 角色按鈕容器 */
+        .role-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+        .role-buttons button { margin: 0; }
     </style>
 </head>
 <body>
-        <!-- 團隊數據變化（只有隊長和副隊長可見） -->
-        <div id="team-progress-card" class="card hidden">
-            <div class="card-title">📈 團隊數據變化</div>
-            <div id="team-progress-content">
-                <div style="text-align: center; padding: 20px; color: #7f8c8d;">
-                    <div>載入中...</div>
-                </div>
-            </div>
-        </div>
-    
+
 <div class="container">
     <!-- 截止時間通知 -->
     <div id="deadline-notice" style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; font-size:13px; margin-bottom:10px; text-align:center;">
@@ -84,6 +103,22 @@
             <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
             <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
             <div><span>隊伍狀態</span><b id="team-status">未加入</b></div>
+        </div>
+
+        <!-- 角色專屬按鈕 -->
+        <div id="role-buttons" class="role-buttons hidden">
+            <!-- 管理員按鈕 -->
+            <button id="admin-btn" class="hidden btn-admin" onclick="window.location.href='admin.html'">
+                👑 管理員後台
+            </button>
+            <!-- 隊長按鈕 -->
+            <button id="captain-btn" class="hidden btn-captain" onclick="window.location.href='captain.html'">
+                🏆 隊長後台
+            </button>
+            <!-- 副隊長按鈕 -->
+            <button id="deputy-btn" class="hidden btn-deputy" onclick="window.location.href='deputy.html'">
+                ⭐ 副隊長後台
+            </button>
         </div>
 
         <!-- 編輯按鈕 -->
@@ -128,6 +163,24 @@
                 <small style="color:#666; display:block; margin-top:5px;">若無隊伍代碼，請聯絡隊長</small>
             </div>
             <button class="btn-primary" onclick="updateProfile()">儲存並開始遊戲</button>
+        </div>
+
+        <!-- 個人數據變化圖表 -->
+        <div id="personal-progress-section" class="progress-card hidden">
+            <div class="progress-title">📈 我的數據變化趨勢</div>
+            <div class="chart-container">
+                <canvas id="personal-progress-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- 團隊數據變化（隊長和副隊長可見） -->
+        <div id="team-progress-section" class="progress-card hidden">
+            <div class="progress-title">👥 團隊數據變化</div>
+            <div class="progress-list" id="team-progress-list">
+                <div style="text-align: center; padding: 20px; color: #7f8c8d;">
+                    載入團隊數據中...
+                </div>
+            </div>
         </div>
 
         <!-- 每日數據報到卡片 -->
@@ -195,6 +248,10 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 全局變數
+    let currentUser = null;
+    let personalChart = null;
+
     // 頁面載入時檢查登入狀態
     window.onload = async () => {
         const { data: { session }, error } = await sb.auth.getSession();
@@ -234,186 +291,12 @@
         return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
     }
 
-    // 檢查角色是否可以修改
-async function checkRoleChangePermission(oldRole, newRole) {
-    const { data: profile } = await sb
-        .from('profiles')
-        .select('is_locked, role')
-        .eq('id', currentUser.id)
-        .single();
-    
-    // 如果用戶被鎖定，不能修改任何資料
-    if (profile.is_locked) {
-        return { allowed: false, message: '您的帳號已被鎖定，請聯繫管理員' };
-    }
-    
-    // 如果角色沒有改變，允許修改
-    if (oldRole === newRole) {
-        return { allowed: true, message: '' };
-    }
-    
-    // 如果是管理員，允許直接修改
-    if (oldRole === 'admin') {
-        return { allowed: true, message: '' };
-    }
-    
-    // 其他情況需要提交申請
-    return { 
-        allowed: false, 
-        needsApproval: true,
-        message: '角色修改需要隊長審核，系統已自動提交申請' 
-    };
-}
-
-// 提交角色修改申請
-async function submitRoleChangeRequest(oldRole, newRole, reason = '') {
-    const { error } = await sb
-        .from('role_change_requests')
-        .insert([{
-            user_id: currentUser.id,
-            current_role: oldRole,
-            requested_role: newRole,
-            reason: reason,
-            status: 'pending'
-        }]);
-    
-    if (!error) {
-        // 記錄審核日誌
-        await sb.from('audit_logs').insert([{
-            user_id: currentUser.id,
-            action: 'REQUEST_ROLE_CHANGE',
-            resource_type: 'USER',
-            resource_id: currentUser.id,
-            details: { 
-                from: oldRole, 
-                to: newRole,
-                reason: reason 
-            }
-        }]);
-        
-        return true;
-    }
-    return false;
-}
-
-// 修改 updateProfile 函數
-async function updateProfile() {
-    const { data: { user } } = await sb.auth.getUser();
-    const fullName = document.getElementById('full_name').value.trim();
-    const newRole = document.getElementById('role').value;
-    const plan = document.getElementById('plan').value;
-    const teamId = document.getElementById('team_id_input').value.trim();
-    
-    if (!fullName) {
-        alert("請輸入真實姓名");
-        return;
-    }
-    
-    try {
-        // 獲取當前角色
-        const { data: currentProfile } = await sb
-            .from('profiles')
-            .select('role, is_locked')
-            .eq('id', user.id)
-            .single();
-        
-        const oldRole = currentProfile.role;
-        
-        // 檢查角色修改權限
-        const permission = await checkRoleChangePermission(oldRole, newRole);
-        
-        if (!permission.allowed) {
-            if (permission.needsApproval) {
-                // 詢問修改原因
-                const reason = prompt('請說明您為什麼要修改角色：');
-                if (reason === null) return; // 用戶取消
-                
-                // 提交角色修改申請
-                const submitted = await submitRoleChangeRequest(oldRole, newRole, reason);
-                if (submitted) {
-                    alert(permission.message);
-                    // 恢復原來的角色選擇
-                    document.getElementById('role').value = oldRole;
-                } else {
-                    alert('提交申請失敗，請稍後再試');
-                    return;
-                }
-            } else {
-                alert(permission.message);
-                document.getElementById('role').value = oldRole;
-                return;
-            }
-        }
-        
-        // 處理頭像上傳
-        let avatarUrl = document.getElementById('avatar-img').src;
-        const avatarFile = document.getElementById('avatar_file').files[0];
-        
-        if (avatarFile) {
-            const fileName = `${user.id}_${Date.now()}.png`;
-            const { error: uploadError } = await sb.storage
-                .from('avatars')
-                .upload(fileName, avatarFile, { upsert: true });
-                
-            if (!uploadError) {
-                const { data: urlData } = sb.storage
-                    .from('avatars')
-                    .getPublicUrl(fileName);
-                avatarUrl = urlData.publicUrl;
-            }
-        }
-        
-        // 更新個人資料
-        const updateData = {
-            id: user.id,
-            full_name: fullName,
-            plan: plan,
-            current_team_id: teamId || null,
-            avatar_url: avatarUrl,
-            updated_at: new Date().toISOString()
-        };
-        
-        // 只有允許修改角色時才更新角色
-        if (permission.allowed) {
-            updateData.role = newRole;
-        }
-        
-        const { error } = await sb
-            .from('profiles')
-            .upsert(updateData);
-        
-        if (error) {
-            console.error("更新資料錯誤:", error);
-            alert("儲存失敗：" + error.message);
-        } else {
-            alert("✅ 設定已儲存！" + (permission.needsApproval ? "角色修改申請已提交，請等待審核。" : ""));
-            
-            // 如果是管理員直接修改角色，記錄日誌
-            if (oldRole !== newRole && permission.allowed && oldRole === 'admin') {
-                await sb.from('audit_logs').insert([{
-                    user_id: user.id,
-                    action: 'ADMIN_ROLE_CHANGE',
-                    resource_type: 'USER',
-                    resource_id: user.id,
-                    details: { 
-                        admin_id: currentUser.id,
-                        from: oldRole, 
-                        to: newRole
-                    }
-                }]);
-            }
-            
-            location.reload();
-        }
-    } catch (error) {
-        console.error("更新個人資料錯誤:", error);
-        alert("儲存失敗：" + error.message);
-    }
-}
-
     // 顯示個人資料
     async function showProfile(user) {
         console.log("顯示用戶資料:", user.email);
+        
+        // 保存當前用戶
+        currentUser = user;
         
         // 切換顯示區域
         document.getElementById('auth-section').classList.add('hidden');
@@ -426,7 +309,7 @@ async function updateProfile() {
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .maybeSingle(); // 使用 maybeSingle 避免找不到資料時報錯
+                .maybeSingle();
 
             if (error) {
                 console.error("查詢用戶資料錯誤:", error);
@@ -472,6 +355,13 @@ async function updateProfile() {
                     
                     // 檢查今日是否已報到
                     await checkDailyCheckin(user.id);
+                    
+                    // 載入個人數據變化圖表
+                    await loadPersonalProgressChart(user.id);
+                    
+                    // 根據角色顯示專屬按鈕和團隊數據
+                    showRoleSpecificContent(profile);
+                    
                 } else {
                     document.getElementById('setup-card').classList.remove('hidden');
                     document.getElementById('edit-profile-btn').classList.add('hidden');
@@ -486,56 +376,210 @@ async function updateProfile() {
         } catch (err) {
             console.error("顯示個人資料錯誤:", err);
         }
-                    // 根據角色顯示對應的按鈕和團隊數據變化
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
-                document.getElementById('admin-btn').classList.remove('hidden');
-                document.getElementById('role-specific-buttons').classList.remove('hidden');
-            } else if (profile.role === 'captain') {
-                document.getElementById('captain-btn').classList.remove('hidden');
-                document.getElementById('role-specific-buttons').classList.remove('hidden');
-                // 顯示團隊數據變化卡片
-                document.getElementById('team-progress-card').classList.remove('hidden');
-                await loadTeamProgress(user.id);
-            } else if (profile.role === 'deputy') {
-                document.getElementById('deputy-btn').classList.remove('hidden');
-                document.getElementById('role-specific-buttons').classList.remove('hidden');
-                // 顯示團隊數據變化卡片
-                document.getElementById('team-progress-card').classList.remove('hidden');
-                await loadTeamProgress(user.id);
-            }
     }
-    // 載入團隊數據變化（只有隊長和副隊長）
-    async function loadTeamProgress(userId) {
-        const container = document.getElementById('team-progress-content');
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入中...</div>';
+
+    // 根據角色顯示專屬內容
+    async function showRoleSpecificContent(profile) {
+        const roleButtons = document.getElementById('role-buttons');
+        const adminBtn = document.getElementById('admin-btn');
+        const captainBtn = document.getElementById('captain-btn');
+        const deputyBtn = document.getElementById('deputy-btn');
+        
+        // 隱藏所有按鈕
+        adminBtn.classList.add('hidden');
+        captainBtn.classList.add('hidden');
+        deputyBtn.classList.add('hidden');
+        roleButtons.classList.add('hidden');
+        
+        // 根據角色顯示對應按鈕
+        if (profile.role === 'admin' || profile.role === 'super_admin') {
+            adminBtn.classList.remove('hidden');
+            roleButtons.classList.remove('hidden');
+        } else if (profile.role === 'captain') {
+            captainBtn.classList.remove('hidden');
+            roleButtons.classList.remove('hidden');
+            
+            // 顯示團隊數據
+            document.getElementById('team-progress-section').classList.remove('hidden');
+            await loadTeamProgress(profile.current_team_id, true); // true表示是隊長
+        } else if (profile.role === 'deputy') {
+            deputyBtn.classList.remove('hidden');
+            roleButtons.classList.remove('hidden');
+            
+            // 顯示團隊數據
+            document.getElementById('team-progress-section').classList.remove('hidden');
+            await loadTeamProgress(profile.current_team_id, false); // false表示是副隊長
+        }
+        
+        // 顯示個人數據圖表
+        document.getElementById('personal-progress-section').classList.remove('hidden');
+    }
+
+    // 載入個人數據變化圖表
+    async function loadPersonalProgressChart(userId) {
+        try {
+            // 獲取最近14天的數據
+            const twoWeeksAgo = new Date();
+            twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+            
+            const { data: records, error } = await sb
+                .from('weight_records')
+                .select('*')
+                .eq('user_id', userId)
+                .gte('date', twoWeeksAgo.toISOString().split('T')[0])
+                .order('date', { ascending: true });
+            
+            if (error) throw error;
+            
+            const ctx = document.getElementById('personal-progress-chart').getContext('2d');
+            
+            // 如果已有圖表，銷毀它
+            if (personalChart) {
+                personalChart.destroy();
+            }
+            
+            if (!records || records.length === 0) {
+                // 沒有數據時顯示提示
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = '#7f8c8d';
+                ctx.textAlign = 'center';
+                ctx.fillText('暫無數據，請開始每日報到', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            
+            // 準備數據
+            const dates = records.map(record => {
+                const date = new Date(record.date);
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            
+            const weights = records.map(record => record.weight || 0);
+            const fatRates = records.map(record => record.fat_rate || 0);
+            const muscleMasses = records.map(record => record.muscle_mass || 0);
+            
+            // 計算變化趨勢
+            const weightChanges = weights.map((weight, index) => {
+                if (index === 0) return 0;
+                return weight - weights[index - 1];
+            });
+            
+            personalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: '體重 (kg)',
+                            data: weights,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.4
+                        },
+                        {
+                            label: '體脂率 (%)',
+                            data: fatRates,
+                            borderColor: 'rgb(54, 162, 235)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        },
+                        {
+                            label: '肌肉量 (kg)',
+                            data: muscleMasses,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(1);
+                                    
+                                    // 如果是體重，顯示變化
+                                    if (context.datasetIndex === 0 && context.dataIndex > 0) {
+                                        const change = weightChanges[context.dataIndex];
+                                        if (change !== 0) {
+                                            label += ` (${change > 0 ? '+' : ''}${change.toFixed(1)})`;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: '體重/肌肉量 (kg)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: '體脂率 (%)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('載入個人數據圖表錯誤:', error);
+        }
+    }
+
+    // 載入團隊數據變化
+    async function loadTeamProgress(teamId, isCaptain) {
+        const container = document.getElementById('team-progress-list');
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
         
         try {
-            // 獲取當前用戶的團隊ID
-            const { data: currentUserProfile } = await sb
-                .from('profiles')
-                .select('current_team_id')
-                .eq('id', userId)
-                .single();
-            
-            if (!currentUserProfile.current_team_id) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">您目前沒有加入團隊</div>';
-                return;
-            }
-            
-            const teamId = currentUserProfile.current_team_id;
-            
             // 獲取團隊成員
-            const { data: members } = await sb
+            const { data: members, error } = await sb
                 .from('profiles')
-                .select('id, full_name, avatar_url')
-                .eq('current_team_id', teamId);
+                .select('id, full_name, avatar_url, role')
+                .eq('current_team_id', teamId)
+                .order('created_at', { ascending: true });
+            
+            if (error) throw error;
             
             if (!members || members.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">團隊暫無成員</div>';
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #7f8c8d;">團隊暫無成員</div>';
                 return;
             }
             
-            // 獲取今天和昨天的日期字符串
+            // 獲取最近2天的日期
             const today = getHKTime();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
@@ -543,44 +587,41 @@ async function updateProfile() {
             const todayStr = today.toISOString().split('T')[0];
             const yesterdayStr = yesterday.toISOString().split('T')[0];
             
-            // 獲取成員的體重記錄
-            const memberIds = members.map(m => m.id);
+            // 獲取所有成員的數據
+            const memberIds = members.map(member => member.id);
             const { data: records } = await sb
                 .from('weight_records')
                 .select('*')
                 .in('user_id', memberIds)
-                .in('date', [todayStr, yesterdayStr]);
+                .in('date', [todayStr, yesterdayStr])
+                .order('date', { ascending: false });
             
-            // 組織數據：以用戶ID為鍵，記錄為值
-            const recordsByUser = {};
-            records?.forEach(record => {
-                if (!recordsByUser[record.user_id]) {
-                    recordsByUser[record.user_id] = {};
-                }
-                recordsByUser[record.user_id][record.date] = record;
+            // 組織數據
+            const memberData = {};
+            members.forEach(member => {
+                memberData[member.id] = {
+                    ...member,
+                    today: null,
+                    yesterday: null
+                };
             });
             
-            // 生成表格
-            let html = `
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">成員</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">日期</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">體重(kg)</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">體脂(%)</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">肌肉(kg)</th>
-                            <th style="padding: 10px; border-bottom: 1px solid #eee; text-align: left;">變化</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+            // 填充數據
+            records?.forEach(record => {
+                if (record.date === todayStr) {
+                    memberData[record.user_id].today = record;
+                } else if (record.date === yesterdayStr) {
+                    memberData[record.user_id].yesterday = record;
+                }
+            });
             
-            members.forEach(member => {
-                const todayRecord = recordsByUser[member.id]?.[todayStr];
-                const yesterdayRecord = recordsByUser[member.id]?.[yesterdayStr];
+            // 生成HTML
+            let html = '';
+            
+            Object.values(memberData).forEach(member => {
+                const todayRecord = member.today;
+                const yesterdayRecord = member.yesterday;
                 
-                // 計算變化
                 let weightChange = null;
                 let fatChange = null;
                 let muscleChange = null;
@@ -591,40 +632,108 @@ async function updateProfile() {
                     muscleChange = todayRecord.muscle_mass - yesterdayRecord.muscle_mass;
                 }
                 
-                // 顯示今日記錄
                 html += `
-                <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                        <div style="display: flex; align-items: center;">
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <div style="display: flex; align-items: center; gap: 8px;">
                             <img src="${member.avatar_url || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(member.full_name || 'User') + '&background=random'}" 
-                                 style="width: 30px; height: 30px; border-radius: 50%; margin-right: 10px;">
-                            ${member.full_name || '未命名'}
+                                 style="width: 30px; height: 30px; border-radius: 50%;">
+                            <div>
+                                <div class="progress-name">${member.full_name || '未命名'}</div>
+                                <div style="font-size: 11px; color: #94a3b8;">
+                                    ${member.role === 'captain' ? '👑 隊長' : member.role === 'deputy' ? '⭐ 副隊長' : '👤 學員'}
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${todayStr}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${todayRecord ? todayRecord.weight : '--'}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${todayRecord ? todayRecord.fat_rate : '--'}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${todayRecord ? todayRecord.muscle_mass : '--'}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #eee;">
-                        ${weightChange !== null ? 
-                            `<div>體重: ${weightChange > 0 ? '+' : ''}${weightChange.toFixed(1)}</div>
-                             <div>體脂: ${fatChange > 0 ? '+' : ''}${fatChange.toFixed(1)}</div>
-                             <div>肌肉: ${muscleChange > 0 ? '+' : ''}${muscleChange.toFixed(1)}</div>` 
-                            : '--'}
-                    </td>
-                </tr>`;
-                
-                // 如果有昨日記錄，也可以選擇顯示，但這裡我們只顯示今日和變化
+                        <div class="progress-date">
+                            ${todayRecord ? '✅ 今日已報到' : '⏳ 今日未報到'}
+                        </div>
+                    </div>
+                    
+                    <div class="progress-details">
+                        <div class="progress-detail">
+                            <div class="progress-label">體重</div>
+                            <div class="progress-value">
+                                ${todayRecord ? todayRecord.weight.toFixed(1) + ' kg' : '--'}
+                            </div>
+                            ${weightChange !== null ? `
+                                <div class="progress-change ${weightChange < 0 ? 'change-positive' : weightChange > 0 ? 'change-negative' : ''}">
+                                    ${weightChange < 0 ? '↓' : weightChange > 0 ? '↑' : '→'} ${Math.abs(weightChange).toFixed(1)} kg
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="progress-detail">
+                            <div class="progress-label">體脂</div>
+                            <div class="progress-value">
+                                ${todayRecord ? todayRecord.fat_rate.toFixed(1) + ' %' : '--'}
+                            </div>
+                            ${fatChange !== null ? `
+                                <div class="progress-change ${fatChange < 0 ? 'change-positive' : fatChange > 0 ? 'change-negative' : ''}">
+                                    ${fatChange < 0 ? '↓' : fatChange > 0 ? '↑' : '→'} ${Math.abs(fatChange).toFixed(1)} %
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="progress-detail">
+                            <div class="progress-label">肌肉</div>
+                            <div class="progress-value">
+                                ${todayRecord ? todayRecord.muscle_mass.toFixed(1) + ' kg' : '--'}
+                            </div>
+                            ${muscleChange !== null ? `
+                                <div class="progress-change ${muscleChange > 0 ? 'change-positive' : muscleChange < 0 ? 'change-negative' : ''}">
+                                    ${muscleChange > 0 ? '↑' : muscleChange < 0 ? '↓' : '→'} ${Math.abs(muscleChange).toFixed(1)} kg
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>`;
             });
             
-            html += `</tbody></table></div>`;
+            // 如果是隊長，顯示團隊統計
+            if (isCaptain) {
+                // 計算團隊總計
+                const totalMembers = members.length;
+                const checkedInToday = Object.values(memberData).filter(m => m.today).length;
+                const completionRate = Math.round((checkedInToday / totalMembers) * 100);
+                
+                const totalWeightLoss = Object.values(memberData).reduce((sum, member) => {
+                    if (member.today && member.yesterday) {
+                        return sum + (member.today.weight - member.yesterday.weight);
+                    }
+                    return sum;
+                }, 0);
+                
+                html = `
+                <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; text-align: center;">
+                        <div>
+                            <div style="font-size: 12px; color: #64748b;">團隊成員</div>
+                            <div style="font-size: 24px; font-weight: bold;">${totalMembers} 人</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #64748b;">今日報到率</div>
+                            <div style="font-size: 24px; font-weight: bold; color: ${completionRate >= 80 ? 'var(--success)' : 'var(--warning)'}">${completionRate}%</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <div style="font-size: 12px; color: #64748b;">昨日總減重</div>
+                        <div style="font-size: 20px; font-weight: bold; color: ${totalWeightLoss < 0 ? 'var(--success)' : 'var(--danger)'}">
+                            ${totalWeightLoss < 0 ? '↓' : totalWeightLoss > 0 ? '↑' : ''} ${Math.abs(totalWeightLoss).toFixed(1)} kg
+                        </div>
+                    </div>
+                </div>
+                ` + html;
+            }
+            
             container.innerHTML = html;
             
         } catch (error) {
-            console.error('載入團隊數據變化錯誤:', error);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入失敗，請重新整理</div>';
+            console.error('載入團隊數據錯誤:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">載入失敗，請重新整理</div>';
         }
     }
+
     // 檢查今日是否已報到
     async function checkDailyCheckin(userId) {
         const today = getHKTime().toISOString().split('T')[0];
@@ -827,7 +936,7 @@ async function updateProfile() {
             document.getElementById('status-msg').textContent = "✅ 今日數據已成功報到！";
             setTimeout(() => {
                 document.getElementById('status-msg').textContent = "";
-                location.reload();
+                location.reload(); // 重新載入以更新圖表和數據
             }, 2000);
 
         } catch (error) {
@@ -855,44 +964,29 @@ async function updateProfile() {
     }
 
     // 登入
-  async function signIn() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    if (!email || !password) {
-        alert("請填寫信箱和密碼");
-        return;
+    async function signIn() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        if (!email || !password) {
+            alert("請填寫信箱和密碼");
+            return;
+        }
+
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+            alert("登入失敗：" + error.message);
+        } else {
+            // 登入成功，重新載入頁面
+            location.reload();
+        }
     }
 
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error) {
-        alert("登入失敗：" + error.message);
-    } else {
-        // 獲取用戶角色
-        const { data: profile } = await sb
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .maybeSingle();
-        
-        // 根據角色重定向
-        if (profile) {
-            if (profile.role === 'admin' || profile.role === 'super_admin') {
-                window.location.href = 'admin.html';
-                return;
-            } else if (profile.role === 'captain') {
-                window.location.href = 'captain.html';
-                return;
-            } else if (profile.role === 'deputy') {
-                window.location.href = 'deputy.html';
-                return;
-            }
-        }
-        
-        // 普通用戶留在原頁面
+    // 登出
+    async function signOut() {
+        await sb.auth.signOut();
         location.reload();
     }
-}
 </script>
 </body>
 </html>
