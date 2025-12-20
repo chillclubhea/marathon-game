@@ -748,29 +748,85 @@ async function updateProfile() {
     }
 
     // 登入
-    async function signIn() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
+// 登入（改進版本）
+async function signIn() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        alert("請填寫信箱和密碼");
+        return;
+    }
+    
+    console.log("嘗試登入:", email);
+    
+    try {
+        const { data, error } = await sb.auth.signInWithPassword({ 
+            email: email, 
+            password: password 
+        });
         
-        if (!email || !password) {
-            alert("請填寫信箱和密碼");
-            return;
-        }
-
-        const { data, error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-            alert("登入失敗：" + error.message);
+            console.error("登入錯誤詳情:", error);
+            
+            // 提供更詳細的錯誤訊息
+            if (error.message.includes('Invalid login credentials')) {
+                alert("登入失敗：帳號或密碼錯誤");
+            } else if (error.message.includes('Email not confirmed')) {
+                alert("請先驗證您的電子郵件地址");
+            } else {
+                alert("登入失敗：" + error.message);
+            }
         } else {
+            console.log("登入成功，重新載入頁面");
             // 登入成功，重新載入頁面
             location.reload();
         }
+    } catch (err) {
+        console.error("登入異常:", err);
+        alert("登入過程中發生錯誤");
     }
+}
 
     // 登出
     async function signOut() {
         await sb.auth.signOut();
         location.reload();
     }
+        // 測試 Supabase 連接
+async function testConnection() {
+    try {
+        const { data, error } = await sb.auth.getSession();
+        if (error) {
+            console.warn("Supabase 連接警告:", error);
+        } else {
+            console.log("Supabase 連接正常");
+        }
+    } catch (err) {
+        console.error("Supabase 連接測試失敗:", err);
+    }
+}
+
+        
+// 在 window.onload 中調用
+window.onload = async () => {
+    await testConnection(); // 先測試連接
+    
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (error) {
+        console.error("檢查登入狀態錯誤:", error);
+        document.getElementById('auth-section').classList.remove('hidden');
+        return;
+    }
+    
+    if (session) {
+        console.log("已登入，用戶:", session.user.email);
+        await showProfile(session.user);
+    } else {
+        console.log("未登入，顯示登入表單");
+        document.getElementById('auth-section').classList.remove('hidden');
+    }
+};
 </script>
 </body>
 </html>
