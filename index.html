@@ -1,424 +1,1013 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬拉松玩家中心</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>馬拉松健身追蹤</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 450px; }
-        .header { text-align: center; margin-bottom: 25px; }
-        h2 { color: #2c3e50; margin: 0; font-size: 24px; }
-        #user-display { font-size: 12px; color: #95a5a6; margin-top: 5px; }
-        .card { background: #fff; border: 1px solid #edf2f7; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-        .card-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; color: #4a5568; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
-        input:disabled, select:disabled { background-color: #f8fafc; color: #94a3b8; cursor: not-allowed; }
-        .row { display: flex; gap: 10px; }
-        .row .form-group { flex: 1; }
-        button { width: 100%; padding: 14px; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px; }
-        .btn-primary { background-color: var(--primary); }
-        .btn-success { background-color: var(--success); }
-        .btn-warning { background-color: var(--warning); }
-        .btn-danger { background-color: var(--danger); }
-        .btn-admin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-captain { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-        .btn-deputy { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-        .hidden { display: none !important; }
-        .avatar-preview { width: 80px; height: 80px; border-radius: 50%; background: #eee; margin: 0 auto 15px; display: block; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .ticket-stats { display: flex; justify-content: space-between; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; }
-        .ticket-stats div { text-align: center; }
-        .ticket-stats span { display: block; font-size: 12px; color: #64748b; margin-bottom: 5px; }
-        .ticket-stats b { display: block; font-size: 24px; color: #0ea5e9; }
-        .mission-item { background: #f1f5f9; padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 14px; }
-        .mission-item.active { background: #dbeafe; border-left: 4px solid #3b82f6; }
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --gray-color: #95a5a6;
+            --card-bg: #ffffff;
+            --bg-color: #f8f9fa;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
         
-        /* 新增：數據變化樣式 */
-        .progress-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; border-left: 5px solid var(--success); }
-        .progress-title { font-weight: bold; color: #2d3748; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .progress-list { max-height: 300px; overflow-y: auto; }
-        .progress-item { padding: 10px; border-bottom: 1px solid #f0f0f0; }
-        .progress-item:last-child { border-bottom: none; }
-        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .progress-name { font-weight: bold; color: #2d3748; font-size: 14px; }
-        .progress-date { font-size: 12px; color: #94a3b8; }
-        .progress-details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
-        .progress-detail { text-align: center; }
-        .progress-label { font-size: 11px; color: #64748b; }
-        .progress-value { font-size: 14px; font-weight: bold; }
-        .progress-change { font-size: 12px; }
-        .change-positive { color: var(--success); }
-        .change-negative { color: var(--danger); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
         
-        /* 圖表容器 */
-        .chart-container { height: 200px; margin-top: 15px; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
         
-        /* 角色按鈕容器 */
-        .role-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
-        .role-buttons button { margin: 0; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 2fr;
+            }
+        }
+        
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .logo i {
+            font-size: 2.2rem;
+        }
+        
+        .deadline {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title i {
+            color: var(--primary-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-details p {
+            margin: 5px 0;
+        }
+        
+        .user-email {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-top: 5px;
+        }
+        
+        .team-section {
+            margin-top: 20px;
+        }
+        
+        .team-id {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .team-id input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .chart-container {
+            height: 250px;
+            margin-top: 20px;
+            position: relative;
+        }
+        
+        .daily-data {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .data-input-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .data-input {
+            width: 100%;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            background: transparent;
+            color: var(--dark-color);
+            outline: none;
+            padding: 5px;
+        }
+        
+        .data-input::placeholder {
+            color: #bbb;
+        }
+        
+        .data-label {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-top: 10px;
+        }
+        
+        .data-unit {
+            font-size: 1rem;
+            color: var(--dark-color);
+            margin-left: 3px;
+        }
+        
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .task-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .task-completed {
+            color: var(--secondary-color);
+        }
+        
+        .task-pending {
+            color: var(--gray-color);
+        }
+        
+        .submit-section {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        .submit-btn {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--secondary-color), #27ae60);
+            color: white;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+        }
+        
+        footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-joined {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: var(--secondary-color);
+        }
+        
+        .status-pending {
+            background-color: rgba(241, 196, 15, 0.2);
+            color: #f39c12;
+        }
+        
+        .data-note {
+            text-align: center;
+            margin-top: 10px;
+            color: var(--gray-color);
+            font-size: 0.85rem;
+        }
+        
+        .input-hint {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        /* 登入頁面樣式 */
+        .auth-section {
+            max-width: 400px;
+            margin: 50px auto;
+        }
+        
+        .auth-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+        
+        .auth-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--dark-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .auth-buttons button {
+            flex: 1;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* 團隊進度樣式 */
+        .team-progress-section {
+            margin-top: 20px;
+        }
+        
+        .progress-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .progress-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .progress-name {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .progress-date {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+        }
+        
+        .progress-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+        
+        .progress-detail {
+            text-align: center;
+        }
+        
+        .progress-label {
+            font-size: 0.75rem;
+            color: var(--gray-color);
+        }
+        
+        .progress-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        /* 個人設定樣式 */
+        .setup-section {
+            margin-top: 20px;
+        }
+        
+        .avatar-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+        }
+        
+        .setup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .setup-form select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        /* 角色按鈕樣式 */
+        .role-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .role-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .role-btn.admin {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .role-btn.captain {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .role-btn.deputy {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
     </style>
 </head>
 <body>
-<!-- 在 index.html 的功能按鈕區域添加 -->
-<div class="card" style="text-align: center;">
-    <button class="btn-success" onclick="window.open('team.html', '_blank')" style="margin-bottom: 10px;">
-        🏆 查看九宮格戰況
-    </button>
-    <button class="btn-primary" onclick="window.open('leaderboard.html', '_blank')" style="margin-bottom: 10px;">
-        📊 查看排行榜
-    </button>
-    <button class="btn-primary" onclick="window.open('tasks.html', '_blank')" style="margin-bottom: 10px;">
-        ✅ 查看任務區
-    </button>
-    <!-- 新增積分指南按鈕 -->
-    <button class="btn-warning" onclick="window.open('points-guide.html', '_blank')">
-        💰 積分獲取指南
-    </button>
-</div>
-<div class="container">
-    <!-- 截止時間通知 -->
-    <div id="deadline-notice" style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; font-size:13px; margin-bottom:10px; text-align:center;">
-        ⚠️ 今日報到截止：香港時間 23:59
-    </div>
-
     <!-- 登入區塊 -->
-    <div id="auth-section">
-        <div class="header">
-            <h2>🔑 登入馬拉松</h2>
-            <div id="login-msg" style="font-size:14px; color:#666; margin-top:5px;">請登入以繼續</div>
+    <div id="auth-section" class="auth-section">
+        <div class="auth-card">
+            <h2 class="auth-title">🔑 登入馬拉松</h2>
+            <div id="login-msg" style="text-align: center; color: var(--gray-color); margin-bottom: 20px;">
+                請登入以繼續
+            </div>
+            <form onsubmit="signIn(); return false;">
+                <div class="form-group">
+                    <label>電子信箱</label>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                <div class="form-group">
+                    <label>密碼</label>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <div class="auth-buttons">
+                    <button type="button" class="btn btn-primary" onclick="signUp()">註冊</button>
+                    <button type="submit" class="btn btn-secondary">登入</button>
+                </div>
+            </form>
         </div>
-        <form onsubmit="signIn(); return false;" class="card" style="margin-top: 20px;">
-            <div class="form-group">
-                <label>電子信箱</label>
-                <input type="email" id="email" placeholder="Email" required>
-            </div>
-            <div class="form-group">
-                <label>密碼</label>
-                <input type="password" id="password" placeholder="Password" required>
-            </div>
-            <button type="button" class="btn-primary" onclick="signUp()">註冊</button>
-            <button type="submit" class="btn-success">登入</button>
-        </form>
     </div>
-
-    <!-- 個人資料區塊 -->
-    <div id="profile-section" class="hidden">
-        <div class="header">
-            <h2>🏃 玩家中心</h2>
-            <div id="user-display"></div>
-        </div>
-
-        <!-- 積分統計 -->
-        <div class="ticket-stats">
-            <div><span>累積積分 🎟️</span><b id="ticket-count">0</b></div>
-            <div><span>馬拉松進度</span><b id="day-progress">Day 0</b></div>
-            <div><span>隊伍狀態</span><b id="team-status">未加入</b></div>
-        </div>
-
-        <!-- 角色專屬按鈕 -->
-        <div id="role-buttons" class="role-buttons hidden">
-            <!-- 管理員按鈕 -->
-            <button id="admin-btn" class="hidden btn-admin" onclick="window.location.href='admin.html'">
-                👑 管理員後台
-            </button>
-            <!-- 隊長按鈕 -->
-            <button id="captain-btn" class="hidden btn-captain" onclick="window.location.href='captain.html'">
-                🏆 隊長後台
-            </button>
-            <!-- 副隊長按鈕 -->
-            <button id="deputy-btn" class="hidden btn-deputy" onclick="window.location.href='deputy.html'">
-                ⭐ 副隊長後台
-            </button>
-        </div>
-
-        <!-- 編輯按鈕 -->
-        <button id="edit-profile-btn" class="hidden" onclick="toggleProfileEdit()" 
-                style="background: #edf2f7; color: #4a5568; font-size: 14px; margin-bottom: 15px; padding: 8px; border:none; border-radius:8px; width:100%;">
-            ⚙️ 修改個人資料或更換隊伍
-        </button>
-
-        <!-- 個人設定卡片 -->
-        <div id="setup-card" class="card">
-            <div class="card-title">👤 個人設定 & 加入隊伍</div>
-            <img id="avatar-img" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random">
-            <div class="form-group">
-                <label>更換頭像</label>
-                <input type="file" id="avatar_file" accept="image/*" onchange="previewAvatar()">
+    
+    <!-- 主頁面區塊 -->
+    <div id="main-section" class="hidden">
+        <header>
+            <div class="logo">
+                <i class="fas fa-running"></i>
+                <span>馬拉松健身追蹤</span>
             </div>
-            <div class="form-group">
-                <label>真實姓名</label>
-                <input type="text" id="full_name" placeholder="隊友如何稱呼你">
+            <div class="deadline">
+                <i class="far fa-clock"></i> 今日報到截止: 香港時間 23:59
             </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>角色</label>
-                    <select id="role">
-                        <option value="member">學員</option>
-                        <option value="captain">隊長</option>
-                        <option value="deputy">副隊長</option>
-                        <option value="admin">管理員</option>
-                    </select>
+        </header>
+        
+        <div class="container">
+            <!-- 左側欄 -->
+            <div class="sidebar">
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-user-circle"></i> 玩家中心
+                    </h2>
+                    <div class="user-info">
+                        <div class="avatar" id="avatar-display">
+                            <img id="avatar-img" src="" alt="Avatar" onerror="this.style.display='none';">
+                        </div>
+                        <div class="user-details">
+                            <p><strong id="user-name">載入中...</strong> <span class="status-badge status-joined" id="team-status-badge">已加入隊伍</span></p>
+                            <p class="user-email" id="user-email">載入中...</p>
+                            <p id="user-role">角色: 載入中...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="ticket-count">0</div>
+                            <div class="stat-label">累積積分</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="day-progress">0</div>
+                            <div class="stat-label">參與天數</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="team-members">0</div>
+                            <div class="stat-label">隊伍人數</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 編輯按鈕 -->
+                    <button id="edit-profile-btn" class="btn btn-primary" style="width: 100%; margin-top: 15px;" onclick="toggleProfileEdit()">
+                        <i class="fas fa-edit"></i> 修改個人資料
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>計畫</label>
-                    <select id="plan">
-                        <option value="slow_run">慢跑</option>
-                        <option value="fast_run">快跑</option>
-                        <option value="vip">VIP</option>
-                    </select>
+                
+                <!-- 個人設定卡片 -->
+                <div id="setup-card" class="card hidden">
+                    <h2 class="card-title">
+                        <i class="fas fa-cog"></i> 個人設定
+                    </h2>
+                    <div class="avatar-upload">
+                        <img id="avatar-preview" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random">
+                        <input type="file" id="avatar_file" accept="image/*" onchange="previewAvatar()" style="display: none;">
+                        <button type="button" class="btn btn-small" onclick="document.getElementById('avatar_file').click()">
+                            <i class="fas fa-upload"></i> 選擇頭像
+                        </button>
+                    </div>
+                    <div class="setup-form">
+                        <div class="form-group">
+                            <label>真實姓名</label>
+                            <input type="text" id="full_name" placeholder="隊友如何稱呼你">
+                        </div>
+                        <div class="form-group">
+                            <label>角色</label>
+                            <select id="role">
+                                <option value="member">學員</option>
+                                <option value="captain">隊長</option>
+                                <option value="deputy">副隊長</option>
+                                <option value="admin">管理員</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>計畫</label>
+                            <select id="plan">
+                                <option value="slow_run">慢跑</option>
+                                <option value="fast_run">快跑</option>
+                                <option value="vip">VIP</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>加入隊伍邀請碼 (Team ID)</label>
+                            <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
+                            <div class="input-hint">若無隊伍代碼，請聯絡隊長</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="updateProfile()">
+                            <i class="fas fa-save"></i> 儲存設定
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <label>加入隊伍邀請碼 (Team ID)</label>
-                <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
-                <small style="color:#666; display:block; margin-top:5px;">若無隊伍代碼，請聯絡隊長</small>
-            </div>
-            <button class="btn-primary" onclick="updateProfile()">儲存並開始遊戲</button>
-        </div>
-
-        <!-- 個人數據變化圖表 -->
-        <div id="personal-progress-section" class="progress-card hidden">
-            <div class="progress-title">📈 我的數據變化趨勢</div>
-            <div class="chart-container">
-                <canvas id="personal-progress-chart"></canvas>
-            </div>
-        </div>
-
-        <!-- 團隊數據變化（隊長和副隊長可見） -->
-        <div id="team-progress-section" class="progress-card hidden">
-            <div class="progress-title">👥 團隊數據變化</div>
-            <div class="progress-list" id="team-progress-list">
-                <div style="text-align: center; padding: 20px; color: #7f8c8d;">
-                    載入團隊數據中...
+                
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-users"></i> 隊伍狀態
+                    </h2>
+                    <div class="team-section">
+                        <p>隊伍進度: <strong id="team-progress">馬拉松進行中</strong></p>
+                        <p style="margin-top: 10px; font-size: 0.95rem;">加入隊伍邀請碼 (隊伍 ID)</p>
+                        <div class="team-id">
+                            <input type="text" id="teamCode" value="載入中..." readonly>
+                            <button class="btn btn-primary btn-small" onclick="copyTeamCode()">
+                                <i class="far fa-copy"></i> 複製
+                            </button>
+                        </div>
+                        <div class="input-hint">
+                            <i class="fas fa-info-circle"></i> 若無隊伍代碼，請聯絡隊長
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- 每日數據報到卡片 -->
-        <div class="card" style="border-left: 5px solid var(--warning);">
-            <div class="card-title">⚖️ 每日數據報到</div>
-            <div class="form-group">
-                <label>今日體重 (kg)</label>
-                <input type="number" id="weight" step="0.1" placeholder="0.0">
-            </div>
-            <div class="row">
-                <div class="form-group">
-                    <label>體脂率 (%)</label>
-                    <input type="number" id="fat_rate" step="0.1" placeholder="0.0">
+                
+                <!-- 角色專屬按鈕 -->
+                <div id="role-buttons" class="role-buttons hidden">
+                    <button id="admin-btn" class="role-btn admin hidden" onclick="window.open('admin.html', '_blank')">
+                        <i class="fas fa-crown"></i> 管理員後台
+                    </button>
+                    <button id="captain-btn" class="role-btn captain hidden" onclick="window.open('captain.html', '_blank')">
+                        <i class="fas fa-trophy"></i> 隊長後台
+                    </button>
+                    <button id="deputy-btn" class="role-btn deputy hidden" onclick="window.open('deputy.html', '_blank')">
+                        <i class="fas fa-star"></i> 副隊長後台
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>肌肉量 (kg)</label>
-                    <input type="number" id="muscle_mass" step="0.1" placeholder="0.0">
+                
+                <div class="action-buttons">
+                    <div class="action-btn" onclick="window.open('team.html', '_blank')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>九宮格戰況</span>
+                    </div>
+                    <div class="action-btn" onclick="window.open('leaderboard.html', '_blank')">
+                        <i class="fas fa-trophy"></i>
+                        <span>查看排行榜</span>
+                    </div>
+                    <div class="action-btn" onclick="window.open('tasks.html', '_blank')">
+                        <i class="fas fa-tasks"></i>
+                        <span>查看任務區</span>
+                    </div>
+                    <div class="action-btn" onclick="window.open('points-guide.html', '_blank')">
+                        <i class="fas fa-coins"></i>
+                        <span>積分指南</span>
+                    </div>
+                </div>
+                
+                <!-- 團隊數據變化 -->
+                <div id="team-progress-section" class="card hidden">
+                    <h2 class="card-title">
+                        <i class="fas fa-users"></i> 團隊數據變化
+                    </h2>
+                    <div class="progress-list" id="team-progress-list">
+                        <div style="text-align: center; padding: 20px; color: var(--gray-color);">
+                            載入團隊數據中...
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- 任務完成狀態 -->
-            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <label>今日任務完成狀態</label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-                    <label style="font-size: 13px; display: flex; align-items: center;">
-                        <input type="checkbox" id="task_shake" style="margin-right: 8px;"> 使用Shake
-                    </label>
-                    <label style="font-size: 13px; display: flex; align-items: center;">
-                        <input type="checkbox" id="task_live" style="margin-right: 8px;"> 完成直播
-                    </label>
-                    <label style="font-size: 13px; display: flex; align-items: center;">
-                        <input type="checkbox" id="task_diet" style="margin-right: 8px;"> 打卡飲食
-                    </label>
-                    <label style="font-size: 13px; display: flex; align-items: center;">
-                        <input type="checkbox" id="task_exercise" style="margin-right: 8px;"> 完成運動
-                    </label>
+            <!-- 主要內容區 -->
+            <div class="main-content">
+                <!-- 個人數據變化圖表 -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-line"></i> 我的數據趨勢
+                    </h2>
+                    <div class="chart-container">
+                        <canvas id="personal-progress-chart"></canvas>
+                    </div>
+                    <p class="data-note">
+                        <i class="fas fa-info-circle"></i> 圖表顯示最近7天的體重和體脂率變化趨勢
+                    </p>
+                </div>
+                
+                <!-- 每日數據報到 -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-day"></i> 每日數據報到
+                    </h2>
+                    <p class="input-hint" style="text-align: center; margin-bottom: 10px;">
+                        請輸入今日的數據，完成後點擊下方「送出今日報到」按鈕
+                    </p>
+                    
+                    <div class="daily-data">
+                        <div class="data-input-box">
+                            <input type="number" class="data-input" id="weight" placeholder="70" step="0.1" min="30" max="200">
+                            <div class="data-label">體重 (公斤)<span class="data-unit">kg</span></div>
+                        </div>
+                        <div class="data-input-box">
+                            <input type="number" class="data-input" id="fat_rate" placeholder="15" step="0.1" min="5" max="50">
+                            <div class="data-label">體脂率 (%)</div>
+                        </div>
+                        <div class="data-input-box">
+                            <input type="number" class="data-input" id="muscle_mass" placeholder="56" step="0.1" min="20" max="100">
+                            <div class="data-label">肌肉量 (公斤)<span class="data-unit">kg</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="tasks">
+                        <h3 style="margin: 20px 0 10px 0;">今日任務完成狀態</h3>
+                        <div class="task-item">
+                            <div class="task-info">
+                                <input type="checkbox" id="task_shake" style="margin-right: 10px;">
+                                <span>使用 Shake</span>
+                            </div>
+                            <span class="status-badge status-pending">待完成</span>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-info">
+                                <input type="checkbox" id="task_exercise" style="margin-right: 10px;">
+                                <span>30分鐘有氧運動</span>
+                            </div>
+                            <span class="status-badge status-pending">待完成</span>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-info">
+                                <input type="checkbox" id="task_live" style="margin-right: 10px;">
+                                <span>完成直播</span>
+                            </div>
+                            <span class="status-badge status-pending">待完成</span>
+                        </div>
+                        <div class="task-item">
+                            <div class="task-info">
+                                <input type="checkbox" id="task_diet" style="margin-right: 10px;">
+                                <span>打卡飲食</span>
+                            </div>
+                            <span class="status-badge status-pending">待完成</span>
+                        </div>
+                    </div>
+                    
+                    <div class="submit-section">
+                        <button class="submit-btn" onclick="saveDailyData()" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> 送出今日報到
+                        </button>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 15px; color: var(--secondary-color); font-size: 0.9rem;" id="status-msg">
+                        <!-- 狀態訊息會在這裡顯示 -->
+                    </p>
+                </div>
+                
+                <!-- 登出按鈕 -->
+                <div class="card" style="text-align: center;">
+                    <button class="btn" style="background-color: var(--accent-color); color: white; width: 100%;" onclick="signOut()">
+                        <i class="fas fa-sign-out-alt"></i> 安全登出
+                    </button>
                 </div>
             </div>
-            
-            <button class="btn-warning" onclick="saveDailyData()">送出今日報到</button>
-            <p id="status-msg" style="text-align: center; color: var(--success); font-size: 14px; font-weight: bold; margin-top: 10px; min-height: 20px;"></p>
         </div>
-
-        <!-- 功能按鈕 -->
-        <div class="card" style="text-align: center;">
-            <button class="btn-success" onclick="window.open('team.html', '_blank')" style="margin-bottom: 10px;">
-                🏆 查看九宮格戰況
-            </button>
-            <button class="btn-primary" onclick="window.open('leaderboard.html', '_blank')" style="margin-bottom: 10px;">
-                📊 查看排行榜
-            </button>
-            <button class="btn-primary" onclick="window.open('tasks.html', '_blank')">
-                ✅ 查看任務區
-            </button>
-        </div>
-
-        <!-- 登出按鈕 -->
-        <button class="btn-danger" style="margin-top:20px;" onclick="signOut()">安全登出</button>
+        
+        <footer>
+            <p>馬拉松健身追蹤系統 &copy; 2023 | 香港時間: <span id="currentTime">載入中...</span></p>
+        </footer>
     </div>
-</div>
 
-<script>
-    // Supabase 初始化
-    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+        // Supabase 初始化
+        const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 全局變數
-    let currentUser = null;
-    let personalChart = null;
+        // 全局變數
+        let currentUser = null;
+        let personalChart = null;
 
-    // 頁面載入時檢查登入狀態
-    window.onload = async () => {
-        console.log("頁面載入，檢查登入狀態...");
-        
-        const { data: { session }, error } = await sb.auth.getSession();
-        
-        if (error) {
-            console.error("檢查登入狀態錯誤:", error);
-            document.getElementById('auth-section').classList.remove('hidden');
-            return;
-        }
-        
-        if (session) {
-            console.log("已登入，用戶:", session.user.email);
-            await showProfile(session.user);
-        } else {
-            console.log("未登入，顯示登入表單");
-            document.getElementById('auth-section').classList.remove('hidden');
-        }
-    };
-
-    // 預覽頭像
-    function previewAvatar() {
-        const fileInput = document.getElementById('avatar_file');
-        const avatarImg = document.getElementById('avatar-img');
-        
-        if (fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                avatarImg.src = e.target.result;
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        }
-    }
-
-    // 獲取香港時間
-    function getHKTime() {
-        const now = new Date();
-        const hkOffset = 8 * 60; // 香港 UTC+8
-        const localOffset = now.getTimezoneOffset();
-        return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
-    }
-
-    // 顯示用戶資料
-    async function showProfile(user) {
-        console.log("顯示用戶資料:", user.email);
-        
-        // 保存當前用戶
-        currentUser = user;
-        
-        // 切換顯示區域
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('profile-section').classList.remove('hidden');
-        document.getElementById('user-display').innerText = `帳號: ${user.email}`;
-
-        try {
-            // 查詢用戶資料 - 使用更廣泛的查詢，獲取所有欄位
-            const { data: profile, error } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .maybeSingle();
-
+        // 頁面載入時檢查登入狀態
+        window.onload = async () => {
+            console.log("頁面載入，檢查登入狀態...");
+            
+            // 更新時間
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 60000);
+            
+            const { data: { session }, error } = await sb.auth.getSession();
+            
             if (error) {
-                console.error("查詢用戶資料錯誤:", error);
+                console.error("檢查登入狀態錯誤:", error);
                 return;
             }
+            
+            if (session) {
+                console.log("已登入，用戶:", session.user.email);
+                await showProfile(session.user);
+            } else {
+                console.log("未登入，顯示登入表單");
+                document.getElementById('auth-section').classList.remove('hidden');
+            }
+        };
 
-            console.log("查詢到的用戶資料完整對象:", profile);
+        // 更新當前時間
+        function updateCurrentTime() {
+            const now = new Date();
+            const hkTime = new Date(now.getTime() + (8 * 60 * 60 * 1000)); // 香港時間 UTC+8
+            const timeString = hkTime.toISOString().substr(11, 8);
+            document.getElementById('currentTime').textContent = timeString;
+        }
 
-            if (profile) {
-                // 顯示所有欄位名稱，幫助調試
-                console.log("Profile 所有欄位:", Object.keys(profile));
-                
-                // 檢查各種可能的 Team ID 欄位
-                const possibleTeamIdFields = [
-                    'current_team_id', // 優先檢查這個欄位
-                    'team_id',
-                    'team',
-                    'teamId',
-                    'current_team',
-                    'team_uuid'
-                ];
-                
-                let teamId = '';
-                for (const field of possibleTeamIdFields) {
-                    if (profile[field]) {
-                        console.log(`找到 Team ID 欄位 "${field}":`, profile[field]);
-                        teamId = profile[field];
-                        break;
-                    }
+        // 預覽頭像
+        function previewAvatar() {
+            const fileInput = document.getElementById('avatar_file');
+            const avatarImg = document.getElementById('avatar-preview');
+            const avatarDisplay = document.getElementById('avatar-img');
+            
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarImg.src = e.target.result;
+                    avatarDisplay.src = e.target.result;
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+        }
+
+        // 獲取香港時間
+        function getHKTime() {
+            const now = new Date();
+            const hkOffset = 8 * 60; // 香港 UTC+8
+            const localOffset = now.getTimezoneOffset();
+            return new Date(now.getTime() + (hkOffset + localOffset) * 60000);
+        }
+
+        // 顯示用戶資料
+        async function showProfile(user) {
+            console.log("顯示用戶資料:", user.email);
+            
+            // 保存當前用戶
+            currentUser = user;
+            
+            // 切換顯示區域
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-section').classList.remove('hidden');
+            document.getElementById('user-email').textContent = user.email;
+
+            try {
+                // 查詢用戶資料
+                const { data: profile, error } = await sb
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("查詢用戶資料錯誤:", error);
+                    return;
                 }
-                
-                // 如果沒有找到，嘗試尋找包含 team 或 uuid 的欄位
-                if (!teamId) {
-                    for (const key in profile) {
-                        if (key.toLowerCase().includes('team') && profile[key]) {
-                            console.log(`在欄位 "${key}" 中找到 Team ID:`, profile[key]);
-                            teamId = profile[key];
+
+                console.log("查詢到的用戶資料完整對象:", profile);
+
+                if (profile) {
+                    // 顯示所有欄位名稱，幫助調試
+                    console.log("Profile 所有欄位:", Object.keys(profile));
+                    
+                    // 檢查各種可能的 Team ID 欄位
+                    const possibleTeamIdFields = [
+                        'current_team_id',
+                        'team_id',
+                        'team',
+                        'teamId',
+                        'current_team',
+                        'team_uuid'
+                    ];
+                    
+                    let teamId = '';
+                    for (const field of possibleTeamIdFields) {
+                        if (profile[field]) {
+                            console.log(`找到 Team ID 欄位 "${field}":`, profile[field]);
+                            teamId = profile[field];
                             break;
                         }
                     }
-                }
-                
-                // 檢查 profile 中的其他欄位
-                const fullName = profile.full_name || profile.name || profile.display_name || '';
-                const plan = profile.plan || 'slow_run';
-                const role = profile.role || 'member';
-                const avatarUrl = profile.avatar_url || '';
-                
-                console.log("解析出的資料:", { fullName, plan, role, teamId });
-                
-                // 更新表單資料
-                document.getElementById('full_name').value = fullName;
-                document.getElementById('plan').value = plan;
-                document.getElementById('team_id_input').value = teamId;
-                
-                // 設定角色選擇
-                const roleSelect = document.getElementById('role');
-                if (roleSelect) {
-                    for (let i = 0; i < roleSelect.options.length; i++) {
-                        if (roleSelect.options[i].value === role) {
-                            roleSelect.selectedIndex = i;
-                            break;
+                    
+                    // 如果沒有找到，嘗試尋找包含 team 或 uuid 的欄位
+                    if (!teamId) {
+                        for (const key in profile) {
+                            if (key.toLowerCase().includes('team') && profile[key]) {
+                                console.log(`在欄位 "${key}" 中找到 Team ID:`, profile[key]);
+                                teamId = profile[key];
+                                break;
+                            }
                         }
                     }
-                }
-                
-                // 頭像
-                if (avatarUrl) {
-                    document.getElementById('avatar-img').src = avatarUrl;
-                } else if (fullName) {
-                    document.getElementById('avatar-img').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`;
-                }
+                    
+                    // 檢查 profile 中的其他欄位
+                    const fullName = profile.full_name || profile.name || profile.display_name || '';
+                    const plan = profile.plan || 'slow_run';
+                    const role = profile.role || 'member';
+                    const avatarUrl = profile.avatar_url || '';
+                    
+                    console.log("解析出的資料:", { fullName, plan, role, teamId });
+                    
+                    // 更新顯示資料
+                    document.getElementById('user-name').textContent = fullName || '未設定';
+                    document.getElementById('user-role').textContent = `角色: ${role}`;
+                    document.getElementById('full_name').value = fullName;
+                    document.getElementById('plan').value = plan;
+                    document.getElementById('team_id_input').value = teamId || '';
+                    
+                    // 設定角色選擇
+                    const roleSelect = document.getElementById('role');
+                    if (roleSelect) {
+                        for (let i = 0; i < roleSelect.options.length; i++) {
+                            if (roleSelect.options[i].value === role) {
+                                roleSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // 頭像
+                    if (avatarUrl) {
+                        document.getElementById('avatar-img').src = avatarUrl;
+                        document.getElementById('avatar-preview').src = avatarUrl;
+                    } else if (fullName) {
+                        const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`;
+                        document.getElementById('avatar-img').src = avatarUrl;
+                        document.getElementById('avatar-preview').src = avatarUrl;
+                    }
 
-                // 檢查是否已完成設定
-                const isSetupComplete = fullName && teamId;
-                
-                // 控制顯示/隱藏和鎖定狀態
-                if (isSetupComplete) {
-                    document.getElementById('setup-card').classList.add('hidden');
-                    document.getElementById('edit-profile-btn').classList.remove('hidden');
-                    
-                    // 鎖定輸入欄位
-                    document.getElementById('full_name').disabled = true;
-                    document.getElementById('role').disabled = true;
-                    document.getElementById('plan').disabled = true;
-                    document.getElementById('team_id_input').disabled = true;
-                    
                     // 更新隊伍狀態顯示
-                    document.getElementById('team-status').textContent = teamId ? '已加入' : '未加入';
+                    document.getElementById('teamCode').value = teamId || '尚未加入隊伍';
+                    document.getElementById('team-status-badge').textContent = teamId ? '已加入隊伍' : '未加入隊伍';
                     
                     // 計算並顯示積分
                     await calculateTotalPoints(user.id);
@@ -432,121 +1021,150 @@
                     // 顯示專屬按鈕
                     await showRoleSpecificContent(profile);
                     
+                    // 載入團隊成員數量
+                    await loadTeamMembersCount(teamId);
+                    
                 } else {
+                    // 如果沒有個人資料，顯示設定卡片
+                    console.log("沒有找到個人資料記錄，顯示設定卡片");
                     document.getElementById('setup-card').classList.remove('hidden');
-                    document.getElementById('edit-profile-btn').classList.add('hidden');
-                    document.getElementById('team-status').textContent = teamId ? '已加入但資料不完整' : '未加入';
+                    document.getElementById('team-status-badge').textContent = '未設定';
                 }
-            } else {
-                // 如果沒有個人資料，顯示設定卡片
-                console.log("沒有找到個人資料記錄，顯示設定卡片");
-                document.getElementById('setup-card').classList.remove('hidden');
-                document.getElementById('edit-profile-btn').classList.add('hidden');
-                document.getElementById('team-status').textContent = '未設定';
+            } catch (err) {
+                console.error("顯示個人資料錯誤:", err);
             }
-        } catch (err) {
-            console.error("顯示個人資料錯誤:", err);
         }
-    }
 
-    // 顯示角色專屬內容
-    async function showRoleSpecificContent(profile) {
-        const roleButtons = document.getElementById('role-buttons');
-        const adminBtn = document.getElementById('admin-btn');
-        const captainBtn = document.getElementById('captain-btn');
-        const deputyBtn = document.getElementById('deputy-btn');
-        
-        // 隱藏所有按鈕
-        adminBtn.classList.add('hidden');
-        captainBtn.classList.add('hidden');
-        deputyBtn.classList.add('hidden');
-        roleButtons.classList.add('hidden');
-        
-        // 獲取用戶角色
-        const userRole = profile.role || 'member';
-        
-        // 獲取 Team ID（使用與 showProfile 相同的邏輯）
-        const possibleTeamIdFields = [
-            'current_team_id',
-            'team_id',
-            'team',
-            'teamId',
-            'current_team',
-            'team_uuid'
-        ];
-        
-        let teamId = '';
-        for (const field of possibleTeamIdFields) {
-            if (profile[field]) {
-                teamId = profile[field];
-                break;
+        // 載入團隊成員數量
+        async function loadTeamMembersCount(teamId) {
+            if (!teamId) {
+                document.getElementById('team-members').textContent = '0';
+                return;
+            }
+            
+            try {
+                // 嘗試不同的查詢方式
+                let members = [];
+                
+                // 嘗試使用 current_team_id
+                const result1 = await sb
+                    .from('profiles')
+                    .select('id')
+                    .eq('current_team_id', teamId);
+                
+                if (result1.data && result1.data.length > 0) {
+                    members = result1.data;
+                } else {
+                    // 嘗試使用 team_id
+                    const result2 = await sb
+                        .from('profiles')
+                        .select('id')
+                        .eq('team_id', teamId);
+                    
+                    if (result2.data && result2.data.length > 0) {
+                        members = result2.data;
+                    }
+                }
+                
+                document.getElementById('team-members').textContent = members.length;
+            } catch (error) {
+                console.error("載入團隊成員數量錯誤:", error);
+                document.getElementById('team-members').textContent = '0';
             }
         }
-        
-        if (!teamId) {
-            for (const key in profile) {
-                if (key.toLowerCase().includes('team') && profile[key]) {
-                    teamId = profile[key];
+
+        // 顯示角色專屬內容
+        async function showRoleSpecificContent(profile) {
+            const roleButtons = document.getElementById('role-buttons');
+            const adminBtn = document.getElementById('admin-btn');
+            const captainBtn = document.getElementById('captain-btn');
+            const deputyBtn = document.getElementById('deputy-btn');
+            const teamProgressSection = document.getElementById('team-progress-section');
+            
+            // 隱藏所有按鈕和區塊
+            adminBtn.classList.add('hidden');
+            captainBtn.classList.add('hidden');
+            deputyBtn.classList.add('hidden');
+            roleButtons.classList.add('hidden');
+            teamProgressSection.classList.add('hidden');
+            
+            // 獲取用戶角色
+            const userRole = profile.role || 'member';
+            
+            // 獲取 Team ID
+            const possibleTeamIdFields = [
+                'current_team_id',
+                'team_id',
+                'team',
+                'teamId',
+                'current_team',
+                'team_uuid'
+            ];
+            
+            let teamId = '';
+            for (const field of possibleTeamIdFields) {
+                if (profile[field]) {
+                    teamId = profile[field];
                     break;
                 }
             }
-        }
-        
-        console.log('角色判斷:', { userRole, teamId });
-        
-        // 根據角色顯示相應按鈕
-        if (userRole === 'admin' || userRole === 'super_admin') {
-            adminBtn.classList.remove('hidden');
-            roleButtons.classList.remove('hidden');
             
-            // 管理員可以查看團隊數據
-            if (teamId) {
-                document.getElementById('team-progress-section').classList.remove('hidden');
-                await loadTeamProgress(teamId, true);
+            if (!teamId) {
+                for (const key in profile) {
+                    if (key.toLowerCase().includes('team') && profile[key]) {
+                        teamId = profile[key];
+                        break;
+                    }
+                }
+            }
+            
+            console.log('角色判斷:', { userRole, teamId });
+            
+            // 根據角色顯示相應按鈕
+            if (userRole === 'admin' || userRole === 'super_admin') {
+                adminBtn.classList.remove('hidden');
+                roleButtons.classList.remove('hidden');
+                
+                // 管理員可以查看團隊數據
+                if (teamId) {
+                    teamProgressSection.classList.remove('hidden');
+                    await loadTeamProgress(teamId, true);
+                }
+            }
+            
+            if (userRole === 'captain') {
+                captainBtn.classList.remove('hidden');
+                roleButtons.classList.remove('hidden');
+                
+                // 顯示團隊數據
+                if (teamId) {
+                    teamProgressSection.classList.remove('hidden');
+                    await loadTeamProgress(teamId, true);
+                }
+            }
+            
+            if (userRole === 'deputy') {
+                deputyBtn.classList.remove('hidden');
+                roleButtons.classList.remove('hidden');
+                
+                // 顯示團隊數據
+                if (teamId) {
+                    teamProgressSection.classList.remove('hidden');
+                    await loadTeamProgress(teamId, false);
+                }
             }
         }
-        
-        if (userRole === 'captain') {
-            captainBtn.classList.remove('hidden');
-            roleButtons.classList.remove('hidden');
-            
-            // 顯示團隊數據
-            if (teamId) {
-                document.getElementById('team-progress-section').classList.remove('hidden');
-                await loadTeamProgress(teamId, true);
-            }
-        }
-        
-        if (userRole === 'deputy') {
-            deputyBtn.classList.remove('hidden');
-            roleButtons.classList.remove('hidden');
-            
-            // 顯示團隊數據
-            if (teamId) {
-                document.getElementById('team-progress-section').classList.remove('hidden');
-                await loadTeamProgress(teamId, false);
-            }
-        }
-        
-        // 顯示個人數據圖表
-        document.getElementById('personal-progress-section').classList.remove('hidden');
-    }
 
-    // 載入團隊進度 - 修正版本，避免欄位不存在錯誤
-    async function loadTeamProgress(teamId, isCaptain) {
-        const container = document.getElementById('team-progress-list');
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">載入團隊數據中...</div>';
-        
-        try {
-            // 首先檢查 profiles 表的結構
-            console.log("開始查詢團隊成員，Team ID:", teamId);
-            
-            // 嘗試不同的查詢方式
-            let members = [];
+        // 載入團隊進度
+        async function loadTeamProgress(teamId, isCaptain) {
+            const container = document.getElementById('team-progress-list');
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-color);">載入團隊數據中...</div>';
             
             try {
-                // 先嘗試使用 current_team_id 欄位
-                console.log("嘗試使用 current_team_id 欄位查詢...");
+                // 嘗試不同的查詢方式
+                let members = [];
+                
+                // 先嘗試使用 current_team_id
                 const result1 = await sb
                     .from('profiles')
                     .select('id, full_name, avatar_url, role')
@@ -554,16 +1172,8 @@
                 
                 if (result1.data && result1.data.length > 0) {
                     members = result1.data;
-                    console.log("使用 current_team_id 找到成員:", members.length);
-                }
-            } catch (err) {
-                console.log("current_team_id 查詢失敗:", err.message);
-            }
-            
-            // 如果沒有找到，嘗試其他欄位
-            if (members.length === 0) {
-                try {
-                    console.log("嘗試使用 team_id 欄位查詢...");
+                } else {
+                    // 嘗試使用 team_id
                     const result2 = await sb
                         .from('profiles')
                         .select('id, full_name, avatar_url, role')
@@ -571,679 +1181,601 @@
                     
                     if (result2.data && result2.data.length > 0) {
                         members = result2.data;
-                        console.log("使用 team_id 找到成員:", members.length);
                     }
-                } catch (err) {
-                    console.log("team_id 查詢失敗:", err.message);
                 }
-            }
-            
-            // 如果還是沒有找到，嘗試直接從資料庫獲取所有用戶，然後在客戶端過濾
-            if (members.length === 0) {
-                console.log("嘗試獲取所有用戶資料進行客戶端過濾...");
-                try {
-                    const allProfiles = await sb
-                        .from('profiles')
-                        .select('id, full_name, avatar_url, role, current_team_id, team_id');
-                    
-                    if (allProfiles.data) {
-                        // 在客戶端過濾 Team ID
-                        members = allProfiles.data.filter(profile => {
-                            // 檢查多個可能的 Team ID 欄位
-                            return profile.current_team_id === teamId || 
-                                   profile.team_id === teamId ||
-                                   (profile.team && profile.team === teamId) ||
-                                   (profile.teamId && profile.teamId === teamId);
-                        });
-                        console.log("客戶端過濾找到成員:", members.length);
-                    }
-                } catch (err) {
-                    console.log("獲取所有用戶資料失敗:", err.message);
-                }
-            }
-            
-            if (!members || members.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #7f8c8d;">暫無團隊成員數據<br><small>或團隊ID無效</small></div>';
-                return;
-            }
-            
-            // 顯示團隊成員數據
-            let html = '';
-            for (const member of members) {
-                try {
-                    // 獲取每個成員的今日數據
-                    const today = getHKTime().toISOString().split('T')[0];
-                    const { data: weightData } = await sb
-                        .from('weight_records')
-                        .select('weight, fat_rate, muscle_mass')
-                        .eq('user_id', member.id)
-                        .eq('date', today)
-                        .maybeSingle();
-                    
-                    const { data: scoreData } = await sb
-                        .from('daily_scores')
-                        .select('total_points')
-                        .eq('user_id', member.id)
-                        .eq('date', today)
-                        .maybeSingle();
-                    
-                    const avatarUrl = member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random`;
-                    
-                    html += `
-                        <div class="progress-item">
-                            <div class="progress-header">
-                                <div class="progress-name">
-                                    <img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
-                                    ${member.full_name || '未設定'}
-                                </div>
-                                <div class="progress-date">${member.role || '學員'}</div>
-                            </div>
-                            <div class="progress-details">
-                                <div class="progress-detail">
-                                    <div class="progress-label">今日積分</div>
-                                    <div class="progress-value">${scoreData?.total_points || 0}</div>
-                                </div>
-                                <div class="progress-detail">
-                                    <div class="progress-label">今日體重</div>
-                                    <div class="progress-value">${weightData?.weight ? weightData.weight.toFixed(1) + 'kg' : '未記錄'}</div>
-                                </div>
-                                <div class="progress-detail">
-                                    <div class="progress-label">今日體脂</div>
-                                    <div class="progress-value">${weightData?.fat_rate ? weightData.fat_rate.toFixed(1) + '%' : '未記錄'}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 在頁面底部添加 -->
-<div class="quick-links">
-    <h4>快速訪問</h4>
-    <div class="link-grid">
-        <a href="/">🏠 首頁</a>
-        <a href="chart.html">📈 數據圖表</a>
-        <a href="viewport.html">⚙️ 數據調試</a>
-        <a href="/profile">👤 個人資料</a>
-    </div>
-</div>
-
-<!-- 樣式 -->
-<style>
-    .quick-links {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        margin-top: 30px;
-    }
-    
-    .link-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
-        margin-top: 15px;
-    }
-    
-    .link-grid a {
-        display: block;
-        padding: 12px;
-        background: white;
-        border-radius: 8px;
-        text-decoration: none;
-        color: #4361ee;
-        text-align: center;
-        border: 1px solid #e9ecef;
-        transition: all 0.3s;
-    }
-    
-    .link-grid a:hover {
-        background: #4361ee;
-        color: white;
-        border-color: #4361ee;
-    }
-</style>
-                    `;
-                } catch (err) {
-                    console.error(`處理成員 ${member.id} 數據時出錯:`, err);
-                }
-            }
-            
-            container.innerHTML = html;
-            
-        } catch (err) {
-            console.error("載入團隊進度錯誤:", err);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #e74c3c;">載入錯誤<br><small>請檢查控制台查看詳細信息</small></div>';
-        }
-    }
-
-    // 切換個人資料編輯
-    function toggleProfileEdit() {
-        const setupCard = document.getElementById('setup-card');
-        const isHidden = setupCard.classList.contains('hidden');
-        
-        if (isHidden) {
-            setupCard.classList.remove('hidden');
-            document.getElementById('edit-profile-btn').textContent = '取消編輯';
-            
-            // 啟用輸入欄位
-            document.getElementById('full_name').disabled = false;
-            document.getElementById('role').disabled = false;
-            document.getElementById('plan').disabled = false;
-            document.getElementById('team_id_input').disabled = false;
-        } else {
-            setupCard.classList.add('hidden');
-            document.getElementById('edit-profile-btn').textContent = '⚙️ 修改個人資料或更換隊伍';
-            
-            // 禁用輸入欄位
-            document.getElementById('full_name').disabled = true;
-            document.getElementById('role').disabled = true;
-            document.getElementById('plan').disabled = true;
-            document.getElementById('team_id_input').disabled = true;
-        }
-    }
-
-    // 檢查今日是否已報到 - 修正版本，確保能讀取 weight_records 表
-    async function checkDailyCheckin(userId) {
-        const today = getHKTime().toISOString().split('T')[0];
-        
-        console.log(`檢查用戶 ${userId} 在 ${today} 的報到記錄`);
-        
-        try {
-            const { data, error } = await sb
-                .from('weight_records')
-                .select('weight, fat_rate, muscle_mass')
-                .eq('user_id', userId)
-                .eq('date', today)
-                .maybeSingle();
-            
-            if (error) {
-                console.error("查詢今日報到錯誤:", error);
-                // 檢查表是否存在
-                console.log("嘗試檢查 weight_records 表結構...");
-                return;
-            }
-            
-            console.log("查詢到的體重記錄:", data);
-            
-            if (data) {
-                document.getElementById('weight').value = data.weight || '';
-                document.getElementById('fat_rate').value = data.fat_rate || '';
-                document.getElementById('muscle_mass').value = data.muscle_mass || '';
                 
-                // 檢查任務狀態
-                const { data: taskData } = await sb
-                    .from('daily_scores')
-                    .select('shake_used, exercise_done, task_completed')
+                if (!members || members.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-color);">暫無團隊成員數據</div>';
+                    return;
+                }
+                
+                // 顯示團隊成員數據
+                let html = '';
+                for (const member of members) {
+                    try {
+                        // 獲取每個成員的今日數據
+                        const today = getHKTime().toISOString().split('T')[0];
+                        const { data: weightData } = await sb
+                            .from('weight_records')
+                            .select('weight, fat_rate, muscle_mass')
+                            .eq('user_id', member.id)
+                            .eq('date', today)
+                            .maybeSingle();
+                        
+                        const { data: scoreData } = await sb
+                            .from('daily_scores')
+                            .select('total_points')
+                            .eq('user_id', member.id)
+                            .eq('date', today)
+                            .maybeSingle();
+                        
+                        const avatarUrl = member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random`;
+                        
+                        html += `
+                            <div class="progress-item">
+                                <div class="progress-header">
+                                    <div class="progress-name">
+                                        <img src="${avatarUrl}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; vertical-align: middle;">
+                                        ${member.full_name || '未設定'}
+                                    </div>
+                                    <div class="progress-date">${member.role || '學員'}</div>
+                                </div>
+                                <div class="progress-details">
+                                    <div class="progress-detail">
+                                        <div class="progress-label">今日積分</div>
+                                        <div class="progress-value">${scoreData?.total_points || 0}</div>
+                                    </div>
+                                    <div class="progress-detail">
+                                        <div class="progress-label">今日體重</div>
+                                        <div class="progress-value">${weightData?.weight ? weightData.weight.toFixed(1) + 'kg' : '未記錄'}</div>
+                                    </div>
+                                    <div class="progress-detail">
+                                        <div class="progress-label">今日體脂</div>
+                                        <div class="progress-value">${weightData?.fat_rate ? weightData.fat_rate.toFixed(1) + '%' : '未記錄'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } catch (err) {
+                        console.error(`處理成員 ${member.id} 數據時出錯:`, err);
+                    }
+                }
+                
+                container.innerHTML = html;
+                
+            } catch (err) {
+                console.error("載入團隊進度錯誤:", err);
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--accent-color);">載入錯誤</div>';
+            }
+        }
+
+        // 切換個人資料編輯
+        function toggleProfileEdit() {
+            const setupCard = document.getElementById('setup-card');
+            const isHidden = setupCard.classList.contains('hidden');
+            
+            if (isHidden) {
+                setupCard.classList.remove('hidden');
+                document.getElementById('edit-profile-btn').innerHTML = '<i class="fas fa-times"></i> 取消編輯';
+            } else {
+                setupCard.classList.add('hidden');
+                document.getElementById('edit-profile-btn').innerHTML = '<i class="fas fa-edit"></i> 修改個人資料';
+            }
+        }
+
+        // 檢查今日是否已報到
+        async function checkDailyCheckin(userId) {
+            const today = getHKTime().toISOString().split('T')[0];
+            
+            console.log(`檢查用戶 ${userId} 在 ${today} 的報到記錄`);
+            
+            try {
+                const { data, error } = await sb
+                    .from('weight_records')
+                    .select('weight, fat_rate, muscle_mass')
                     .eq('user_id', userId)
                     .eq('date', today)
                     .maybeSingle();
                 
-                if (taskData) {
-                    document.getElementById('task_shake').checked = taskData.shake_used || false;
-                    document.getElementById('task_live').checked = taskData.task_completed || false;
-                    document.getElementById('task_exercise').checked = taskData.exercise_done || false;
+                if (error) {
+                    console.error("查詢今日報到錯誤:", error);
+                    return;
                 }
                 
-                // 提醒用戶今日已報到
-                if (data.weight) {
-                    document.getElementById('status-msg').textContent = "✅ 今日已報到，可更新數據";
+                console.log("查詢到的體重記錄:", data);
+                
+                if (data) {
+                    document.getElementById('weight').value = data.weight || '';
+                    document.getElementById('fat_rate').value = data.fat_rate || '';
+                    document.getElementById('muscle_mass').value = data.muscle_mass || '';
+                    
+                    // 檢查任務狀態
+                    const { data: taskData } = await sb
+                        .from('daily_scores')
+                        .select('shake_used, exercise_done, task_completed')
+                        .eq('user_id', userId)
+                        .eq('date', today)
+                        .maybeSingle();
+                    
+                    if (taskData) {
+                        document.getElementById('task_shake').checked = taskData.shake_used || false;
+                        document.getElementById('task_live').checked = taskData.task_completed || false;
+                        document.getElementById('task_exercise').checked = taskData.exercise_done || false;
+                    }
+                    
+                    // 提醒用戶今日已報到
+                    if (data.weight) {
+                        document.getElementById('status-msg').textContent = "✅ 今日已報到，可更新數據";
+                        document.getElementById('status-msg').style.color = "var(--secondary-color)";
+                    }
                 }
+                
+            } catch (error) {
+                console.error("檢查報到狀態錯誤:", error);
             }
-            
-        } catch (error) {
-            console.error("檢查報到狀態錯誤:", error);
         }
-    }
 
-    // 載入個人數據變化圖表
-    async function loadPersonalProgressChart(userId) {
-        try {
-            // 獲取最近7天的數據
-            const sevenDaysAgo = new Date(getHKTime());
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            const startDate = sevenDaysAgo.toISOString().split('T')[0];
-            
-            console.log(`載入用戶 ${userId} 從 ${startDate} 起的體重記錄`);
-            
-            const { data, error } = await sb
-                .from('weight_records')
-                .select('date, weight, fat_rate, muscle_mass')
-                .eq('user_id', userId)
-                .gte('date', startDate)
-                .order('date', { ascending: true });
-            
-            if (error) {
-                console.error("載入圖表數據錯誤:", error);
-                throw error;
-            }
-            
-            console.log("載入的體重記錄數據:", data);
-            
-            const dates = [];
-            const weights = [];
-            const fatRates = [];
-            
-            if (data && data.length > 0) {
-                data.forEach(record => {
-                    dates.push(record.date.substring(5)); // 顯示 MM-DD 格式
-                    weights.push(record.weight || 0);
-                    fatRates.push(record.fat_rate || 0);
-                });
-            }
-            
-            // 如果已有圖表實例，先銷毀
-            if (personalChart) {
-                personalChart.destroy();
-            }
-            
-            // 創建圖表
-            const ctx = document.getElementById('personal-progress-chart').getContext('2d');
-            personalChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: '體重 (kg)',
-                            data: weights,
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            tension: 0.3,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: '體脂率 (%)',
-                            data: fatRates,
-                            borderColor: '#e74c3c',
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            tension: 0.3,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: '體重 (kg)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: '體脂率 (%)'
+        // 載入個人數據變化圖表
+        async function loadPersonalProgressChart(userId) {
+            try {
+                // 獲取最近7天的數據
+                const sevenDaysAgo = new Date(getHKTime());
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const startDate = sevenDaysAgo.toISOString().split('T')[0];
+                
+                console.log(`載入用戶 ${userId} 從 ${startDate} 起的體重記錄`);
+                
+                const { data, error } = await sb
+                    .from('weight_records')
+                    .select('date, weight, fat_rate, muscle_mass')
+                    .eq('user_id', userId)
+                    .gte('date', startDate)
+                    .order('date', { ascending: true });
+                
+                if (error) {
+                    console.error("載入圖表數據錯誤:", error);
+                    throw error;
+                }
+                
+                console.log("載入的體重記錄數據:", data);
+                
+                const dates = [];
+                const weights = [];
+                const fatRates = [];
+                
+                if (data && data.length > 0) {
+                    data.forEach(record => {
+                        dates.push(record.date.substring(5)); // 顯示 MM-DD 格式
+                        weights.push(record.weight || 0);
+                        fatRates.push(record.fat_rate || 0);
+                    });
+                }
+                
+                // 如果已有圖表實例，先銷毀
+                if (personalChart) {
+                    personalChart.destroy();
+                }
+                
+                // 創建圖表
+                const ctx = document.getElementById('personal-progress-chart').getContext('2d');
+                personalChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: '體重 (kg)',
+                                data: weights,
+                                borderColor: '#3498db',
+                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                tension: 0.3,
+                                yAxisID: 'y'
                             },
-                            grid: {
-                                drawOnChartArea: false
+                            {
+                                label: '體脂率 (%)',
+                                data: fatRates,
+                                borderColor: '#e74c3c',
+                                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                tension: 0.3,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '體重 (kg)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '體脂率 (%)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
                             }
                         }
                     }
-                }
-            });
-            
-        } catch (error) {
-            console.error("載入個人圖表錯誤:", error);
-            document.getElementById('personal-progress-chart').parentElement.innerHTML = 
-                '<div style="text-align: center; padding: 40px; color: #7f8c8d;">無法載入圖表數據<br><small>可能尚未有體重記錄</small></div>';
+                });
+                
+            } catch (error) {
+                console.error("載入個人圖表錯誤:", error);
+                document.getElementById('personal-progress-chart').parentElement.innerHTML = 
+                    '<div style="text-align: center; padding: 40px; color: var(--gray-color);">無法載入圖表數據</div>';
+            }
         }
-    }
 
-    // 計算總積分
-    async function calculateTotalPoints(userId) {
-        try {
-            const { data, error } = await sb
-                .from('daily_scores')
-                .select('total_points')
-                .eq('user_id', userId);
-            
-            if (error) {
+        // 計算總積分
+        async function calculateTotalPoints(userId) {
+            try {
+                const { data, error } = await sb
+                    .from('daily_scores')
+                    .select('total_points')
+                    .eq('user_id', userId);
+                
+                if (error) {
+                    console.error("計算積分錯誤:", error);
+                    return;
+                }
+                
+                let totalPoints = 0;
+                if (data) {
+                    data.forEach(record => {
+                        totalPoints += record.total_points || 0;
+                    });
+                }
+                
+                document.getElementById('ticket-count').textContent = totalPoints;
+                
+                // 計算進度天數
+                const dayProgress = data ? data.length : 0;
+                document.getElementById('day-progress').textContent = dayProgress;
+                
+            } catch (error) {
                 console.error("計算積分錯誤:", error);
+            }
+        }
+
+        // 更新個人資料
+        async function updateProfile() {
+            const { data: { user }, error: authError } = await sb.auth.getUser();
+            if (authError || !user) {
+                alert("請先登入");
                 return;
             }
+
+            const fullName = document.getElementById('full_name').value.trim();
+            const selectedRole = document.getElementById('role').value;
+            const plan = document.getElementById('plan').value;
+            const teamId = document.getElementById('team_id_input').value.trim();
             
-            let totalPoints = 0;
-            if (data) {
-                data.forEach(record => {
-                    totalPoints += record.total_points || 0;
-                });
+            if (!fullName) {
+                alert("請輸入真實姓名");
+                return;
             }
-            
-            document.getElementById('ticket-count').textContent = totalPoints;
-            
-            // 計算進度天數
-            const dayProgress = data ? data.length : 0;
-            document.getElementById('day-progress').textContent = `Day ${dayProgress}`;
-            
-        } catch (error) {
-            console.error("計算積分錯誤:", error);
-        }
-    }
 
-    // 更新個人資料 - 支援多種 Team ID 欄位名稱
-    async function updateProfile() {
-        const { data: { user }, error: authError } = await sb.auth.getUser();
-        if (authError || !user) {
-            alert("請先登入");
-            return;
-        }
-
-        const fullName = document.getElementById('full_name').value.trim();
-        const selectedRole = document.getElementById('role').value;
-        const plan = document.getElementById('plan').value;
-        const teamId = document.getElementById('team_id_input').value.trim();
-        
-        if (!fullName) {
-            alert("請輸入真實姓名");
-            return;
-        }
-
-        // 處理頭像上傳
-        let avatarUrl = document.getElementById('avatar-img').src;
-        const avatarFile = document.getElementById('avatar_file').files[0];
-        
-        if (avatarFile) {
-            const fileName = `${user.id}_${Date.now()}.png`;
-            const { error: uploadError } = await sb.storage
-                .from('avatars')
-                .upload(fileName, avatarFile, { upsert: true });
-                
-            if (!uploadError) {
-                const { data: urlData } = sb.storage
+            // 處理頭像上傳
+            let avatarUrl = document.getElementById('avatar-preview').src;
+            const avatarFile = document.getElementById('avatar_file').files[0];
+            
+            if (avatarFile) {
+                const fileName = `${user.id}_${Date.now()}.png`;
+                const { error: uploadError } = await sb.storage
                     .from('avatars')
-                    .getPublicUrl(fileName);
-                avatarUrl = urlData.publicUrl;
-            }
-        }
-
-        try {
-            // 先查詢現有的 profile 來確定資料庫結構
-            const { data: existingProfile } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .maybeSingle();
-            
-            // 準備更新資料
-            const updateData = {
-                id: user.id,
-                full_name: fullName,
-                role: selectedRole,
-                plan: plan,
-                avatar_url: avatarUrl,
-                updated_at: new Date().toISOString()
-            };
-            
-            // 根據現有的 profile 結構決定如何儲存 Team ID
-            if (existingProfile) {
-                // 檢查現有的 profile 有哪些 Team ID 相關欄位
-                const possibleTeamFields = [
-                    'current_team_id', // 優先使用這個欄位
-                    'team_id',
-                    'team',
-                    'teamId',
-                    'current_team',
-                    'team_uuid'
-                ];
-                
-                // 找出現有 profile 中已有的 Team ID 欄位
-                let existingTeamField = null;
-                for (const field of possibleTeamFields) {
-                    if (field in existingProfile) {
-                        existingTeamField = field;
-                        console.log(`找到現有的 Team ID 欄位: ${existingTeamField}`);
-                        break;
-                    }
+                    .upload(fileName, avatarFile, { upsert: true });
+                    
+                if (!uploadError) {
+                    const { data: urlData } = sb.storage
+                        .from('avatars')
+                        .getPublicUrl(fileName);
+                    avatarUrl = urlData.publicUrl;
                 }
+            }
+
+            try {
+                // 先查詢現有的 profile 來確定資料庫結構
+                const { data: existingProfile } = await sb
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
                 
-                // 如果有現有的欄位，使用它
-                if (existingTeamField) {
-                    if (teamId) {
-                        updateData[existingTeamField] = teamId;
+                // 準備更新資料
+                const updateData = {
+                    id: user.id,
+                    full_name: fullName,
+                    role: selectedRole,
+                    plan: plan,
+                    avatar_url: avatarUrl,
+                    updated_at: new Date().toISOString()
+                };
+                
+                // 根據現有的 profile 結構決定如何儲存 Team ID
+                if (existingProfile) {
+                    // 檢查現有的 profile 有哪些 Team ID 相關欄位
+                    const possibleTeamFields = [
+                        'current_team_id',
+                        'team_id',
+                        'team',
+                        'teamId',
+                        'current_team',
+                        'team_uuid'
+                    ];
+                    
+                    // 找出現有 profile 中已有的 Team ID 欄位
+                    let existingTeamField = null;
+                    for (const field of possibleTeamFields) {
+                        if (field in existingProfile) {
+                            existingTeamField = field;
+                            console.log(`找到現有的 Team ID 欄位: ${existingTeamField}`);
+                            break;
+                        }
+                    }
+                    
+                    // 如果有現有的欄位，使用它
+                    if (existingTeamField) {
+                        if (teamId) {
+                            updateData[existingTeamField] = teamId;
+                        } else {
+                            updateData[existingTeamField] = null;
+                        }
                     } else {
-                        updateData[existingTeamField] = null;
+                        // 如果沒有現有的欄位，嘗試使用最常見的欄位名稱
+                        updateData.current_team_id = teamId || null;
                     }
                 } else {
-                    // 如果沒有現有的欄位，嘗試使用最常見的欄位名稱
+                    // 如果沒有現有記錄，使用預設的欄位名稱
                     updateData.current_team_id = teamId || null;
                 }
-            } else {
-                // 如果沒有現有記錄，使用預設的欄位名稱
-                updateData.current_team_id = teamId || null;
-            }
-            
-            console.log("準備更新的資料:", updateData);
-            
-            // 更新或創建個人資料
-            const { error } = await sb
-                .from('profiles')
-                .upsert(updateData);
+                
+                console.log("準備更新的資料:", updateData);
+                
+                // 更新或創建個人資料
+                const { error } = await sb
+                    .from('profiles')
+                    .upsert(updateData);
 
-            if (error) {
-                console.error("更新資料錯誤:", error);
+                if (error) {
+                    console.error("更新資料錯誤:", error);
+                    alert("儲存失敗：" + error.message);
+                } else {
+                    alert("✅ 設定已儲存！");
+                    location.reload(); // 重新載入以更新顯示狀態
+                }
+            } catch (error) {
+                console.error("更新個人資料錯誤:", error);
                 alert("儲存失敗：" + error.message);
-            } else {
-                alert("✅ 設定已儲存！");
-                location.reload(); // 重新載入以更新顯示狀態
             }
-        } catch (error) {
-            console.error("更新個人資料錯誤:", error);
-            alert("儲存失敗：" + error.message);
-        }
-    }
-
-    // 儲存每日數據 - 修正版本，確保能正確儲存到 weight_records 表
-    async function saveDailyData() {
-        const { data: { user } } = await sb.auth.getUser();
-        if (!user) {
-            alert("請先登入");
-            return;
         }
 
-        const weight = parseFloat(document.getElementById('weight').value);
-        if (!weight || weight <= 0) {
-            alert("請輸入有效的體重");
-            return;
-        }
+        // 儲存每日數據
+        async function saveDailyData() {
+            const { data: { user } } = await sb.auth.getUser();
+            if (!user) {
+                alert("請先登入");
+                return;
+            }
 
-        const today = getHKTime().toISOString().split('T')[0];
-        const fatRate = parseFloat(document.getElementById('fat_rate').value) || 0;
-        const muscleMass = parseFloat(document.getElementById('muscle_mass').value) || 0;
-        
-        // 獲取任務狀態
-        const hasShake = document.getElementById('task_shake').checked;
-        const hasLive = document.getElementById('task_live').checked;
-        const hasDiet = document.getElementById('task_diet').checked;
-        const hasExercise = document.getElementById('task_exercise').checked;
+            const weight = parseFloat(document.getElementById('weight').value);
+            if (!weight || weight <= 0) {
+                alert("請輸入有效的體重");
+                return;
+            }
 
-        console.log("準備儲存每日數據:", {
-            user_id: user.id,
-            date: today,
-            weight,
-            fatRate,
-            muscleMass,
-            tasks: { hasShake, hasLive, hasDiet, hasExercise }
-        });
-
-        try {
-            // 首先檢查 weight_records 表是否存在並有正確的欄位
-            console.log("嘗試儲存體重記錄到 weight_records 表...");
+            const today = getHKTime().toISOString().split('T')[0];
+            const fatRate = parseFloat(document.getElementById('fat_rate').value) || 0;
+            const muscleMass = parseFloat(document.getElementById('muscle_mass').value) || 0;
             
-            // 準備體重記錄數據
-            const weightRecordData = {
+            // 獲取任務狀態
+            const hasShake = document.getElementById('task_shake').checked;
+            const hasLive = document.getElementById('task_live').checked;
+            const hasDiet = document.getElementById('task_diet').checked;
+            const hasExercise = document.getElementById('task_exercise').checked;
+
+            console.log("準備儲存每日數據:", {
                 user_id: user.id,
                 date: today,
-                weight: weight,
-                fat_rate: fatRate,
-                muscle_mass: muscleMass,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
-            
-            console.log("體重記錄數據:", weightRecordData);
-            
-            // 儲存體重記錄 - 使用 upsert，如果已存在則更新
-            const { data: weightResult, error: weightError } = await sb
-                .from('weight_records')
-                .upsert(weightRecordData, { 
-                    onConflict: 'user_id,date',
-                    ignoreDuplicates: false 
-                });
+                weight,
+                fatRate,
+                muscleMass,
+                tasks: { hasShake, hasLive, hasDiet, hasExercise }
+            });
 
-            if (weightError) {
-                console.error("儲存體重記錄錯誤詳細信息:", weightError);
+            try {
+                // 準備體重記錄數據
+                const weightRecordData = {
+                    user_id: user.id,
+                    date: today,
+                    weight: weight,
+                    fat_rate: fatRate,
+                    muscle_mass: muscleMass,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
                 
-                // 嘗試不同的錯誤處理
-                if (weightError.code === '42P01') {
-                    alert("錯誤：weight_records 表不存在，請在 Supabase 中創建該表");
-                } else if (weightError.code === '42703') {
-                    alert("錯誤：weight_records 表的欄位名稱不匹配，請檢查表結構");
-                } else {
-                    throw weightError;
+                console.log("體重記錄數據:", weightRecordData);
+                
+                // 儲存體重記錄
+                const { data: weightResult, error: weightError } = await sb
+                    .from('weight_records')
+                    .upsert(weightRecordData, { 
+                        onConflict: 'user_id,date',
+                        ignoreDuplicates: false 
+                    });
+
+                if (weightError) {
+                    console.error("儲存體重記錄錯誤詳細信息:", weightError);
+                    
+                    if (weightError.code === '42P01') {
+                        alert("錯誤：weight_records 表不存在，請在 Supabase 中創建該表");
+                    } else if (weightError.code === '42703') {
+                        alert("錯誤：weight_records 表的欄位名稱不匹配，請檢查表結構");
+                    } else {
+                        throw weightError;
+                    }
+                    return;
                 }
+                
+                console.log("體重記錄儲存成功:", weightResult);
+
+                // 計算今日積分
+                let dailyPoints = 0;
+                if (weight > 0 && hasDiet && hasShake && hasLive) {
+                    dailyPoints += 1;
+                }
+                if (hasExercise) dailyPoints += 1;
+                if (hasShake) dailyPoints += 1;
+
+                console.log("計算出的今日積分:", dailyPoints);
+
+                // 準備每日分數數據
+                const dailyScoreData = {
+                    user_id: user.id,
+                    date: today,
+                    weight_recorded: weight > 0,
+                    shake_used: hasShake,
+                    exercise_done: hasExercise,
+                    task_completed: hasLive,
+                    social_shared: false,
+                    referral_made: false,
+                    total_points: dailyPoints,
+                    updated_at: new Date().toISOString()
+                };
+                
+                console.log("每日分數數據:", dailyScoreData);
+                
+                // 儲存每日分數
+                const { data: scoreResult, error: scoreError } = await sb
+                    .from('daily_scores')
+                    .upsert(dailyScoreData, { 
+                        onConflict: 'user_id,date',
+                        ignoreDuplicates: false 
+                    });
+
+                if (scoreError) {
+                    console.error("儲存每日分數錯誤:", scoreError);
+                    
+                    if (scoreError.code === '42P01') {
+                        console.log("daily_scores 表不存在，跳過分數儲存");
+                    } else {
+                        throw scoreError;
+                    }
+                } else {
+                    console.log("每日分數儲存成功:", scoreResult);
+                }
+
+                // 更新狀態訊息
+                document.getElementById('status-msg').textContent = "✅ 今日數據已成功報到！";
+                document.getElementById('status-msg').style.color = "var(--secondary-color)";
+                
+                setTimeout(() => {
+                    document.getElementById('status-msg').textContent = "";
+                    location.reload();
+                }, 2000);
+
+            } catch (error) {
+                console.error("儲存數據錯誤:", error);
+                
+                let errorMsg = "儲存失敗：" + error.message;
+                
+                if (error.message.includes('weight_records')) {
+                    errorMsg += "\n\n請在 Supabase 中檢查：\n1. weight_records 表是否存在\n2. 表結構是否包含：user_id, date, weight, fat_rate, muscle_mass 欄位";
+                } else if (error.message.includes('daily_scores')) {
+                    errorMsg += "\n\n請在 Supabase 中檢查 daily_scores 表";
+                }
+                
+                alert(errorMsg);
+            }
+        }
+
+        // 複製隊伍代碼
+        function copyTeamCode() {
+            const teamCode = document.getElementById('teamCode');
+            teamCode.select();
+            teamCode.setSelectionRange(0, 99999);
+            
+            try {
+                navigator.clipboard.writeText(teamCode.value);
+                alert("隊伍代碼已複製到剪貼簿！");
+            } catch (err) {
+                console.error("複製失敗:", err);
+                alert("複製失敗，請手動複製");
+            }
+        }
+
+        // 註冊
+        async function signUp() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert("請填寫信箱和密碼");
+                return;
+            }
+
+            const { data, error } = await sb.auth.signUp({ email, password });
+            if (error) {
+                alert("註冊失敗：" + error.message);
+            } else {
+                alert("✅ 註冊成功！請檢查信箱驗證郵件後登入。");
+            }
+        }
+
+        // 登入
+        async function signIn() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                alert("請填寫信箱和密碼");
                 return;
             }
             
-            console.log("體重記錄儲存成功:", weightResult);
-
-            // 計算今日積分
-            let dailyPoints = 0;
-            if (weight > 0 && hasDiet && hasShake && hasLive) {
-                dailyPoints += 1; // 完成一圈
-            }
-            if (hasExercise) dailyPoints += 1;
-            if (hasShake) dailyPoints += 1;
-
-            console.log("計算出的今日積分:", dailyPoints);
-
-            // 準備每日分數數據
-            const dailyScoreData = {
-                user_id: user.id,
-                date: today,
-                weight_recorded: weight > 0,
-                shake_used: hasShake,
-                exercise_done: hasExercise,
-                task_completed: hasLive,
-                social_shared: false,
-                referral_made: false,
-                total_points: dailyPoints,
-                updated_at: new Date().toISOString()
-            };
+            console.log("嘗試登入:", email);
             
-            console.log("每日分數數據:", dailyScoreData);
-            
-            // 儲存每日分數
-            const { data: scoreResult, error: scoreError } = await sb
-                .from('daily_scores')
-                .upsert(dailyScoreData, { 
-                    onConflict: 'user_id,date',
-                    ignoreDuplicates: false 
+            try {
+                const { data, error } = await sb.auth.signInWithPassword({ 
+                    email: email, 
+                    password: password 
                 });
-
-            if (scoreError) {
-                console.error("儲存每日分數錯誤:", scoreError);
                 
-                // 嘗試創建表（如果不存在）
-                if (scoreError.code === '42P01') {
-                    console.log("daily_scores 表不存在，跳過分數儲存");
+                if (error) {
+                    console.error("登入錯誤詳情:", error);
+                    
+                    if (error.message.includes('Invalid login credentials')) {
+                        alert("登入失敗：帳號或密碼錯誤");
+                    } else if (error.message.includes('Email not confirmed')) {
+                        alert("請先驗證您的電子郵件地址");
+                    } else {
+                        alert("登入失敗：" + error.message);
+                    }
                 } else {
-                    throw scoreError;
+                    console.log("登入成功，重新載入頁面");
+                    location.reload();
                 }
-            } else {
-                console.log("每日分數儲存成功:", scoreResult);
+            } catch (err) {
+                console.error("登入異常:", err);
+                alert("登入過程中發生錯誤");
             }
-
-            // 更新狀態訊息
-            document.getElementById('status-msg').textContent = "✅ 今日數據已成功報到！";
-            setTimeout(() => {
-                document.getElementById('status-msg').textContent = "";
-                location.reload(); // 重新載入以更新圖表和數據
-            }, 2000);
-
-        } catch (error) {
-            console.error("儲存數據錯誤:", error);
-            
-            // 提供更詳細的錯誤信息
-            let errorMsg = "儲存失敗：" + error.message;
-            
-            if (error.message.includes('weight_records')) {
-                errorMsg += "\n\n請在 Supabase 中檢查：\n1. weight_records 表是否存在\n2. 表結構是否包含：user_id, date, weight, fat_rate, muscle_mass 欄位";
-            } else if (error.message.includes('daily_scores')) {
-                errorMsg += "\n\n請在 Supabase 中檢查 daily_scores 表";
-            }
-            
-            alert(errorMsg);
-        }
-    }
-
-    // 註冊
-    async function signUp() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        if (!email || !password) {
-            alert("請填寫信箱和密碼");
-            return;
         }
 
-        const { data, error } = await sb.auth.signUp({ email, password });
-        if (error) {
-            alert("註冊失敗：" + error.message);
-        } else {
-            alert("✅ 註冊成功！請檢查信箱驗證郵件後登入。");
+        // 登出
+        async function signOut() {
+            await sb.auth.signOut();
+            location.reload();
         }
-    }
-
-    // 登入
-    async function signIn() {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        
-        if (!email || !password) {
-            alert("請填寫信箱和密碼");
-            return;
-        }
-        
-        console.log("嘗試登入:", email);
-        
-        try {
-            const { data, error } = await sb.auth.signInWithPassword({ 
-                email: email, 
-                password: password 
-            });
-            
-            if (error) {
-                console.error("登入錯誤詳情:", error);
-                
-                // 提供更詳細的錯誤訊息
-                if (error.message.includes('Invalid login credentials')) {
-                    alert("登入失敗：帳號或密碼錯誤");
-                } else if (error.message.includes('Email not confirmed')) {
-                    alert("請先驗證您的電子郵件地址");
-                } else {
-                    alert("登入失敗：" + error.message);
-                }
-            } else {
-                console.log("登入成功，重新載入頁面");
-                // 登入成功，重新載入頁面
-                location.reload();
-            }
-        } catch (err) {
-            console.error("登入異常:", err);
-            alert("登入過程中發生錯誤");
-        }
-    }
-
-    // 登出
-    async function signOut() {
-        await sb.auth.signOut();
-        location.reload();
-    }
-</script>
+    </script>
 </body>
 </html>
