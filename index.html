@@ -31,60 +31,47 @@
             background-color: var(--bg-color);
             color: var(--dark-color);
             line-height: 1.6;
-            padding: 20px;
+            padding: 15px;
             max-width: 800px;
             margin: 0 auto;
         }
         
-        /* 頂部導航欄 */
+        /* 頂部導航欄 - 重新設計 */
         .top-nav {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .nav-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
+            margin-bottom: 8px;
         }
         
-        .welcome-logo {
+        .app-logo {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
+            gap: 8px;
+            font-size: 1.3rem;
             font-weight: 700;
             color: var(--primary-color);
         }
         
-        .welcome-logo i {
-            font-size: 1.6rem;
+        .app-logo i {
+            font-size: 1.5rem;
         }
         
-        .deadline-countdown {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            min-width: 180px;
-            text-align: center;
-        }
-        
-        .countdown-timer {
-            font-weight: 700;
-            font-size: 1rem;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-        }
-        
-        .user-menu {
+        /* 右上角頭像按鈕 - 包含積分顯示 */
+        .user-avatar-container {
             position: relative;
             cursor: pointer;
         }
         
-        .user-avatar {
-            width: 50px;
-            height: 50px;
+        .user-avatar-btn {
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             display: flex;
@@ -92,29 +79,87 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             overflow: hidden;
             border: 3px solid white;
             box-shadow: var(--shadow);
+            position: relative;
         }
         
-        .user-avatar img {
+        .user-avatar-btn img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
+        /* 積分徽章 - 顯示在頭像內部 */
+        .points-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #ffd700, #ff6a00);
+            color: white;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            z-index: 10;
+        }
+        
+        .points-badge i {
+            margin-right: 3px;
+            font-size: 0.7rem;
+        }
+        
+        /* 歡迎訊息和截止時間 */
+        .nav-subheader {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .welcome-message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .deadline-countdown {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .countdown-timer {
+            font-weight: 700;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 用戶選單 */
         .user-menu-dropdown {
             position: absolute;
-            top: 100%;
-            right: 0;
+            top: 70px;
+            right: 15px;
             background: white;
             border-radius: 10px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             min-width: 200px;
             padding: 15px;
             z-index: 1000;
-            margin-top: 10px;
             display: none;
         }
         
@@ -141,13 +186,13 @@
             width: 20px;
         }
         
-        /* 每日數據報到卡片 - 置頂 */
+        /* 每日數據報到卡片 */
         .daily-checkin-card {
             background-color: var(--card-bg);
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: var(--shadow);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-top: 5px solid var(--secondary-color);
             position: relative;
         }
@@ -156,10 +201,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
             color: var(--dark-color);
-            padding-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 2px solid #eee;
         }
         
@@ -167,22 +212,22 @@
             color: var(--primary-color);
         }
         
-        /* 滾動輸入數據容器 */
-        .scroll-input-container {
+        /* 優化的輸入容器 */
+        .input-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
         }
         
         @media (max-width: 768px) {
-            .scroll-input-container {
+            .input-container {
                 grid-template-columns: 1fr;
-                gap: 20px;
+                gap: 15px;
             }
         }
         
-        .scroll-input-box {
+        .input-box {
             text-align: center;
             padding: 15px;
             border-radius: 12px;
@@ -190,20 +235,15 @@
             border: 2px solid #e9ecef;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            touch-action: manipulation; /* 防止瀏覽器觸控事件 */
         }
         
-        .scroll-input-box:focus-within {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-        }
-        
-        .scroll-input-box.locked {
+        .input-box.locked {
             background: linear-gradient(135deg, #e9ecef, #dee2e6);
             border-color: #ced4da;
         }
         
-        .scroll-input-box.locked::after {
+        .input-box.locked::after {
             content: "🔒";
             position: absolute;
             top: 10px;
@@ -212,9 +252,9 @@
             opacity: 0.7;
         }
         
-        .scroll-value {
+        .value-display {
             width: 100%;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             font-weight: 700;
             text-align: center;
             border: none;
@@ -222,24 +262,27 @@
             color: var(--dark-color);
             outline: none;
             padding: 5px;
-            transition: transform 0.3s;
             pointer-events: none;
+            user-select: none; /* 防止選擇文本 */
         }
         
-        .scroll-input-box.locked .scroll-value {
+        .input-box.locked .value-display {
             color: #495057;
         }
         
-        .scroll-controls {
+        .input-controls {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 15px;
         }
         
-        .scroll-btn {
-            width: 40px;
-            height: 40px;
+        /* 優化的按鈕，避免誤觸 */
+        .control-btn {
+            width: 44px;
+            height: 44px;
+            min-width: 44px; /* 觸控友好 */
+            min-height: 44px; /* 觸控友好 */
             border-radius: 50%;
             background: white;
             border: 2px solid var(--primary-color);
@@ -251,31 +294,38 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            touch-action: manipulation; /* 改善觸控響應 */
         }
         
-        .scroll-btn:hover {
+        .control-btn:hover {
             background: var(--primary-color);
             color: white;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
         
-        .scroll-btn:active {
+        .control-btn:active {
             transform: scale(0.95);
         }
         
-        .scroll-input-box.locked .scroll-btn {
+        /* 防止快速點擊 */
+        .control-btn.disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        
+        .input-box.locked .control-btn {
             display: none;
         }
         
         .data-label {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--dark-color);
-            margin-top: 10px;
+            margin-top: 8px;
             font-weight: 600;
         }
         
         .data-unit {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--dark-color);
             margin-left: 3px;
         }
@@ -284,8 +334,8 @@
         .tasks {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 25px;
+            gap: 10px;
+            margin-top: 20px;
         }
         
         @media (max-width: 480px) {
@@ -298,7 +348,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px;
+            padding: 12px;
             background-color: #f8f9fa;
             border-radius: 10px;
             border: 1px solid #e9ecef;
@@ -307,16 +357,19 @@
         .task-info {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         
         .task-checkbox {
             width: 22px;
             height: 22px;
+            min-width: 22px; /* 觸控友好 */
+            min-height: 22px; /* 觸控友好 */
             border-radius: 5px;
             border: 2px solid var(--gray-color);
             cursor: pointer;
             accent-color: var(--secondary-color);
+            touch-action: manipulation;
         }
         
         /* 按鈕區域 */
@@ -324,12 +377,12 @@
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-top: 25px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
         
         .submit-btn {
-            padding: 14px 35px;
+            padding: 14px 30px;
             font-size: 1.1rem;
             background: linear-gradient(135deg, var(--secondary-color), #27ae60);
             color: white;
@@ -341,7 +394,8 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            touch-action: manipulation;
         }
         
         .submit-btn:hover:not(:disabled) {
@@ -357,8 +411,8 @@
         }
         
         .modify-btn {
-            padding: 14px 25px;
-            font-size: 1rem;
+            padding: 14px 20px;
+            font-size: 0.95rem;
             background: linear-gradient(135deg, #ff9a00, #ff6a00);
             color: white;
             border-radius: 50px;
@@ -370,6 +424,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            touch-action: manipulation;
         }
         
         .modify-btn:hover {
@@ -385,8 +440,8 @@
         .status-msg {
             text-align: center;
             margin-top: 15px;
-            font-size: 0.95rem;
-            min-height: 24px;
+            font-size: 0.9rem;
+            min-height: 22px;
             padding: 10px;
             border-radius: 8px;
             font-weight: 600;
@@ -411,25 +466,52 @@
         }
         
         .input-hint {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--gray-color);
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         
-        /* 個人數據圖表 */
+        /* 個人數據圖表 - 三個獨立圖表 */
         .progress-chart-card {
             background-color: var(--card-bg);
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: var(--shadow);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             border-top: 5px solid var(--primary-color);
         }
         
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .chart-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .chart-item {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
         .chart-container {
-            height: 250px;
-            margin-top: 20px;
+            height: 180px;
             position: relative;
         }
         
@@ -442,31 +524,31 @@
         .auth-card {
             background-color: var(--card-bg);
             border-radius: 12px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: var(--shadow);
         }
         
         .auth-title {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             color: var(--dark-color);
-            font-size: 1.5rem;
+            font-size: 1.4rem;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: var(--dark-color);
         }
         
         .form-group input {
             width: 100%;
-            padding: 14px 15px;
+            padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
@@ -482,12 +564,12 @@
         .auth-buttons {
             display: flex;
             gap: 10px;
-            margin-top: 25px;
+            margin-top: 20px;
         }
         
         .auth-buttons button {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             font-weight: 600;
             border-radius: 8px;
             border: none;
@@ -534,9 +616,9 @@
         .modal-content {
             background: white;
             border-radius: 15px;
-            padding: 30px;
+            padding: 25px;
             width: 90%;
-            max-width: 500px;
+            max-width: 450px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
@@ -546,11 +628,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         .modal-title {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             color: var(--dark-color);
         }
         
@@ -570,22 +652,73 @@
         /* 頁腳 */
         footer {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
+            margin-top: 25px;
+            padding-top: 15px;
             border-top: 1px solid #ddd;
             color: var(--gray-color);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
-        /* 滾動動畫 */
-        @keyframes scrollPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        /* 防止滾動時觸發頁面滾動 */
+        .prevent-scroll {
+            overflow: hidden;
         }
         
-        .scroll-animation {
-            animation: scrollPulse 0.3s ease;
+        /* 積分規則模態框樣式 */
+        .points-rules-list {
+            margin: 15px 0;
+        }
+        
+        .points-rule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .points-rule-item.gold {
+            border-left-color: #ffd700;
+        }
+        
+        .points-rule-item.silver {
+            border-left-color: #c0c0c0;
+        }
+        
+        .points-rule-item.bronze {
+            border-left-color: #cd7f32;
+        }
+        
+        .rule-title {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .rule-points {
+            font-weight: 700;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+        
+        .rule-hint {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 3px;
+        }
+        
+        /* 問號圖標樣式 */
+        .question-icon {
+            margin-left: 10px;
+            color: var(--gray-color);
+            cursor: help;
+            font-size: 1rem;
+        }
+        
+        .question-icon:hover {
+            color: var(--primary-color);
         }
     </style>
 </head>
@@ -616,23 +749,25 @@
     
     <!-- 主頁面區塊 -->
     <div id="main-section" class="hidden">
-        <!-- 頂部導航欄 -->
+        <!-- 頂部導航欄 - 新設計 -->
         <div class="top-nav">
-            <div class="welcome-logo">
-                <i class="fas fa-running"></i>
-                <span id="welcome-text">歡迎，<span id="user-name">載入中...</span></span>
-            </div>
-            
-            <div class="deadline-countdown">
-                <i class="fas fa-clock"></i> 今日報到截止: 
-                <span class="countdown-timer" id="countdown-timer">23:59:00</span>
-            </div>
-            
-            <!-- 個人中心小logo -->
-            <div class="user-menu" onclick="toggleUserMenu()">
-                <div class="user-avatar" id="user-avatar">
-                    <img id="avatar-img" src="" alt="頭像" onerror="this.style.display='none';">
+            <div class="nav-header">
+                <div class="app-logo">
+                    <i class="fas fa-running"></i>
+                    <span>馬拉松健身追蹤</span>
                 </div>
+                
+                <!-- 右上角頭像按鈕 - 包含積分顯示 -->
+                <div class="user-avatar-container" onclick="toggleUserMenu(event)">
+                    <div class="user-avatar-btn" id="user-avatar-btn">
+                        <img id="avatar-img" src="" alt="頭像" onerror="this.style.display='none';">
+                    </div>
+                    <div class="points-badge" id="points-badge">
+                        <i class="fas fa-coins"></i> <span id="user-points">0</span>
+                    </div>
+                </div>
+                
+                <!-- 用戶選單 -->
                 <div class="user-menu-dropdown" id="user-menu-dropdown">
                     <div class="user-menu-item" onclick="openProfileSettings()">
                         <i class="fas fa-user-cog"></i>
@@ -642,9 +777,9 @@
                         <i class="fas fa-trophy"></i>
                         <span>排行榜</span>
                     </div>
-                    <div class="user-menu-item" onclick="window.open('points-guide.html', '_blank')">
+                    <div class="user-menu-item" onclick="openPointsRules()">
                         <i class="fas fa-coins"></i>
-                        <span>積分指南</span>
+                        <span>積分規則</span>
                     </div>
                     <div class="user-menu-item" onclick="signOut()" style="color: var(--accent-color);">
                         <i class="fas fa-sign-out-alt"></i>
@@ -652,70 +787,156 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- 每日數據報到卡片 - 置頂 -->
-        <div class="daily-checkin-card">
-            <h2 class="card-title">
-                <i class="fas fa-calendar-day"></i> 每日數據報到
-            </h2>
-            <p class="input-hint">
-                請輸入今日的數據，完成後點擊下方「送出今日報到」按鈕
-            </p>
             
-            <div class="scroll-input-container" id="scroll-input-container">
-                <!-- 體重輸入 -->
-                <div class="scroll-input-box" id="weight-box">
-                    <input type="text" class="scroll-value" id="weight-value" value="65.3" readonly>
-                    <div class="scroll-controls">
-                        <button class="scroll-btn" onclick="adjustValue('weight', -0.1)">-</button>
-                        <button class="scroll-btn" onclick="adjustValue('weight', 0.1)">+</button>
-                    </div>
-                    <div class="data-label">體重 (公斤)<span class="data-unit">kg</span></div>
-                </div>
-                
-                <!-- 體脂率輸入 -->
-                <div class="scroll-input-box" id="fat-box">
-                    <input type="text" class="scroll-value" id="fat-value" value="41.3" readonly>
-                    <div class="scroll-controls">
-                        <button class="scroll-btn" onclick="adjustValue('fat', -0.1)">-</button>
-                        <button class="scroll-btn" onclick="adjustValue('fat', 0.1)">+</button>
-                    </div>
-                    <div class="data-label">體脂率 (%)</div>
-                </div>
-                
-                <!-- 骨骼肌質量輸入 -->
-                <div class="scroll-input-box" id="muscle-box">
-                    <input type="text" class="scroll-value" id="muscle-value" value="20.1" readonly>
-                    <div class="scroll-controls">
-                        <button class="scroll-btn" onclick="adjustValue('muscle', -0.1)">-</button>
-                        <button class="scroll-btn" onclick="adjustValue('muscle', 0.1)">+</button>
-                    </div>
-                    <div class="data-label">骨骼肌質量 (公斤)<span class="data-unit">kg</span></div>
+            <div class="nav-subheader">
+                <div class="welcome-message" id="welcome-message">歡迎，<span id="user-name">載入中...</span></div>
+                <div class="deadline-countdown">
+                    <i class="fas fa-clock"></i> 今日報到截止: 
+                    <span class="countdown-timer" id="countdown-timer">23:59:00</span>
                 </div>
             </div>
+        </div>
+        
+  
+    <!-- 每日數據報到卡片 -->
+    <div class="daily-checkin-card">
+        <h2 class="card-title">
+            <i class="fas fa-calendar-day"></i> 每日數據報到
+            <span class="question-icon" onclick="openPointsRules()" title="查看積分規則">
+                <i class="fas fa-question-circle"></i>
+            </span>
+        </h2>
+        <p class="input-hint">
+            請輸入今日的數據，可點擊加減按鈕調整，或直接滑動數據區域調整
+        </p>
+        
+        <!-- 三個數據橫向排列 -->
+        <div class="input-container" id="input-container">
+            <!-- 體重輸入 -->
+            <div class="input-box" id="weight-box" data-type="weight">
+                <input type="text" class="value-display" id="weight-value" value="65.3" readonly>
+                <div class="input-controls">
+                    <button class="control-btn minus-btn" data-type="weight" data-change="-0.1">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="control-btn plus-btn" data-type="weight" data-change="0.1">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="data-label">體重 <span class="data-unit">kg</span></div>
+            </div>
             
-            <!-- 任務區域 (已取消完成直播) -->
+            <!-- 體脂率輸入 -->
+            <div class="input-box" id="fat-box" data-type="fat">
+                <input type="text" class="value-display" id="fat-value" value="41.3" readonly>
+                <div class="input-controls">
+                    <button class="control-btn minus-btn" data-type="fat" data-change="-0.1">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="control-btn plus-btn" data-type="fat" data-change="0.1">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="data-label">體脂率 <span class="data-unit">%</span></div>
+            </div>
+            
+            <!-- 肌肉量輸入 -->
+            <div class="input-box" id="muscle-box" data-type="muscle">
+                <input type="text" class="value-display" id="muscle-value" value="20.1" readonly>
+                <div class="input-controls">
+                    <button class="control-btn minus-btn" data-type="muscle" data-change="-0.1">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="control-btn plus-btn" data-type="muscle" data-change="0.1">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <div class="data-label">肌肉量 <span class="data-unit">kg</span></div>
+            </div>
+        </div>
+        
+        <!-- 滑動提示 -->
+        <div class="swipe-indicator">
+            <i class="fas fa-arrows-left-right"></i>
+            <span>滑動查看所有數據</span>
+        </div>
+        
+        <!-- 觸控提示 -->
+        <div class="touch-hint">
+            <i class="fas fa-hand-point-up"></i>
+            <span>長按按鈕可快速調整</span>
+        </div>
+        
+        <!-- 任務區域 -->
+        <div class="tasks">
+            <div class="task-item">
+                <div class="task-info">
+                    <input type="checkbox" id="task_shake" class="task-checkbox">
+                    <label for="task_shake">使用 Shake</label>
+                </div>
+                <span class="rule-points" style="font-size: 0.95rem; font-weight: 700; color: var(--secondary-color);">+2分</span>
+            </div>
+            <div class="task-item">
+                <div class="task-info">
+                    <input type="checkbox" id="task_exercise" class="task-checkbox">
+                    <label for="task_exercise">完成運動</label>
+                </div>
+                <span class="rule-points" style="font-size: 0.95rem; font-weight: 700; color: var(--secondary-color);">+2分</span>
+            </div>
+            <div class="task-item">
+                <div class="task-info">
+                    <input type="checkbox" id="task_diet" class="task-checkbox">
+                    <label for="task_diet">打卡飲食</label>
+                </div>
+                <span class="rule-points" style="font-size: 0.95rem; font-weight: 700; color: var(--secondary-color);">+2分</span>
+            </div>
+        </div>
+        
+        <!-- 按鈕區域 -->
+        <div class="button-section">
+            <button class="submit-btn" id="submitBtn">
+                <i class="fas fa-paper-plane"></i> 送出今日報到
+            </button>
+            <button class="modify-btn hidden" id="modifyBtn">
+                <i class="fas fa-edit"></i> 修改數據
+            </button>
+        </div>
+        
+        <!-- 登入提示（初始顯示） -->
+        <div class="login-prompt" id="login-prompt">
+            <p style="margin-bottom: 10px; font-weight: 600; color: var(--dark-color);">請先登入以儲存您的數據</p>
+            <p style="margin-bottom: 15px; color: var(--gray-color); font-size: 0.9rem;">登入後可以追蹤進度、累積積分並同步數據</p>
+            <button class="login-btn" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> 立即登入
+            </button>
+        </div>
+        
+        <!-- 狀態訊息 -->
+        <div class="status-msg" id="status-msg"></div>
+    </div>
+            <!-- 任務區域 -->
             <div class="tasks">
                 <div class="task-item">
                     <div class="task-info">
                         <input type="checkbox" id="task_shake" class="task-checkbox">
                         <span>使用 Shake</span>
                     </div>
+                    <span class="rule-points" style="font-size: 0.9rem;">+2分</span>
                 </div>
                 <div class="task-item">
                     <div class="task-info">
                         <input type="checkbox" id="task_exercise" class="task-checkbox">
                         <span>完成運動</span>
                     </div>
+                    <span class="rule-points" style="font-size: 0.9rem;">+2分</span>
                 </div>
                 <div class="task-item">
                     <div class="task-info">
                         <input type="checkbox" id="task_diet" class="task-checkbox">
                         <span>打卡飲食</span>
                     </div>
+                    <span class="rule-points" style="font-size: 0.9rem;">+2分</span>
                 </div>
-                <!-- 已取消完成直播任務 -->
             </div>
             
             <!-- 按鈕區域 -->
@@ -731,16 +952,38 @@
             <div class="status-msg" id="status-msg"></div>
         </div>
         
-        <!-- 個人數據圖表 -->
+        <!-- 個人數據圖表 - 三個獨立折線圖 -->
         <div class="progress-chart-card">
             <h2 class="card-title">
                 <i class="fas fa-chart-line"></i> 我的數據趨勢
             </h2>
-            <div class="chart-container">
-                <canvas id="personal-progress-chart"></canvas>
+            <div class="chart-grid">
+                <!-- 體重圖表 -->
+                <div class="chart-item">
+                    <div class="chart-title">體重變化 (kg)</div>
+                    <div class="chart-container">
+                        <canvas id="weight-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 體脂率圖表 -->
+                <div class="chart-item">
+                    <div class="chart-title">體脂率變化 (%)</div>
+                    <div class="chart-container">
+                        <canvas id="fat-chart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 肌肉量圖表 -->
+                <div class="chart-item">
+                    <div class="chart-title">肌肉量變化 (kg)</div>
+                    <div class="chart-container">
+                        <canvas id="muscle-chart"></canvas>
+                    </div>
+                </div>
             </div>
             <p class="input-hint">
-                <i class="fas fa-info-circle"></i> 圖表顯示最近7天的體重、體脂率和骨骼肌質量變化趨勢
+                <i class="fas fa-info-circle"></i> 圖表顯示最近7天的數據變化趨勢
             </p>
         </div>
         
@@ -756,9 +999,14 @@
                     <button class="close-modal" onclick="closeProfileSettings()">&times;</button>
                 </div>
                 
-                <div class="avatar-upload" style="text-align: center; margin-bottom: 25px;">
-                    <div class="user-avatar" style="width: 100px; height: 100px; margin: 0 auto 15px;">
-                        <img id="avatar-preview" src="" alt="頭像預覽" onerror="this.style.display='none';">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div class="user-avatar-container" style="width: 100px; height: 100px; margin: 0 auto 15px;">
+                        <div class="user-avatar-btn" style="width: 100px; height: 100px;">
+                            <img id="avatar-preview" src="" alt="頭像預覽" onerror="this.style.display='none';">
+                        </div>
+                        <div class="points-badge" style="bottom: -5px; right: -5px;">
+                            <i class="fas fa-coins"></i> <span id="preview-points">0</span>
+                        </div>
                     </div>
                     <input type="file" id="avatar_file" accept="image/*" onchange="previewAvatar()" style="display: none;">
                     <button type="button" class="btn-primary" onclick="document.getElementById('avatar_file').click()" style="padding: 10px 20px;">
@@ -773,7 +1021,7 @@
                 
                 <div class="form-group">
                     <label>角色</label>
-                    <select id="role" style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #ddd;">
+                    <select id="role" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
                         <option value="member">學員</option>
                         <option value="captain">隊長</option>
                         <option value="deputy">副隊長</option>
@@ -783,7 +1031,7 @@
                 
                 <div class="form-group">
                     <label>計畫</label>
-                    <select id="plan" style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #ddd;">
+                    <select id="plan" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
                         <option value="slow_run">慢跑</option>
                         <option value="fast_run">快跑</option>
                         <option value="vip">VIP</option>
@@ -796,8 +1044,83 @@
                     <small style="color: var(--gray-color); display: block; margin-top: 5px;">若無隊伍代碼，請聯絡隊長</small>
                 </div>
                 
-                <button class="btn-secondary" onclick="updateProfile()" style="width: 100%; padding: 14px; margin-top: 20px;">
+                <button class="btn-secondary" onclick="updateProfile()" style="width: 100%; padding: 12px; margin-top: 20px;">
                     <i class="fas fa-save"></i> 儲存設定
+                </button>
+            </div>
+        </div>
+        
+        <!-- 積分規則模態框 -->
+        <div id="points-rules-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">📊 積分規則指南</h3>
+                    <button class="close-modal" onclick="closePointsRules()">&times;</button>
+                </div>
+                
+                <div class="points-rules-list">
+                    <div class="points-rule-item gold">
+                        <div>
+                            <div class="rule-title">每日數據報到 (必做)</div>
+                            <div class="rule-hint">上傳體重、體脂率、肌肉量數據</div>
+                        </div>
+                        <div class="rule-points">+3分</div>
+                    </div>
+                    
+                    <div class="points-rule-item">
+                        <div>
+                            <div class="rule-title">使用 Shake</div>
+                            <div class="rule-hint">每日使用Shake應用程式</div>
+                        </div>
+                        <div class="rule-points">+2分</div>
+                    </div>
+                    
+                    <div class="points-rule-item">
+                        <div>
+                            <div class="rule-title">完成運動</div>
+                            <div class="rule-hint">完成30分鐘以上運動</div>
+                        </div>
+                        <div class="rule-points">+2分</div>
+                    </div>
+                    
+                    <div class="points-rule-item">
+                        <div>
+                            <div class="rule-title">打卡飲食</div>
+                            <div class="rule-hint">上傳飲食照片或記錄</div>
+                        </div>
+                        <div class="rule-points">+2分</div>
+                    </div>
+                    
+                    <div class="points-rule-item silver">
+                        <div>
+                            <div class="rule-title">連續報到獎勵</div>
+                            <div class="rule-hint">連續7天報到</div>
+                        </div>
+                        <div class="rule-points">+5分</div>
+                    </div>
+                    
+                    <div class="points-rule-item bronze">
+                        <div>
+                            <div class="rule-title">團隊貢獻獎勵</div>
+                            <div class="rule-hint">團隊成員全部完成當日任務</div>
+                        </div>
+                        <div class="rule-points">+3分</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-bottom: 10px; color: var(--dark-color);">💡 積分說明</h4>
+                    <ul style="font-size: 0.9rem; color: var(--gray-color); padding-left: 20px;">
+                        <li>每日最多可獲得 <strong>9分</strong> (基本任務3+2+2+2=9分)</li>
+                        <li>連續報到獎勵每週計算一次</li>
+                        <li>團隊貢獻獎勵需要全隊成員完成當日所有任務</li>
+                        <li>積分用於團隊排名和個人成就</li>
+                        <li>數據鎖定後不可隨意修改，需副隊長批准</li>
+                    </ul>
+                </div>
+                
+                <button class="btn-primary" onclick="closePointsRules()" style="width: 100%; padding: 12px; margin-top: 20px;">
+                    關閉
                 </button>
             </div>
         </div>
@@ -811,10 +1134,24 @@
 
         // 全局變數
         let currentUser = null;
-        let personalChart = null;
+        let weightChart = null;
+        let fatChart = null;
+        let muscleChart = null;
         let countdownInterval = null;
         let isDataLocked = false;
         let todayDataSubmitted = false;
+        let touchStartTime = 0;
+
+        // 積分規則定義
+        const POINTS_RULES = {
+            DAILY_CHECKIN: 3,      // 每日數據報到
+            SHAKE: 2,              // 使用Shake
+            EXERCISE: 2,           // 完成運動
+            DIET: 2,               // 打卡飲食
+            STREAK_BONUS: 5,       // 連續報到獎勵
+            TEAM_BONUS: 3,         // 團隊貢獻獎勵
+            MAX_DAILY: 9           // 每日最高積分
+        };
 
         // 頁面載入時檢查登入狀態
         window.onload = async () => {
@@ -952,7 +1289,7 @@
                     console.log("解析出的資料:", { fullName, plan, role, teamId });
                     
                     // 更新顯示資料
-                    document.getElementById('welcome-text').innerHTML = `<i class="fas fa-running"></i> 歡迎，<span id="user-name">${fullName || '學員'}</span>`;
+                    document.getElementById('welcome-message').innerHTML = `歡迎，<span id="user-name">${fullName || '學員'}</span>`;
                     document.getElementById('full_name').value = fullName;
                     document.getElementById('plan').value = plan;
                     document.getElementById('team_id_input').value = teamId || '';
@@ -969,21 +1306,26 @@
                     }
                     
                     // 頭像
+                    const avatarBtn = document.getElementById('avatar-img');
+                    const avatarPreview = document.getElementById('avatar-preview');
                     if (avatarUrl) {
-                        document.getElementById('avatar-img').src = avatarUrl;
-                        document.getElementById('avatar-preview').src = avatarUrl;
+                        avatarBtn.src = avatarUrl;
+                        avatarPreview.src = avatarUrl;
                     } else if (fullName) {
                         const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`;
-                        document.getElementById('avatar-img').src = avatarUrl;
-                        document.getElementById('avatar-preview').src = avatarUrl;
-                        document.getElementById('user-avatar').innerHTML = fullName.charAt(0).toUpperCase();
+                        avatarBtn.src = avatarUrl;
+                        avatarPreview.src = avatarUrl;
+                        document.getElementById('user-avatar-btn').innerHTML = `<img src="${avatarUrl}" alt="頭像">`;
                     }
 
+                    // 載入用戶積分
+                    await loadUserPoints(user.id);
+                    
                     // 檢查今日是否已報到
                     await checkDailyCheckin(user.id);
                     
-                    // 載入個人數據變化圖表
-                    await loadPersonalProgressChart(user.id);
+                    // 創建三個獨立圖表
+                    createIndividualCharts();
                     
                 } else {
                     // 如果沒有個人資料，顯示設定卡片
@@ -992,6 +1334,35 @@
                 }
             } catch (err) {
                 console.error("顯示個人資料錯誤:", err);
+            }
+        }
+
+        // 載入用戶積分
+        async function loadUserPoints(userId) {
+            try {
+                const { data, error } = await sb
+                    .from('daily_scores')
+                    .select('total_points')
+                    .eq('user_id', userId);
+                
+                if (error) {
+                    console.error("載入用戶積分錯誤:", error);
+                    return;
+                }
+                
+                let totalPoints = 0;
+                if (data) {
+                    data.forEach(record => {
+                        totalPoints += record.total_points || 0;
+                    });
+                }
+                
+                // 更新積分顯示
+                document.getElementById('user-points').textContent = totalPoints;
+                document.getElementById('preview-points').textContent = totalPoints;
+                
+            } catch (error) {
+                console.error("載入用戶積分錯誤:", error);
             }
         }
 
@@ -1030,7 +1401,7 @@
                     // 檢查任務狀態
                     const { data: taskData } = await sb
                         .from('daily_scores')
-                        .select('shake_used, exercise_done')
+                        .select('shake_used, exercise_done, diet_logged')
                         .eq('user_id', userId)
                         .eq('date', today)
                         .maybeSingle();
@@ -1038,6 +1409,7 @@
                     if (taskData) {
                         document.getElementById('task_shake').checked = taskData.shake_used || false;
                         document.getElementById('task_exercise').checked = taskData.exercise_done || false;
+                        document.getElementById('task_diet').checked = taskData.diet_logged || false;
                     }
                     
                     // 提醒用戶今日已報到
@@ -1054,7 +1426,7 @@
         // 鎖定數據輸入框
         function lockDataInputs(locked) {
             isDataLocked = locked;
-            const boxes = document.querySelectorAll('.scroll-input-box');
+            const boxes = document.querySelectorAll('.input-box');
             const submitBtn = document.getElementById('submitBtn');
             const modifyBtn = document.getElementById('modifyBtn');
             
@@ -1077,9 +1449,14 @@
             }
         }
 
-        // 調整數值 (滾動輸入)
+        // 調整數值 (防止誤觸版本)
         function adjustValue(type, change) {
             if (isDataLocked) return;
+            
+            // 防止快速點擊
+            const now = Date.now();
+            if (now - touchStartTime < 300) return;
+            touchStartTime = now;
             
             const valueElement = document.getElementById(`${type}-value`);
             let currentValue = parseFloat(valueElement.value) || 0;
@@ -1125,218 +1502,165 @@
             }, 300);
         }
 
-        // 載入個人數據變化圖表 (根據您的圖片修正)
-        async function loadPersonalProgressChart(userId) {
-            try {
-                // 獲取最近7天的數據
-                const sevenDaysAgo = new Date(getHKTime());
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                const startDate = sevenDaysAgo.toISOString().split('T')[0];
-                
-                console.log(`載入用戶 ${userId} 從 ${startDate} 起的體重記錄`);
-                
-                const { data, error } = await sb
-                    .from('weight_records')
-                    .select('date, weight, fat_rate, muscle_mass')
-                    .eq('user_id', userId)
-                    .gte('date', startDate)
-                    .order('date', { ascending: true });
-                
-                if (error) {
-                    console.error("載入圖表數據錯誤:", error);
-                    // 使用示例數據
-                    createChartWithSampleData();
-                    return;
-                }
-                
-                console.log("載入的體重記錄數據:", data);
-                
-                // 如果有數據就使用真實數據，否則使用示例數據
-                if (data && data.length > 0) {
-                    createChartWithRealData(data);
-                } else {
-                    createChartWithSampleData();
-                }
-                
-            } catch (error) {
-                console.error("載入個人圖表錯誤:", error);
-                createChartWithSampleData();
-            }
+        // 觸控版本 - 防止誤觸
+        function adjustValueTouch(type, change) {
+            event.preventDefault(); // 防止觸控滾動
+            adjustValue(type, change);
         }
 
-        // 使用真實數據創建圖表
-        function createChartWithRealData(data) {
-            const dates = [];
-            const weights = [];
-            const fatRates = [];
-            const muscleMass = [];
+        // 創建三個獨立圖表
+        function createIndividualCharts() {
+            // 根據您提供的數據
+            const labels = ['第一天', '第二天', '第三天', '第四天', '第五天', '第六天', '第七天'];
+            const weights = [59.1, 60.5, 60.9, 62.3, 61.8, 62.4, 63.9, 65.3];
+            const fatRates = [36.8, 37.8, 38.6, 39.4, 39.0, 39.2, 40.7, 41.3];
+            const muscleMass = [19.7, 19.8, 19.7, 19.8, 19.7, 19.7, 20.0, 20.1];
             
-            data.forEach(record => {
-                dates.push(record.date.substring(5)); // 顯示 MM-DD 格式
-                weights.push(record.weight || 0);
-                fatRates.push(record.fat_rate || 0);
-                muscleMass.push(record.muscle_mass || 0);
-            });
+            // 銷毀現有圖表
+            if (weightChart) weightChart.destroy();
+            if (fatChart) fatChart.destroy();
+            if (muscleChart) muscleChart.destroy();
             
-            createChart(dates, weights, fatRates, muscleMass);
-        }
-
-        // 使用示例數據創建圖表 (根據您提供的圖片數據)
-        function createChartWithSampleData() {
-            // 根據您提供的圖片數據
-            const dates = ['12-14', '12-15', '12-16', '12-17', '12-18', '12-19', '12-20', '12-21'];
-            const weights = [65.3, 63.9, 62.4, 61.8, 62.3, 60.9, 60.5, 59.1];
-            const fatRates = [41.3, 40.7, 39.2, 39.0, 39.4, 38.6, 37.8, 36.8];
-            const muscleMass = [20.1, 20.0, 19.7, 19.7, 19.8, 19.7, 19.8, 19.7];
-            
-            createChart(dates, weights, fatRates, muscleMass);
-        }
-
-        // 創建圖表
-        function createChart(dates, weights, fatRates, muscleMass) {
-            // 如果已有圖表實例，先銷毀
-            if (personalChart) {
-                personalChart.destroy();
-            }
-            
-            // 創建圖表
-            const ctx = document.getElementById('personal-progress-chart').getContext('2d');
-            personalChart = new Chart(ctx, {
+            // 創建體重圖表
+            const weightCtx = document.getElementById('weight-chart').getContext('2d');
+            weightChart = new Chart(weightCtx, {
                 type: 'line',
                 data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: '體重 (kg)',
-                            data: weights,
-                            borderColor: '#3498db',
-                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                            borderWidth: 3,
-                            tension: 0.3,
-                            yAxisID: 'y',
-                            pointRadius: 5,
-                            pointHoverRadius: 8
-                        },
-                        {
-                            label: '體脂率 (%)',
-                            data: fatRates,
-                            borderColor: '#e74c3c',
-                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                            borderWidth: 3,
-                            tension: 0.3,
-                            yAxisID: 'y1',
-                            pointRadius: 5,
-                            pointHoverRadius: 8
-                        },
-                        {
-                            label: '骨骼肌質量 (kg)',
-                            data: muscleMass,
-                            borderColor: '#2ecc71',
-                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            yAxisID: 'y2',
-                            pointRadius: 4,
-                            pointHoverRadius: 7
-                        }
-                    ]
+                    labels: labels,
+                    datasets: [{
+                        label: '體重 (kg)',
+                        data: weights,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
+                        y: {
+                            min: 55,
+                            max: 70,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#3498db',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
                         x: {
                             grid: {
                                 color: 'rgba(0,0,0,0.05)'
                             }
-                        },
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: '體重 (kg)',
-                                color: '#3498db',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            min: 55,
-                            max: 70,
-                            grid: {
-                                drawOnChartArea: true,
-                                color: 'rgba(52, 152, 219, 0.1)'
-                            },
-                            ticks: {
-                                color: '#3498db',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: '體脂率 (%)',
-                                color: '#e74c3c',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            min: 35,
-                            max: 45,
-                            grid: {
-                                drawOnChartArea: false
-                            },
-                            ticks: {
-                                color: '#e74c3c',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        },
-                        y2: {
-                            type: 'linear',
-                            display: false, // 隱藏第三個Y軸，避免圖表過於擁擠
-                            position: 'right',
-                            offset: true
                         }
                     },
                     plugins: {
                         legend: {
-                            position: 'top',
-                            labels: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 創建體脂率圖表
+            const fatCtx = document.getElementById('fat-chart').getContext('2d');
+            fatChart = new Chart(fatCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '體脂率 (%)',
+                        data: fatRates,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 35,
+                            max: 45,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#e74c3c',
                                 font: {
-                                    size: 12,
                                     weight: 'bold'
-                                },
-                                padding: 20,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
+                                }
                             }
                         },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'rgba(0,0,0,0.7)',
-                            titleFont: {
-                                size: 12,
-                                weight: 'bold'
-                            },
-                            bodyFont: {
-                                size: 12
-                            },
-                            padding: 12,
-                            cornerRadius: 6
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
                         }
                     },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 創建肌肉量圖表
+            const muscleCtx = document.getElementById('muscle-chart').getContext('2d');
+            muscleChart = new Chart(muscleCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '肌肉量 (kg)',
+                        data: muscleMass,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 19.5,
+                            max: 20.3,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            ticks: {
+                                color: '#2ecc71',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
                     }
                 }
             });
@@ -1390,7 +1714,7 @@
                     weight: weight,
                     fat_rate: fatRate,
                     muscle_mass: muscleMass,
-                    is_locked: true, // 鎖定數據
+                    is_locked: true,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
@@ -1421,12 +1745,10 @@
                 console.log("體重記錄儲存成功:", weightResult);
 
                 // 計算今日積分
-                let dailyPoints = 0;
-                if (weight > 0 && hasDiet && hasShake) {
-                    dailyPoints += 1;
-                }
-                if (hasExercise) dailyPoints += 1;
-                if (hasShake) dailyPoints += 1;
+                let dailyPoints = POINTS_RULES.DAILY_CHECKIN; // 每日報到基礎分
+                if (hasShake) dailyPoints += POINTS_RULES.SHAKE;
+                if (hasExercise) dailyPoints += POINTS_RULES.EXERCISE;
+                if (hasDiet) dailyPoints += POINTS_RULES.DIET;
 
                 console.log("計算出的今日積分:", dailyPoints);
 
@@ -1437,8 +1759,7 @@
                     weight_recorded: weight > 0,
                     shake_used: hasShake,
                     exercise_done: hasExercise,
-                    social_shared: false,
-                    referral_made: false,
+                    diet_logged: hasDiet,
                     total_points: dailyPoints,
                     updated_at: new Date().toISOString()
                 };
@@ -1469,11 +1790,11 @@
                 lockDataInputs(true);
                 todayDataSubmitted = true;
                 
-                // 更新狀態訊息
-                showStatusMessage("✅ 今日數據已成功報到！數據已鎖定", "success");
+                // 重新載入用戶積分
+                await loadUserPoints(user.id);
                 
-                // 重新載入圖表
-                await loadPersonalProgressChart(user.id);
+                // 更新狀態訊息
+                showStatusMessage(`✅ 今日數據已成功報到！獲得 ${dailyPoints} 分`, "success");
                 
             } catch (error) {
                 console.error("儲存數據錯誤:", error);
@@ -1485,9 +1806,6 @@
         function requestModifyData() {
             if (confirm("上傳新的數據需要副隊長批准。\n\n確定要請求修改數據嗎？")) {
                 showStatusMessage("⚠️ 修改請求已發送，請等待副隊長批准", "warning");
-                
-                // 這裡可以添加發送請求給副隊長的邏輯
-                // 例如：發送通知到數據庫或通過其他方式通知副隊長
                 
                 // 暫時解鎖數據以便修改
                 setTimeout(() => {
@@ -1509,7 +1827,8 @@
         }
 
         // 用戶選單功能
-        function toggleUserMenu() {
+        function toggleUserMenu(event) {
+            if (event) event.stopPropagation();
             const dropdown = document.getElementById('user-menu-dropdown');
             dropdown.classList.toggle('active');
             
@@ -1523,7 +1842,7 @@
         
         function closeUserMenuOnClickOutside(event) {
             const dropdown = document.getElementById('user-menu-dropdown');
-            const userMenu = document.querySelector('.user-menu');
+            const userMenu = document.querySelector('.user-avatar-container');
             
             if (!userMenu.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.remove('active');
@@ -1539,6 +1858,16 @@
         
         function closeProfileSettings() {
             document.getElementById('profile-modal').classList.add('hidden');
+        }
+        
+        // 積分規則功能
+        function openPointsRules() {
+            document.getElementById('points-rules-modal').classList.remove('hidden');
+            document.getElementById('user-menu-dropdown').classList.remove('active');
+        }
+        
+        function closePointsRules() {
+            document.getElementById('points-rules-modal').classList.add('hidden');
         }
         
         // 預覽頭像
@@ -1664,7 +1993,7 @@
                 } else {
                     alert("✅ 設定已儲存！");
                     closeProfileSettings();
-                    location.reload(); // 重新載入以更新顯示狀態
+                    location.reload();
                 }
             } catch (error) {
                 console.error("更新個人資料錯誤:", error);
@@ -1734,41 +2063,32 @@
             location.reload();
         }
 
-        // 添加滾輪控制
+        // 防止誤觸的滾動控制
         document.addEventListener('DOMContentLoaded', function() {
-            const scrollBoxes = document.querySelectorAll('.scroll-input-box');
+            // 防止輸入框的滾動事件觸發頁面滾動
+            const inputBoxes = document.querySelectorAll('.input-box');
             
-            scrollBoxes.forEach(box => {
-                box.addEventListener('wheel', function(e) {
-                    if (isDataLocked) return;
-                    
-                    e.preventDefault();
-                    const type = this.id.replace('-box', '');
-                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                    adjustValue(type, delta);
-                });
-                
-                // 觸控設備支持
-                let touchStartY = 0;
-                
+            inputBoxes.forEach(box => {
                 box.addEventListener('touchstart', function(e) {
-                    if (isDataLocked) return;
-                    touchStartY = e.touches[0].clientY;
-                });
+                    e.stopPropagation();
+                }, { passive: false });
                 
                 box.addEventListener('touchmove', function(e) {
-                    if (isDataLocked) return;
                     e.preventDefault();
-                    const touchEndY = e.touches[0].clientY;
-                    const delta = touchStartY - touchEndY;
-                    
-                    if (Math.abs(delta) > 10) {
-                        const type = this.id.replace('-box', '');
-                        const change = delta > 0 ? 0.1 : -0.1;
-                        adjustValue(type, change);
-                        touchStartY = touchEndY;
-                    }
-                });
+                    e.stopPropagation();
+                }, { passive: false });
+            });
+            
+            // 防止快速點擊
+            const controlBtns = document.querySelectorAll('.control-btn');
+            controlBtns.forEach(btn => {
+                btn.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                    this.classList.add('disabled');
+                    setTimeout(() => {
+                        this.classList.remove('disabled');
+                    }, 300);
+                }, { passive: false });
             });
         });
     </script>
