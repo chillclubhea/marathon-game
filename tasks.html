@@ -52,7 +52,45 @@
 </head>
 <body>
     <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
-    
+    <!-- 在 tasks.html 的統計卡片後添加 -->
+<div class="task-card">
+    <div class="task-title">💰 積分獲取規則詳解</div>
+    <div class="task-desc">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div style="background: #e8f4fc; padding: 12px; border-radius: 8px;">
+                <div style="font-weight: bold; color: var(--primary); margin-bottom: 5px;">📅 每日任務</div>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                    <li>完成一圈（體重+飲食+Shake+直播）: <strong>+1分</strong></li>
+                    <li>使用Shake: <strong>+1分</strong></li>
+                    <li>完成運動: <strong>+1分</strong></li>
+                    <li><strong>每日上限: 3分</strong></li>
+                </ul>
+            </div>
+            
+            <div style="background: #f0e8fc; padding: 12px; border-radius: 8px;">
+                <div style="font-weight: bold; color: #9b59b6; margin-bottom: 5px;">🎁 特別任務</div>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                    <li>轉介紹朋友: <strong>+15分</strong></li>
+                    <li>邀請參加研討會: <strong>+2分</strong></li>
+                    <li>首次參加研討會: <strong>+2分</strong></li>
+                    <li>社交分享: <strong>+1分</strong></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 15px;">
+            <div style="font-weight: bold; color: #856404; margin-bottom: 5px;">🏆 連續獎勵</div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">
+                <li>連續7天完成: <strong>+5分</strong></li>
+                <li>連續30天完成: <strong>+20分</strong></li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 12px; color: #7f8c8d;">
+            💡 提示：積分用於兌換抽獎券（50積分換1張）和影響排行榜排名
+        </div>
+    </div>
+</div>
     <div class="container">
         <div class="header">
             <h1>✅ 馬拉松任務區</h1>
