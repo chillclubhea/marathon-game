@@ -307,55 +307,67 @@
             await loadAllData();
         });
         
-        async function loadAllData() {
-            try {
-                // 1. 加载体重记录数据
-                await loadWeightRecords();
-                
-                // 2. 加载团队数据
-                await loadTeamData();
-                
-                // 3. 加载个人积分数据
-                await loadPersonalPoints();
-                
-                // 4. 更新指标卡片
-                updateMetricCards();
-                
-            } catch (error) {
-                console.error('加载数据失败:', error);
-                showError('數據加載失敗，請檢查網絡連接或刷新頁面');
-            }
+       
+async function loadAllData() {
+    try {
+        // 先获取当前用户ID
+        const userId = await getCurrentUserId();
+        if (!userId) {
+            // 如果未获取到ID，直接返回，不执行后续查询
+            document.getElementById('dataTableContainer').innerHTML = `
+                <div class="error-state">
+                    <h3>🔒 需要登入</h3>
+                    <p>請先登入帳號以查看您的健康數據趨勢圖。</p>
+                    <button onclick="window.location.href='/login'" style="margin-top: 15px; padding: 10px 20px; background: #4361ee; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        前往登入頁面
+                    </button>
+                </div>
+            `;
+            return;
         }
         
-        async function loadWeightRecords() {
-            try {
-                // 获取当前用户ID（这里需要根据你的认证系统调整）
-                const userId = await getCurrentUserId();
-                if (!userId) {
-                    showError('未檢測到用戶登錄');
-                    return;
-                }
-                
-                // 查询最近30天的体重记录
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
-                const { data, error } = await supabase
-                    .from('weight_records')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
-                    .order('date', { ascending: true });
-                
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    renderMainChart(data);
-                    renderDataTable(data);
-                    window.weightData = data; // 存储数据供其他函数使用
-                } else {
-                    showEmptyState('暫無體重記錄數據，請開始記錄您的健康數據');
-                }
+        // 用户ID获取成功，继续加载数据
+        await loadWeightRecords(userId); // 将userId传递给后续函数
+        await loadTeamData();
+        await loadPersonalPoints(userId); // 也可以传递userId给个人积分函数
+        updateMetricCards();
+        
+    } catch (error) {
+        console.error('加載數據失敗:', error);
+        showError('數據加載失敗: ' + error.message);
+    }
+}
+
+        
+    async function loadWeightRecords(userId) {
+    try {
+        // 不再从函数内部调用 getCurrentUserId()
+        // 直接使用传入的 userId 参数
+        
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const { data, error } = await supabase
+            .from('weight_records')
+            .select('*')
+            .eq('user_id', userId) // 使用传入的真实用户ID
+            .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+            .order('date', { ascending: true });
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            renderMainChart(data);
+            renderDataTable(data);
+            window.weightData = data;
+        } else {
+            showEmptyState('暫無體重記錄數據，請開始記錄您的健康數據');
+        }
+    } catch (error) {
+        console.error('加載體重記錄失敗:', error);
+        showError('加載體重記錄失敗: ' + error.message);
+    }
+}
                 
             } catch (error) {
                 console.error('加载体重记录失败:', error);
@@ -510,43 +522,155 @@
             container.innerHTML = tableHTML;
         }
         
-        async function loadTeamData() {
-            try {
-                // 这里需要根据你的数据结构调整团队查询逻辑
-                const container = document.getElementById('teamRanking');
-                
-                // 示例团队数据 - 实际应从你的 teams 表获取
-                const teamData = [
-                    { name: '閃電隊', score: 1250, members: 5, trend: 'up' },
-                    { name: '疾風隊', score: 1180, members: 5, trend: 'down' },
-                    { name: '雷霆隊', score: 1100, members: 4, trend: 'up' },
-                    { name: '烈焰隊', score: 950, members: 5, trend: 'stable' }
-                ];
-                
-                let html = '';
-                teamData.forEach((team, index) => {
-                    const trendIcon = team.trend === 'up' ? '↗' : team.trend === 'down' ? '↘' : '→';
-                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-                    
-                    html += `
-                        <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee;">
-                            <div>
-                                <strong>${medal} ${team.name}</strong>
-                                <div style="font-size: 0.85rem; color: #666;">${team.members} 名成員</div>
-                            </div>
-                            <div style="text-align: right;">
-                                <strong>${team.score} 分</strong>
-                                <div style="font-size: 0.85rem; color: ${team.trend === 'up' ? '#06d6a0' : '#ef476f'}">
-                                    ${trendIcon} ${team.trend === 'up' ? '領先中' : '加油!'}
-                                </div>
-                            </div>
+      async function loadTeamData() {
+    try {
+        const container = document.getElementById('teamRanking');
+        
+        // 1. 首先获取所有团队的基本信息
+        const { data: teams, error: teamsError } = await supabase
+            .from('teams')
+            .select('id, team_name, captain_id')
+            .order('team_name');
+        
+        if (teamsError) throw teamsError;
+        
+        if (!teams || teams.length === 0) {
+            container.innerHTML = '<div class="empty-state">暫無團隊數據</div>';
+            return;
+        }
+        
+        // 2. 获取最近一周的积分数据 (示例: 从 daily_scores 表)
+        // 请根据你的实际数据结构调整此查询
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        // 这里假设有一个 daily_scores 表记录每日积分
+        // 你需要根据你的实际数据结构修改这个查询
+        const { data: scores, error: scoresError } = await supabase
+            .from('daily_scores')
+            .select('user_id, points, date, profiles(current_team_id)')
+            .gte('date', oneWeekAgo.toISOString().split('T')[0])
+            .order('date', { ascending: false });
+        
+        if (scoresError) {
+            console.warn('無法獲取積分數據，使用示例數據:', scoresError);
+            // 如果表不存在，回退到示例数据
+            displayExampleTeamRanking(container);
+            return;
+        }
+        
+        // 3. 计算每个团队的总积分
+        const teamScores = {};
+        
+        teams.forEach(team => {
+            teamScores[team.id] = {
+                name: team.team_name,
+                totalScore: 0,
+                memberCount: 0
+            };
+        });
+        
+        // 汇总积分到各个团队
+        if (scores && scores.length > 0) {
+            scores.forEach(score => {
+                const teamId = score.profiles?.current_team_id;
+                if (teamId && teamScores[teamId]) {
+                    teamScores[teamId].totalScore += score.points || 0;
+                }
+            });
+        }
+        
+        // 4. 获取每个团队的成员数量 (从 team_members 表)
+        const { data: memberCounts, error: countError } = await supabase
+            .from('team_members')
+            .select('team_id, count')
+            .group('team_id');
+        
+        if (!countError && memberCounts) {
+            memberCounts.forEach(item => {
+                if (teamScores[item.team_id]) {
+                    teamScores[item.team_id].memberCount = item.count;
+                }
+            });
+        }
+        
+        // 5. 将对象转换为数组并按积分排序
+        const teamRanking = Object.values(teamScores)
+            .filter(team => team.memberCount > 0) // 过滤掉没有成员的团队
+            .sort((a, b) => b.totalScore - a.totalScore);
+        
+        // 6. 显示团队排名
+        let html = '';
+        teamRanking.forEach((team, index) => {
+            const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+            const trend = index < 2 ? 'up' : 'stable';
+            const trendIcon = trend === 'up' ? '↗' : trend === 'down' ? '↘' : '→';
+            
+            html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; background: ${index < 3 ? '#f8f9ff' : 'transparent'}; border-radius: 8px; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 1.2rem; width: 30px;">${medal}</div>
+                        <div>
+                            <strong style="font-size: 1.1rem;">${team.name}</strong>
+                            <div style="font-size: 0.85rem; color: #666;">${team.memberCount} 名成員</div>
                         </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
-                
-            } catch (error) {
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="font-size: 1.2rem; color: #4361ee;">${team.totalScore} 分</strong>
+                        <div style="font-size: 0.85rem; color: ${trend === 'up' ? '#06d6a0' : trend === 'down' ? '#ef476f' : '#666'}">
+                            ${trendIcon} ${index === 0 ? '領先中' : index === 1 ? '緊追在後' : '繼續加油'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if (teamRanking.length === 0) {
+            html = '<div class="empty-state">本週暫無團隊積分數據</div>';
+        }
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('加載團隊數據失敗:', error);
+        document.getElementById('teamRanking').innerHTML = 
+            `<div class="error-state">無法加載團隊數據: ${error.message}</div>`;
+    }
+}
+
+// 备用函数：如果查询真实数据失败，显示示例数据
+function displayExampleTeamRanking(container) {
+    const teamData = [
+        { name: '閃電隊', score: 1250, members: 5, trend: 'up' },
+        { name: '疾風隊', score: 1180, members: 5, trend: 'down' },
+        { name: '雷霆隊', score: 1100, members: 4, trend: 'up' },
+        { name: '烈焰隊', score: 950, members: 5, trend: 'stable' }
+    ];
+    
+    let html = '<p style="color: #666; margin-bottom: 10px; font-size: 0.9rem;"><em>⚠️ 示例數據 - 請配置您的積分系統</em></p>';
+    
+    teamData.forEach((team, index) => {
+        const trendIcon = team.trend === 'up' ? '↗' : team.trend === 'down' ? '↘' : '→';
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        
+        html += `
+            <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee;">
+                <div>
+                    <strong>${medal} ${team.name}</strong>
+                    <div style="font-size: 0.85rem; color: #666;">${team.members} 名成員</div>
+                </div>
+                <div style="text-align: right;">
+                    <strong>${team.score} 分</strong>
+                    <div style="font-size: 0.85rem; color: ${team.trend === 'up' ? '#06d6a0' : '#ef476f'}">
+                        ${trendIcon} ${team.trend === 'up' ? '領先中' : '加油!'}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+} catch (error) {
                 console.error('加载团队数据失败:', error);
                 document.getElementById('teamRanking').innerHTML = 
                     `<div class="error-state">無法加載團隊數據</div>`;
@@ -640,12 +764,31 @@
         }
         
         // 辅助函数
-        async function getCurrentUserId() {
-            // 这里需要根据你的认证系统获取当前用户ID
-            // 示例：从本地存储或Supabase会话获取
-            // 返回一个示例用户ID，实际使用时请替换
-            return 'd4a01a80-e882-4b65-8ea8-2cfda8b0b320';
+      // 修改后 (动态获取当前会话用户):
+async function getCurrentUserId() {
+    try {
+        // 1. 尝试从 Supabase 认证会话中获取当前用户
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+            console.error('获取会话失败:', error);
+            return null;
         }
+        
+        // 2. 如果用户已登录，返回其唯一ID
+        if (session && session.user) {
+            return session.user.id;
+        } else {
+            // 3. 用户未登录，显示提示
+            showError('請先登入以查看您的個人數據');
+            return null;
+        }
+    } catch (err) {
+        console.error('获取用户ID异常:', err);
+        return null;
+    }
+}
+        
         
         function showError(message) {
             const container = document.getElementById('dataTableContainer');
