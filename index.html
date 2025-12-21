@@ -638,6 +638,52 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- 在頁面底部添加 -->
+<div class="quick-links">
+    <h4>快速訪問</h4>
+    <div class="link-grid">
+        <a href="/">🏠 首頁</a>
+        <a href="chart.html">📈 數據圖表</a>
+        <a href="viewport.html">⚙️ 數據調試</a>
+        <a href="/profile">👤 個人資料</a>
+    </div>
+</div>
+
+<!-- 樣式 -->
+<style>
+    .quick-links {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 30px;
+    }
+    
+    .link-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .link-grid a {
+        display: block;
+        padding: 12px;
+        background: white;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #4361ee;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s;
+    }
+    
+    .link-grid a:hover {
+        background: #4361ee;
+        color: white;
+        border-color: #4361ee;
+    }
+</style>
                     `;
                 } catch (err) {
                     console.error(`處理成員 ${member.id} 數據時出錯:`, err);
