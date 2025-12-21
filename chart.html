@@ -294,6 +294,19 @@
     </div>
 
     <script>
+
+        // 复制并粘贴到控制台，按回车执行
+const supabaseUrl = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// 测试获取当前会话
+supabase.auth.getSession().then(({ data: { session }, error }) => {
+    if(error) console.error('获取会话出错:', error);
+    else if(session) console.log('当前登录用户ID:', session.user.id);
+    else console.warn('❌ 当前无登录会话，请先登录。');
+});
+        
         // 初始化 Supabase 客户端
         const supabaseUrl = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
