@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 團隊數據管理</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .card h2 {
+            color: #4f46e5;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+        }
+        
+        .btn-success {
+            background: #10b981;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .result-container {
+            margin-top: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+        
+        pre {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .error {
+            color: #ef4444;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .success {
+            color: #10b981;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 30px;
+        }
+        
+        .instructions {
+            background: #e0e7ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Supabase 團隊數據管理</h1>
+            <p class="subtitle">檢查和修復團隊成員查詢問題</p>
+        </header>
+        
+        <div class="main-content">
+            <!-- 左側：檢查數據庫結構 -->
+            <div class="card">
+                <h2>1. 檢查數據庫結構</h2>
+                <div class="instructions">
+                    <p>首先檢查數據庫表結構，確認字段名稱和關係。</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="supabase">Supabase URL:</label>
+                    <input type="text" id="supabaseUrl" placeholder="https://your-project.supabase.co" value="https://sdloakutxcsbshcqpxwn.supabase.co">
+                </div>
+                
+                <div class="form-group">
+                    <label for="supabaseKey">Supabase Anon Key:</label>
+                    <input type="password" id="supabaseKey" placeholder="你的匿名密鑰">
+                </div>
+                
+                <button class="btn" onclick="checkDatabaseStructure()">檢查數據庫結構</button>
+                <button class="btn btn-secondary" onclick="testProfilesQuery()">測試 Profiles 查詢</button>
+                
+                <div class="loading" id="loading1">
+                    <div class="loading-spinner"></div>
+                    檢查中...
+                </div>
+                
+                <div id="structureResult" class="result-container"></div>
+            </div>
+            
+            <!-- 右側：團隊成員管理 -->
+            <div class="card">
+                <h2>2. 團隊成員查詢與測試</h2>
+                <div class="instructions">
+                    <p>由於 team_members 表是空的，這裡提供幾種測試方案。</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teamId">團隊 ID:</label>
+                    <input type="text" id="teamId" value="1780c31e-c226-4814-b087-5f339b7ba016">
+                </div>
+                
+                <button class="btn" onclick="testTeamQuery()">測試團隊查詢</button>
+                <button class="btn btn-success" onclick="createTestData()">創建測試數據</button>
+                <button class="btn btn-danger" onclick="clearTestData()">清除測試數據</button>
+                
+                <div class="loading" id="loading2">
+                    <div class="loading-spinner"></div>
+                    處理中...
+                </div>
+                
+                <div id="teamResult" class="result-container"></div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin: 0 30px 30px;">
+            <h2>3. 問題診斷與解決方案</h2>
+            <div class="instructions">
+                <p><strong>當前問題：</strong> profiles 表中沒有 team_id 字段，team_members 表是空的。</p>
+                <p><strong>解決方案：</strong></p>
+                <ol>
+                    <li>檢查 team_members 表的字段結構</li>
+                    <li>創建測試團隊和成員數據</li>
+                    <li>使用正確的查詢方式（通過 team_members 表連接）</li>
+                </ol>
+            </div>
+            
+            <div class="form-group">
+                <label for="customQuery">自定義查詢 (SQL):</label>
+                <textarea id="customQuery" rows="4">SELECT * FROM team_members LIMIT 10;</textarea>
+            </div>
+            
+            <button class="btn" onclick="runCustomQuery()">執行自定義查詢</button>
+            
+            <div id="customResult" class="result-container"></div>
+        </div>
+        
+        <footer>
+            <p>Supabase 團隊數據管理工具 &copy; 2024</p>
+            <p>注意：請妥善保管你的 Supabase 密鑰，僅在測試環境中使用</p>
+        </footer>
+    </div>
+
+    <script>
+        let supabaseClient = null;
+        
+        // 初始化 Supabase 客戶端
+        function initSupabase() {
+            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+            const supabaseKey = document.getElementById('supabaseKey').value.trim();
+            
+            if (!supabaseUrl || !supabaseKey) {
+                alert('請填寫 Supabase URL 和 Anon Key');
+                return false;
+            }
+            
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            return true;
+        }
+        
+        // 檢查數據庫結構
+        async function checkDatabaseStructure() {
+            if (!initSupabase()) return;
+            
+            const loading = document.getElementById('loading1');
+            const resultDiv = document.getElementById('structureResult');
+            
+            loading.classList.add('active');
+            resultDiv.innerHTML = '';
+            
+            try {
+                // 檢查 profiles 表結構
+                const { data: profilesColumns, error: profilesError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .limit(1);
+                
+                if (profilesError) throw profilesError;
+                
+                // 檢查 team_members 表結構
+                const { data: teamMembersColumns, error: tmError } = await supabaseClient
+                    .from('team_members')
+                    .select('*')
+                    .limit(1);
+                
+                if (tmError) {
+                    // 如果表是空的，嘗試獲取表結構信息
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p><strong>team_members 表查詢錯誤:</strong> ${tmError.message}</p>
+                            <p>可能是表結構不同或完全為空</p>
+                        </div>
+                    `;
+                }
+                
+                // 獲取表名列表
+                const { data: tables, error: tablesError } = await supabaseClient
+                    .from('information_schema.tables')
+                    .select('table_name')
+                    .eq('table_schema', 'public');
+                
+                // 顯示結果
+                let html = `
+                    <div class="result-title">數據庫結構分析</div>
+                    <div class="success">
+                        <p><strong>✓ Supabase 連接成功</strong></p>
+                        <p>URL: ${document.getElementById('supabaseUrl').value}</p>
+                    </div>
+                `;
+                
+                if (profilesColumns && profilesColumns.length > 0) {
+                    html += `
+                        <div class="success" style="margin-top: 15px;">
+                            <p><strong>profiles 表結構 (示例記錄):</strong></p>
+                            <pre>${JSON.stringify(profilesColumns[0], null, 2)}</pre>
+                        </div>
+                    `;
+                    
+                    // 分析 profiles 表字段
+                    const profileFields = Object.keys(profilesColumns[0]);
+                    const hasTeamField = profileFields.some(field => 
+                        field.includes('team') || field.includes('group')
+                    );
+                    
+                    html += `
+                        <div class="${hasTeamField ? 'success' : 'error'}" style="margin-top: 15px;">
+                            <p><strong>profiles 表分析:</strong></p>
+                            <p>字段列表: ${profileFields.join(', ')}</p>
+                            <p>是否有團隊相關字段: ${hasTeamField ? '是' : '否'}</p>
+                        </div>
+                    `;
+                }
+                
+                if (teamMembersColumns && teamMembersColumns.length > 0) {
+                    html += `
+                        <div class="success" style="margin-top: 15px;">
+                            <p><strong>team_members 表結構 (示例記錄):</strong></p>
+                            <pre>${JSON.stringify(teamMembersColumns[0], null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="error" style="margin-top: 15px;">
+                            <p><strong>team_members 表:</strong> 表中沒有數據或無法訪問</p>
+                            <p>請創建測試數據或檢查表權限</p>
+                        </div>
+                    `;
+                }
+                
+                if (tables && !tablesError) {
+                    const tableNames = tables.map(t => t.table_name).sort();
+                    html += `
+                        <div style="margin-top: 15px;">
+                            <p><strong>數據庫中的表:</strong></p>
+                            <pre>${tableNames.join('\n')}</pre>
+                        </div>
+                    `;
+                }
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <p><strong>檢查數據庫結構時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                        <p>請確認 URL 和密鑰是否正確</p>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 測試 profiles 查詢
+        async function testProfilesQuery() {
+            if (!initSupabase()) return;
+            
+            const loading = document.getElementById('loading1');
+            const resultDiv = document.getElementById('structureResult');
+            
+            loading.classList.add('active');
+            resultDiv.innerHTML = '<div class="result-title">測試 Profiles 查詢</div>';
+            
+            try {
+                // 嘗試原始錯誤的查詢
+                const teamId = document.getElementById('teamId').value;
+                
+                resultDiv.innerHTML += `<p>嘗試查詢: profiles?select=id,full_name,avatar_url,role&team_id=eq.${teamId}</p>`;
+                
+                const { data, error } = await supabaseClient
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, role')
+                    .eq('team_id', teamId);
+                
+                if (error) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p><strong>使用 team_id 查詢失敗:</strong></p>
+                            <pre>${error.message}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="success">
+                            <p><strong>查詢成功！找到 ${data.length} 條記錄</strong></p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+                // 嘗試另一種可能
+                resultDiv.innerHTML += `<p style="margin-top: 20px;">嘗試查詢: profiles?select=id,full_name,avatar_url,role&team=eq.${teamId}</p>`;
+                
+                const { data: data2, error: error2 } = await supabaseClient
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, role')
+                    .eq('team', teamId);
+                
+                if (error2) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p><strong>使用 team 查詢失敗:</strong></p>
+                            <pre>${error2.message}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="success">
+                            <p><strong>查詢成功！找到 ${data2.length} 條記錄</strong></p>
+                            <pre>${JSON.stringify(data2, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+                // 嘗試獲取所有 profiles
+                const { data: allProfiles, error: allError } = await supabaseClient
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, role')
+                    .limit(5);
+                
+                if (!allError) {
+                    resultDiv.innerHTML += `
+                        <div style="margin-top: 20px;">
+                            <p><strong>所有用戶 (前5個):</strong></p>
+                            <pre>${JSON.stringify(allProfiles, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <div class="error">
+                        <p><strong>測試查詢時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 測試團隊查詢
+        async function testTeamQuery() {
+            if (!initSupabase()) return;
+            
+            const loading = document.getElementById('loading2');
+            const resultDiv = document.getElementById('teamResult');
+            const teamId = document.getElementById('teamId').value;
+            
+            loading.classList.add('active');
+            resultDiv.innerHTML = '<div class="result-title">團隊查詢測試</div>';
+            
+            try {
+                // 方法1: 通過 team_members 表連接查詢
+                resultDiv.innerHTML += `<p><strong>方法1: 通過 team_members 表連接查詢</strong></p>`;
+                
+                const { data: teamMembers, error: tmError } = await supabaseClient
+                    .from('team_members')
+                    .select(`
+                        id,
+                        team_id,
+                        user_id,
+                        profiles:user_id (id, full_name, avatar_url, role)
+                    `)
+                    .eq('team_id', teamId);
+                
+                if (tmError) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>連接查詢失敗: ${tmError.message}</p>
+                            <p>嘗試直接查詢 team_members 表...</p>
+                        </div>
+                    `;
+                    
+                    // 嘗試直接查詢 team_members
+                    const { data: directTm, error: directError } = await supabaseClient
+                        .from('team_members')
+                        .select('*')
+                        .eq('team_id', teamId);
+                    
+                    if (directError) {
+                        resultDiv.innerHTML += `
+                            <div class="error">
+                                <p>直接查詢也失敗: ${directError.message}</p>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML += `
+                            <div class="${directTm.length > 0 ? 'success' : 'error'}">
+                                <p>直接查詢 team_members 表: 找到 ${directTm.length} 條記錄</p>
+                                <pre>${JSON.stringify(directTm, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="${teamMembers.length > 0 ? 'success' : 'error'}">
+                            <p>通過 team_members 連接查詢: 找到 ${teamMembers.length} 個團隊成員</p>
+                            <pre>${JSON.stringify(teamMembers, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+                // 方法2: 分兩步查詢
+                resultDiv.innerHTML += `<p style="margin-top: 20px;"><strong>方法2: 分兩步查詢</strong></p>`;
+                
+                // 第一步: 獲取 team_members 中的 user_id
+                const { data: memberIds, error: step1Error } = await supabaseClient
+                    .from('team_members')
+                    .select('user_id')
+                    .eq('team_id', teamId);
+                
+                if (step1Error) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>第一步失敗: ${step1Error.message}</p>
+                        </div>
+                    `;
+                } else if (memberIds.length === 0) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>團隊 ${teamId} 中沒有成員</p>
+                            <p>請先創建測試數據</p>
+                        </div>
+                    `;
+                } else {
+                    // 第二步: 根據 user_id 獲取 profiles
+                    const userIds = memberIds.map(m => m.user_id);
+                    
+                    const { data: memberProfiles, error: step2Error } = await supabaseClient
+                        .from('profiles')
+                        .select('id, full_name, avatar_url, role')
+                        .in('id', userIds);
+                    
+                    if (step2Error) {
+                        resultDiv.innerHTML += `
+                            <div class="error">
+                                <p>第二步失敗: ${step2Error.message}</p>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML += `
+                            <div class="success">
+                                <p>分兩步查詢成功: 找到 ${memberProfiles.length} 個團隊成員</p>
+                                <pre>${JSON.stringify(memberProfiles, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // 檢查 teams 表
+                resultDiv.innerHTML += `<p style="margin-top: 20px;"><strong>檢查 teams 表</strong></p>`;
+                
+                const { data: teams, error: teamsError } = await supabaseClient
+                    .from('teams')
+                    .select('*')
+                    .eq('id', teamId);
+                
+                if (teamsError) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>查詢 teams 表失敗: ${teamsError.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="${teams.length > 0 ? 'success' : 'error'}">
+                            <p>teams 表查詢: 找到 ${teams.length} 個匹配的團隊</p>
+                            <pre>${JSON.stringify(teams, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <div class="error">
+                        <p><strong>測試團隊查詢時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 創建測試數據
+        async function createTestData() {
+            if (!initSupabase()) return;
+            
+            if (!confirm('這將創建測試團隊和成員數據。確定繼續嗎？')) return;
+            
+            const loading = document.getElementById('loading2');
+            const resultDiv = document.getElementById('teamResult');
+            
+            loading.classList.add('active');
+            resultDiv.innerHTML = '<div class="result-title">創建測試數據</div>';
+            
+            try {
+                const teamId = document.getElementById('teamId').value;
+                
+                // 1. 先檢查團隊是否存在
+                const { data: existingTeams, error: checkError } = await supabaseClient
+                    .from('teams')
+                    .select('id, name')
+                    .eq('id', teamId);
+                
+                let teamExists = false;
+                
+                if (!checkError && existingTeams && existingTeams.length > 0) {
+                    teamExists = true;
+                    resultDiv.innerHTML += `
+                        <div class="success">
+                            <p>團隊已存在: ${existingTeams[0].name} (${existingTeams[0].id})</p>
+                        </div>
+                    `;
+                }
+                
+                // 2. 如果團隊不存在，創建一個
+                if (!teamExists) {
+                    resultDiv.innerHTML += `<p>創建新團隊...</p>`;
+                    
+                    const { data: newTeam, error: teamError } = await supabaseClient
+                        .from('teams')
+                        .insert([
+                            {
+                                id: teamId,
+                                name: '測試團隊',
+                                description: '這是創建的測試團隊',
+                                created_at: new Date().toISOString()
+                            }
+                        ])
+                        .select();
+                    
+                    if (teamError) {
+                        resultDiv.innerHTML += `
+                            <div class="error">
+                                <p>創建團隊失敗: ${teamError.message}</p>
+                                <p>嘗試使用現有團隊...</p>
+                            </div>
+                        `;
+                        
+                        // 嘗試獲取第一個團隊
+                        const { data: firstTeam, error: firstError } = await supabaseClient
+                            .from('teams')
+                            .select('id, name')
+                            .limit(1);
+                        
+                        if (!firstError && firstTeam && firstTeam.length > 0) {
+                            document.getElementById('teamId').value = firstTeam[0].id;
+                            resultDiv.innerHTML += `
+                                <div class="success">
+                                    <p>使用現有團隊: ${firstTeam[0].name} (${firstTeam[0].id})</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        resultDiv.innerHTML += `
+                            <div class="success">
+                                <p>團隊創建成功: ${newTeam[0].name}</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // 3. 獲取一些用戶來添加到團隊
+                resultDiv.innerHTML += `<p>獲取用戶添加到團隊...</p>`;
+                
+                const { data: profiles, error: profilesError } = await supabaseClient
+                    .from('profiles')
+                    .select('id, full_name')
+                    .limit(3);
+                
+                if (profilesError || !profiles || profiles.length === 0) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>無法獲取用戶: ${profilesError ? profilesError.message : '沒有找到用戶'}</p>
+                            <p>請先確保 profiles 表中有數據</p>
+                        </div>
+                    `;
+                } else {
+                    // 4. 將用戶添加到 team_members
+                    const teamMembersData = profiles.map(profile => ({
+                        team_id: document.getElementById('teamId').value,
+                        user_id: profile.id,
+                        role: 'member',
+                        joined_at: new Date().toISOString()
+                    }));
+                    
+                    resultDiv.innerHTML += `<p>將 ${profiles.length} 個用戶添加到團隊...</p>`;
+                    
+                    const { data: newMembers, error: membersError } = await supabaseClient
+                        .from('team_members')
+                        .insert(teamMembersData)
+                        .select();
+                    
+                    if (membersError) {
+                        resultDiv.innerHTML += `
+                            <div class="error">
+                                <p>添加團隊成員失敗: ${membersError.message}</p>
+                                <p>可能原因:</p>
+                                <ol>
+                                    <li>team_members 表結構不同（字段名稱不一樣）</li>
+                                    <li>權限問題</li>
+                                    <li>表不存在或名稱不正確</li>
+                                </ol>
+                                <p>請檢查數據庫結構後重試</p>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML += `
+                            <div class="success">
+                                <p>成功創建 ${newMembers.length} 個團隊成員！</p>
+                                <p>現在可以測試團隊查詢功能了。</p>
+                                <pre>${JSON.stringify(newMembers, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <div class="error">
+                        <p><strong>創建測試數據時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 清除測試數據
+        async function clearTestData() {
+            if (!initSupabase()) return;
+            
+            if (!confirm('這將刪除測試團隊成員數據。確定繼續嗎？')) return;
+            
+            const loading = document.getElementById('loading2');
+            const resultDiv = document.getElementById('teamResult');
+            
+            loading.classList.add('active');
+            resultDiv.innerHTML = '<div class="result-title">清除測試數據</div>';
+            
+            try {
+                const teamId = document.getElementById('teamId').value;
+                
+                // 刪除 team_members 中的測試數據
+                const { error: deleteError } = await supabaseClient
+                    .from('team_members')
+                    .delete()
+                    .eq('team_id', teamId);
+                
+                if (deleteError) {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>刪除團隊成員失敗: ${deleteError.message}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="success">
+                            <p>已清除團隊 ${teamId} 的所有成員</p>
+                            <p>team_members 表現在應該是空的</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <div class="error">
+                        <p><strong>清除測試數據時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+        
+        // 執行自定義查詢
+        async function runCustomQuery() {
+            if (!initSupabase()) return;
+            
+            const query = document.getElementById('customQuery').value.trim();
+            if (!query) {
+                alert('請輸入查詢語句');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('customResult');
+            resultDiv.innerHTML = '<div class="result-title">自定義查詢結果</div>';
+            
+            try {
+                // 注意：這只是一個簡單的實現，實際上 Supabase JS 客戶端不支持直接執行 SQL
+                // 這裡我們嘗試根據查詢類型執行對應的操作
+                
+                if (query.toLowerCase().includes('select')) {
+                    // 嘗試解析表名
+                    const tableMatch = query.match(/from\s+(\w+)/i);
+                    if (tableMatch) {
+                        const tableName = tableMatch[1];
+                        
+                        // 簡單的 SELECT 查詢
+                        const { data, error } = await supabaseClient
+                            .from(tableName)
+                            .select('*')
+                            .limit(10);
+                        
+                        if (error) {
+                            resultDiv.innerHTML += `
+                                <div class="error">
+                                    <p>查詢失敗: ${error.message}</p>
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.innerHTML += `
+                                <div class="success">
+                                    <p>查詢成功: 找到 ${data.length} 條記錄</p>
+                                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        resultDiv.innerHTML += `
+                            <div class="error">
+                                <p>無法解析表名，請使用簡單的 SELECT 語句如: SELECT * FROM table_name</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultDiv.innerHTML += `
+                        <div class="error">
+                            <p>此工具僅支持簡單的 SELECT 查詢測試</p>
+                            <p>複雜查詢請使用 Supabase SQL Editor</p>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML += `
+                    <div class="error">
+                        <p><strong>執行自定義查詢時出錯:</strong></p>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        // 頁面加載時顯示使用說明
+        window.onload = function() {
+            const resultDiv = document.getElementById('structureResult');
+            resultDiv.innerHTML = `
+                <div class="instructions">
+                    <p><strong>使用說明:</strong></p>
+                    <ol>
+                        <li>填寫你的 Supabase URL 和 Anon Key</li>
+                        <li>點擊「檢查數據庫結構」了解當前數據庫狀況</li>
+                        <li>如果 team_members 表是空的，點擊「創建測試數據」</li>
+                        <li>使用「測試團隊查詢」驗證問題是否解決</li>
+                    </ol>
+                    <p><strong>注意:</strong> 請確保 Supabase 項目設置中的 CORS 已包含當前域名</p>
+                </div>
+            `;
+        };
+    </script>
+</body>
+</html>
