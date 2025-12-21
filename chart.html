@@ -155,6 +155,61 @@
     </style>
 </head>
 <body>
+
+    <!-- 在 chart.html 的 <body> 開頭添加 -->
+<div class="global-nav">
+    <div class="nav-container">
+        <a href="/" class="nav-home">🏠 返回首頁</a>
+        <a href="/viewport.html" class="nav-debug">🐛 數據調試工具</a>
+        <span class="nav-title">📈 健康數據儀表板</span>
+    </div>
+</div>
+
+<!-- 在 <style> 部分添加以下 CSS -->
+<style>
+    /* 全局導航欄 */
+    .global-nav {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        color: white;
+        padding: 15px 0;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .nav-home, .nav-debug {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.1);
+        transition: all 0.3s;
+        font-size: 0.95rem;
+    }
+    
+    .nav-home:hover, .nav-debug:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateY(-2px);
+    }
+    
+    .nav-title {
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    /* 調整 header 的 margin-top */
+    header {
+        margin-top: 0; /* 因為導航欄已經有間距 */
+    }
+</style>
     <div class="container">
         <header>
             <h1>📈 我的健康數據趨勢</h1>
