@@ -488,7 +488,7 @@ const { data: profiles, error: pError } = await supabase
                 
                 // 檢查 teams 表
                 const { data: teamsData, error: teamsError } = await supabaseClient
-                    .from('teams')
+                    .from('"Teams"')
                     .select('id, name')
                     .limit(3);
                 
@@ -514,6 +514,49 @@ const { data: profiles, error: pError } = await supabase
                 loading.classList.remove('active');
             }
         }
+
+        async function testProfilesQuery() {
+    if (!initSupabase()) return;
+
+    const loading = document.getElementById('loading1');
+    const resultDiv = document.getElementById('structureResult');
+
+    loading.classList.add('active');
+    resultDiv.innerHTML = '<div class="result-title">测试原始错误查询</div>';
+
+    try {
+        const teamId = document.getElementById('teamId').value;
+
+        // 测试1: 使用错误的字段 'team_id' 查询（这将失败）
+        resultDiv.innerHTML += `<p><strong>测试1 (错误查询):</strong> 使用 'team_id' 字段查询</p>`;
+        const { data: data1, error: error1 } = await supabaseClient
+            .from('profiles')
+            .select('id, full_name, avatar_url, role')
+            .eq('team_id', teamId); // profiles 表中没有 team_id 字段
+
+        if (error1) {
+            resultDiv.innerHTML += `<div class="error"><p>预期中的失败: ${error1.message}</p></div>`;
+        }
+
+        // 测试2: 使用正确的字段 'current_team_id' 查询（这应该成功）
+        resultDiv.innerHTML += `<p style="margin-top:20px"><strong>测试2 (正确查询):</strong> 使用 'current_team_id' 字段查询</p>`;
+        const { data: data2, error: error2 } = await supabaseClient
+            .from('profiles')
+            .select('id, full_name, avatar_url, role, current_team_id')
+            .eq('current_team_id', teamId); // 使用正确的字段
+
+        if (error2) {
+            resultDiv.innerHTML += `<div class="error"><p>查询失败: ${error2.message}</p></div>`;
+        } else {
+            resultDiv.innerHTML += `<div class="success"><p>查询成功！找到 ${data2.length} 个团队成员。</p><pre>${JSON.stringify(data2, null, 2)}</pre></div>`;
+        }
+
+    } catch (error) {
+        resultDiv.innerHTML += `<div class="error"><p>函数执行出错: ${error.message}</p></div>`;
+    } finally {
+        loading.classList.remove('active');
+    }
+}
         
         // 測試使用 current_team_id 查詢
         async function testCurrentTeamIdQuery() {
@@ -715,7 +758,7 @@ const { data: profiles, error: pError } = await supabase
                 
                 // 1. 檢查/創建團隊
                 const { data: existingTeams, error: checkError } = await supabaseClient
-                    .from('teams')
+                    .from('"Teams"')
                     .select('id, name')
                     .eq('id', teamId);
                 
@@ -735,7 +778,7 @@ const { data: profiles, error: pError } = await supabase
                     resultDiv.innerHTML += `<p>創建新團隊...</p>`;
                     
                     const { data: newTeam, error: teamError } = await supabaseClient
-                        .from('teams')
+                        .from('"Teams"')
                         .insert([
                             {
                                 id: teamId,
