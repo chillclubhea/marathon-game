@@ -489,7 +489,7 @@ const { data: profiles, error: pError } = await supabase
                 // 檢查 teams 表
                 const { data: teamsData, error: teamsError } = await supabaseClient
                     .from('"Teams"')
-                    .select('id, name')
+                    .select('id, team_name')
                     .limit(3);
                 
                 if (!teamsError && teamsData && teamsData.length > 0) {
