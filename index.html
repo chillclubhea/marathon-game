@@ -828,25 +828,19 @@
     <script>
         // 使用立即執行函數來避免變數重複聲明
         (function() {
-            // Supabase配置 - 請替換為您自己的Supabase項目URL和匿名密鑰
-            // 從Supabase項目設置中獲取這些資訊：
-            // 1. 進入Supabase項目
-            // 2. 點擊Settings -> API
-            // 3. 找到Project URL和anon/public key
-            
-            // 請用您自己的Supabase項目URL替換下面的值
-            const SUPABASE_URL = 'https://yoursupabaseproject.supabase.co'; // 替換為您的Supabase URL
-            
-            // 請用您自己的Supabase匿名密鑰替換下面的值
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // 替換為您的匿名密鑰
+            // Supabase配置
+            const SUPABASE_URL = 'https://your-project.supabase.co'; // 請替換為您的Supabase URL
+            const SUPABASE_ANON_KEY = 'your-anon-key'; // 請替換為您的Supabase匿名密鑰
             
             // 初始化Supabase - 只聲明一次
-            let supabaseClient;
+            let supabaseClient = null;
             try {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                if (window.supabase) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('Supabase客戶端初始化成功');
+                }
             } catch (error) {
                 console.error('Supabase初始化失敗:', error);
-                supabaseClient = null;
             }
             
             // 認證管理
@@ -920,6 +914,21 @@
                     return this.currentUser;
                 }
                 
+                // 登入
+                async login(email, password) {
+                    try {
+                        // 先嘗試Supabase登入
+                        if (supabaseClient) {
+                            return await this.supabaseLogin(email, password);
+                        }
+                    } catch (supabaseError) {
+                        console.log('Supabase登入失敗，使用本地模式:', supabaseError);
+                    }
+                    
+                    // 如果Supabase失敗，使用本地模式
+                    return await this.simpleLogin(email, password);
+                }
+                
                 // Supabase登入
                 async supabaseLogin(email, password) {
                     if (!supabaseClient) {
@@ -990,18 +999,6 @@
                     }
                 }
                 
-                // 登入（嘗試Supabase，如果失敗則使用本地）
-                async login(email, password) {
-                    try {
-                        // 先嘗試Supabase登入
-                        return await this.supabaseLogin(email, password);
-                    } catch (supabaseError) {
-                        console.log('Supabase登入失敗，使用本地模式:', supabaseError);
-                        // 如果Supabase失敗，使用本地模式
-                        return await this.simpleLogin(email, password);
-                    }
-                }
-                
                 // 註冊
                 async signup(email, password) {
                     return await this.login(email, password); // 簡化處理，與登入相同
@@ -1051,7 +1048,6 @@
             const welcomeMessage = document.getElementById('welcome-message');
             const countdownTimer = document.getElementById('countdown-timer');
             const currentDay = document.getElementById('current-day');
-            const dayBadge = document.getElementById('day-badge');
             const userAvatarBtn = document.getElementById('user-avatar-btn');
             const userMenuDropdown = document.getElementById('user-menu-dropdown');
             const emailError = document.getElementById('email-error');
@@ -1082,15 +1078,6 @@
                 
                 // 設定事件監聽器
                 setupEventListeners();
-                
-                // 添加Enter鍵登入功能
-                document.getElementById('email').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') handleLogin();
-                });
-                
-                document.getElementById('password').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') handleLogin();
-                });
             });
             
             // 檢查並導向頁面
@@ -1200,7 +1187,8 @@
                 // 登入相關按鈕
                 loginBtn.addEventListener('click', handleLogin);
                 signupBtn.addEventListener('click', handleSignup);
-                logoutBtn.addEventListener('click', logout);
+                logoutBtn.addEventListener('click', handleLogout);
+                logoutMenuBtn.addEventListener('click', handleLogout);
                 
                 // 用戶菜單按鈕
                 personalSettingsBtn.addEventListener('click', openPersonalSettings);
@@ -1208,7 +1196,6 @@
                 leaderboardBtn.addEventListener('click', openLeaderboard);
                 pointsRulesBtn.addEventListener('click', openPointsRules);
                 scheduleBtn.addEventListener('click', openSchedule);
-                logoutMenuBtn.addEventListener('click', logout);
                 
                 // 加減按鈕事件
                 document.querySelectorAll('.control-btn').forEach(btn => {
@@ -1232,6 +1219,15 @@
                     if (!userAvatarBtn.contains(event.target) && !userMenuDropdown.contains(event.target)) {
                         userMenuDropdown.classList.remove('show');
                     }
+                });
+                
+                // Enter鍵登入功能
+                document.getElementById('email').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleLogin();
+                });
+                
+                document.getElementById('password').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleLogin();
                 });
             }
             
@@ -1458,7 +1454,7 @@
             }
             
             // 登出
-            function logout() {
+            function handleLogout() {
                 if (confirm('確定要登出嗎？')) {
                     authManager.logout();
                     showAuthSection();
@@ -1657,19 +1653,19 @@
                 userMenuDropdown.classList.remove('show');
                 const day = authManager.getCurrentDay();
                 const schedule = `
-每一屆馬拉松時間表：
-第1屆：2024年1月1日 - 2024年3月31日
-第2屆：2024年4月1日 - 2024年6月30日
-第3屆：2024年7月1日 - 2024年9月30日
-第4屆：2024年10月1日 - 2024年12月31日
-第5屆：2025年1月1日 - 2025年3月31日
-第6屆：2025年4月1日 - 2025年6月30日
-第7屆：2025年7月1日 - 2025年9月30日
-第8屆：2025年10月1日 - 2025年12月31日
-第9屆：2026年1月1日 - 2026年3月31日
-第10屆：2026年4月1日 - 2026年6月30日
-第11屆：2026年7月1日 - 2026年9月30日
-第12屆：2026年10月1日 - 2026年12月31日
+每一屆馬拉松時間表 (每屆10天)：
+第1屆：2026年1月1日 - 2026年1月10日
+第2屆：2026年1月15日 - 2026年1月24日
+第3屆：2026年2月1日 - 2026年2月10日
+第4屆：2026年2月15日 - 2026年2月24日
+第5屆：2026年3月1日 - 2026年3月10日
+第6屆：2026年3月15日 - 2026年3月24日
+第7屆：2026年4月1日 - 2026年4月10日
+第8屆：2026年4月15日 - 2026年4月24日
+第9屆：2026年5月1日 - 2026年5月10日
+第10屆：2026年5月15日 - 2026年5月24日
+第11屆：2026年6月1日 - 2026年6月10日
+第12屆：2026年6月15日 - 2026年6月24日
 
 目前進行中：第${day}天
                 `;
