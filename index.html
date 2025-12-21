@@ -64,7 +64,22 @@
     </style>
 </head>
 <body>
-
+<!-- 在 index.html 的功能按鈕區域添加 -->
+<div class="card" style="text-align: center;">
+    <button class="btn-success" onclick="window.open('team.html', '_blank')" style="margin-bottom: 10px;">
+        🏆 查看九宮格戰況
+    </button>
+    <button class="btn-primary" onclick="window.open('leaderboard.html', '_blank')" style="margin-bottom: 10px;">
+        📊 查看排行榜
+    </button>
+    <button class="btn-primary" onclick="window.open('tasks.html', '_blank')" style="margin-bottom: 10px;">
+        ✅ 查看任務區
+    </button>
+    <!-- 新增積分指南按鈕 -->
+    <button class="btn-warning" onclick="window.open('points-guide.html', '_blank')">
+        💰 積分獲取指南
+    </button>
+</div>
 <div class="container">
     <!-- 截止時間通知 -->
     <div id="deadline-notice" style="background:#fff3cd; color:#856404; padding:8px; border-radius:8px; font-size:13px; margin-bottom:10px; text-align:center;">
