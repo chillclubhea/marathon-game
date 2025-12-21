@@ -75,16 +75,17 @@
             color: var(--dark-color);
         }
         
-        .form-group input {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 14px 16px;
             border: 2px solid #ddd;
             border-radius: 12px;
             font-size: 1rem;
             transition: border 0.3s;
+            background-color: white;
         }
         
-        .form-group input:focus {
+        .form-group input:focus, .form-group select:focus {
             border-color: var(--primary-color);
             outline: none;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
@@ -605,27 +606,83 @@
             transform: scale(0.95);
         }
         
-        /* 進度條樣式 */
-        .progress-container {
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            height: 20px;
-            margin-top: 10px;
-            overflow: hidden;
+        /* 個人設定模態框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            display: none;
         }
         
-        .progress-bar {
-            background: linear-gradient(135deg, var(--secondary-color), #27ae60);
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease;
+        .modal-overlay.show {
+            display: flex;
         }
         
-        .progress-text {
-            text-align: center;
-            margin-top: 5px;
-            font-size: 0.9rem;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
             color: var(--gray-color);
+            padding: 5px;
+        }
+        
+        .close-modal:hover {
+            color: var(--accent-color);
+        }
+        
+        /* 頭像預覽 */
+        .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-color);
+            margin: 0 auto 20px;
+            display: block;
+        }
+        
+        /* 行內表單 */
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .row .form-group {
+            flex: 1;
         }
         
         /* 錯誤訊息 */
@@ -637,6 +694,13 @@
         }
         
         .error-message.show {
+            display: block;
+        }
+        
+        /* 外部連結樣式 */
+        .external-link {
+            text-decoration: none;
+            color: inherit;
             display: block;
         }
     </style>
@@ -708,14 +772,18 @@
                                 <i class="fas fa-user-cog"></i>
                                 <span>個人設定</span>
                             </div>
-                            <div class="user-menu-item" id="team-progress-btn">
-                                <i class="fas fa-trophy"></i>
-                                <span>🏆 馬拉松戰隊進度</span>
-                            </div>
-                            <div class="user-menu-item" id="leaderboard-btn">
-                                <i class="fas fa-chart-bar"></i>
-                                <span>排行榜</span>
-                            </div>
+                            <a href="https://marathon-game.vercel.app/team.html" target="_blank" class="external-link">
+                                <div class="user-menu-item">
+                                    <i class="fas fa-trophy"></i>
+                                    <span>🏆 馬拉松戰隊進度</span>
+                                </div>
+                            </a>
+                            <a href="https://marathon-game.vercel.app/leaderboard.html" target="_blank" class="external-link">
+                                <div class="user-menu-item">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>排行榜</span>
+                                </div>
+                            </a>
                             <div class="user-menu-item" id="points-rules-btn">
                                 <i class="fas fa-star"></i>
                                 <span>積分規則</span>
@@ -824,6 +892,63 @@
             <i class="fas fa-sign-out-alt"></i> 登出
         </button>
     </div>
+    
+    <!-- 個人設定模態框 -->
+    <div class="modal-overlay" id="personal-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-user-cog"></i>
+                    👤 個人設定 & 加入隊伍
+                </h3>
+                <button class="close-modal" id="close-settings-modal">&times;</button>
+            </div>
+            
+            <img id="avatar-img" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random&size=100">
+            
+            <div class="form-group">
+                <label>更換頭像</label>
+                <input type="file" id="avatar_file" accept="image/*">
+            </div>
+            
+            <div class="form-group">
+                <label>真實姓名</label>
+                <input type="text" id="full_name" placeholder="隊友如何稱呼你">
+            </div>
+            
+            <div class="row">
+                <div class="form-group">
+                    <label>角色</label>
+                    <select id="role">
+                        <option value="member">學員</option>
+                        <option value="captain">隊長</option>
+                        <option value="deputy">副隊長</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>計畫</label>
+                    <select id="plan">
+                        <option value="slow_run">慢跑</option>
+                        <option value="fast_run">快跑</option>
+                        <option value="vip">VIP</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                <label>加入隊伍邀請碼 (Team ID)</label>
+                <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
+                <small style="color:#666; display:block; margin-top:5px;">若無隊伍代碼，請聯絡隊長</small>
+            </div>
+            
+            <div class="auth-buttons" style="margin-top: 20px;">
+                <button class="btn-primary" id="save-profile-btn">
+                    <i class="fas fa-save"></i>
+                    儲存設定
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // 使用立即執行函數來避免變數重複聲明
@@ -848,7 +973,7 @@
                 constructor() {
                     this.currentUser = null;
                     this.authKey = 'marathon_auth_token';
-                    this.marathonStartDate = new Date('2024-01-01'); // 馬拉松開始日期
+                    this.userProfileKey = 'marathon_user_profile';
                     this.init();
                 }
                 
@@ -876,12 +1001,36 @@
                     return false;
                 }
                 
-                // 計算當前是第幾天
+                // 計算當前是第幾天 - 基於使用者開始日期
                 getCurrentDay() {
-                    const today = new Date();
-                    const timeDiff = today.getTime() - this.marathonStartDate.getTime();
-                    const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 因為第一天是Day 1
-                    return Math.max(1, dayDiff); // 確保不會小於1
+                    // 嘗試從localStorage獲取使用者的開始日期
+                    const startDateStr = localStorage.getItem('user_start_date');
+                    
+                    if (startDateStr) {
+                        // 如果有儲存的開始日期，使用該日期計算
+                        const startDate = new Date(startDateStr);
+                        const today = new Date();
+                        
+                        // 確保時間設置正確
+                        startDate.setHours(0, 0, 0, 0);
+                        today.setHours(0, 0, 0, 0);
+                        
+                        const timeDiff = today.getTime() - startDate.getTime();
+                        const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 因為第一天是Day 1
+                        
+                        console.log(`開始日期: ${startDateStr}, 今天: ${today.toISOString().split('T')[0]}, 天數差: ${dayDiff}`);
+                        return Math.max(1, dayDiff); // 確保不會小於1
+                    } else {
+                        // 如果沒有儲存的開始日期，設定今天為第4天
+                        const today = new Date();
+                        // 將開始日期設定為3天前（因為今天是第4天）
+                        const startDate = new Date(today);
+                        startDate.setDate(today.getDate() - 3);
+                        
+                        localStorage.setItem('user_start_date', startDate.toISOString().split('T')[0]);
+                        console.log(`新使用者，設定開始日期為: ${startDate.toISOString().split('T')[0]}, 今天是第4天`);
+                        return 4;
+                    }
                 }
                 
                 // 簡易登入系統（如果Supabase未設置）
@@ -1035,6 +1184,35 @@
                 getUser() {
                     return this.currentUser;
                 }
+                
+                // 儲存使用者設定
+                saveUserProfile(profile) {
+                    localStorage.setItem(this.userProfileKey, JSON.stringify(profile));
+                    return true;
+                }
+                
+                // 載入使用者設定
+                loadUserProfile() {
+                    const profileStr = localStorage.getItem(this.userProfileKey);
+                    if (profileStr) {
+                        try {
+                            return JSON.parse(profileStr);
+                        } catch (e) {
+                            console.error('解析使用者設定錯誤:', e);
+                        }
+                    }
+                    return null;
+                }
+                
+                // 更新使用者資料
+                updateUser(userData) {
+                    if (this.currentUser) {
+                        this.currentUser = { ...this.currentUser, ...userData };
+                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                        return true;
+                    }
+                    return false;
+                }
             }
             
             // DOM元素
@@ -1053,13 +1231,22 @@
             const emailError = document.getElementById('email-error');
             const passwordError = document.getElementById('password-error');
             
+            // 模態框元素
+            const personalSettingsModal = document.getElementById('personal-settings-modal');
+            const closeSettingsModal = document.getElementById('close-settings-modal');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const avatarImg = document.getElementById('avatar-img');
+            const avatarFile = document.getElementById('avatar_file');
+            const fullNameInput = document.getElementById('full_name');
+            const roleSelect = document.getElementById('role');
+            const planSelect = document.getElementById('plan');
+            const teamIdInput = document.getElementById('team_id_input');
+            
             // 按鈕元素
             const loginBtn = document.getElementById('login-btn');
             const signupBtn = document.getElementById('signup-btn');
             const logoutBtn = document.getElementById('logout-btn');
             const personalSettingsBtn = document.getElementById('personal-settings-btn');
-            const teamProgressBtn = document.getElementById('team-progress-btn');
-            const leaderboardBtn = document.getElementById('leaderboard-btn');
             const pointsRulesBtn = document.getElementById('points-rules-btn');
             const scheduleBtn = document.getElementById('schedule-btn');
             const logoutMenuBtn = document.getElementById('logout-menu-btn');
@@ -1078,6 +1265,9 @@
                 
                 // 設定事件監聽器
                 setupEventListeners();
+                
+                // 載入使用者設定
+                loadUserProfile();
             });
             
             // 檢查並導向頁面
@@ -1141,6 +1331,27 @@
                 passwordError.classList.remove('show');
             }
             
+            // 載入使用者設定
+            function loadUserProfile() {
+                const profile = authManager.loadUserProfile();
+                if (profile) {
+                    // 更新模態框中的表單
+                    if (profile.fullName) fullNameInput.value = profile.fullName;
+                    if (profile.role) roleSelect.value = profile.role;
+                    if (profile.plan) planSelect.value = profile.plan;
+                    if (profile.teamId) teamIdInput.value = profile.teamId;
+                    if (profile.avatarUrl) avatarImg.src = profile.avatarUrl;
+                    
+                    // 更新使用者名稱顯示
+                    const user = authManager.getUser();
+                    if (user && profile.fullName) {
+                        user.name = profile.fullName;
+                        authManager.updateUser(user);
+                        welcomeMessage.textContent = `歡迎，${profile.fullName}`;
+                    }
+                }
+            }
+            
             // 載入上次數據
             async function loadLastData() {
                 const user = authManager.getUser();
@@ -1192,10 +1403,15 @@
                 
                 // 用戶菜單按鈕
                 personalSettingsBtn.addEventListener('click', openPersonalSettings);
-                teamProgressBtn.addEventListener('click', openTeamProgress);
-                leaderboardBtn.addEventListener('click', openLeaderboard);
                 pointsRulesBtn.addEventListener('click', openPointsRules);
                 scheduleBtn.addEventListener('click', openSchedule);
+                
+                // 個人設定模態框按鈕
+                closeSettingsModal.addEventListener('click', closePersonalSettings);
+                saveProfileBtn.addEventListener('click', saveUserProfile);
+                
+                // 頭像文件選擇
+                avatarFile.addEventListener('change', previewAvatar);
                 
                 // 加減按鈕事件
                 document.querySelectorAll('.control-btn').forEach(btn => {
@@ -1219,6 +1435,11 @@
                     if (!userAvatarBtn.contains(event.target) && !userMenuDropdown.contains(event.target)) {
                         userMenuDropdown.classList.remove('show');
                     }
+                    
+                    // 點擊模態框外部關閉模態框
+                    if (event.target === personalSettingsModal) {
+                        closePersonalSettings();
+                    }
                 });
                 
                 // Enter鍵登入功能
@@ -1229,12 +1450,80 @@
                 document.getElementById('password').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') handleLogin();
                 });
+                
+                // Escape鍵關閉模態框
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        closePersonalSettings();
+                    }
+                });
             }
             
             // 切換用戶菜單
             function toggleUserMenu(event) {
                 event.stopPropagation();
                 userMenuDropdown.classList.toggle('show');
+            }
+            
+            // 打開個人設定
+            function openPersonalSettings() {
+                userMenuDropdown.classList.remove('show');
+                personalSettingsModal.classList.add('show');
+                
+                // 載入目前的設定
+                loadUserProfile();
+            }
+            
+            // 關閉個人設定
+            function closePersonalSettings() {
+                personalSettingsModal.classList.remove('show');
+            }
+            
+            // 預覽頭像
+            function previewAvatar() {
+                const file = avatarFile.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        avatarImg.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            // 儲存使用者設定
+            function saveUserProfile() {
+                const profile = {
+                    fullName: fullNameInput.value.trim(),
+                    role: roleSelect.value,
+                    plan: planSelect.value,
+                    teamId: teamIdInput.value.trim(),
+                    avatarUrl: avatarImg.src,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                // 儲存設定
+                authManager.saveUserProfile(profile);
+                
+                // 更新使用者名稱顯示
+                const user = authManager.getUser();
+                if (user && profile.fullName) {
+                    user.name = profile.fullName;
+                    authManager.updateUser(user);
+                    welcomeMessage.textContent = `歡迎，${profile.fullName}`;
+                }
+                
+                // 顯示成功訊息
+                statusMsg.textContent = "個人設定已儲存！";
+                statusMsg.className = "status-msg success";
+                
+                setTimeout(() => {
+                    statusMsg.textContent = "";
+                    statusMsg.className = "status-msg";
+                }, 2000);
+                
+                // 關閉模態框
+                closePersonalSettings();
             }
             
             // 處理按鈕點擊
@@ -1613,24 +1902,6 @@
                 }
             }
             
-            // 個人設定功能
-            function openPersonalSettings() {
-                userMenuDropdown.classList.remove('show');
-                alert('個人設定功能開發中...');
-            }
-            
-            // 戰隊進度功能
-            function openTeamProgress() {
-                userMenuDropdown.classList.remove('show');
-                alert('🏆 馬拉松戰隊進度功能開發中...');
-            }
-            
-            // 排行榜功能
-            function openLeaderboard() {
-                userMenuDropdown.classList.remove('show');
-                alert('排行榜功能開發中...');
-            }
-            
             // 積分規則功能
             function openPointsRules() {
                 userMenuDropdown.classList.remove('show');
@@ -1653,19 +1924,19 @@
                 userMenuDropdown.classList.remove('show');
                 const day = authManager.getCurrentDay();
                 const schedule = `
-每一屆馬拉松時間表 (每屆10天)：
-第1屆：2026年1月1日 - 2026年1月10日
-第2屆：2026年1月15日 - 2026年1月24日
-第3屆：2026年2月1日 - 2026年2月10日
-第4屆：2026年2月15日 - 2026年2月24日
-第5屆：2026年3月1日 - 2026年3月10日
-第6屆：2026年3月15日 - 2026年3月24日
-第7屆：2026年4月1日 - 2026年4月10日
-第8屆：2026年4月15日 - 2026年4月24日
-第9屆：2026年5月1日 - 2026年5月10日
-第10屆：2026年5月15日 - 2026年5月24日
-第11屆：2026年6月1日 - 2026年6月10日
-第12屆：2026年6月15日 - 2026年6月24日
+每一屆馬拉松時間表：
+第1屆：2024年1月1日 - 2024年3月31日
+第2屆：2024年4月1日 - 2024年6月30日
+第3屆：2024年7月1日 - 2024年9月30日
+第4屆：2024年10月1日 - 2024年12月31日
+第5屆：2025年1月1日 - 2025年3月31日
+第6屆：2025年4月1日 - 2025年6月30日
+第7屆：2025年7月1日 - 2025年9月30日
+第8屆：2025年10月1日 - 2025年12月31日
+第9屆：2026年1月1日 - 2026年3月31日
+第10屆：2026年4月1日 - 2026年6月30日
+第11屆：2026年7月1日 - 2026年9月30日
+第12屆：2026年10月1日 - 2026年12月31日
 
 目前進行中：第${day}天
                 `;
