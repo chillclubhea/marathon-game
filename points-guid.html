@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>積分獲取指南</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --warning: #f39c12; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 25px; padding: 20px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; margin: 0; font-size: 28px; }
+        .back-btn { position: fixed; top: 20px; left: 20px; background: white; color: var(--primary); border: 2px solid var(--primary); padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        .card { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .points-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; }
+        .points-item:last-child { border-bottom: none; }
+        .points-icon { font-size: 24px; margin-right: 15px; min-width: 40px; }
+        .points-details { flex: 1; }
+        .points-title { font-weight: bold; color: #2c3e50; font-size: 16px; }
+        .points-desc { color: #5d6d7e; font-size: 14px; margin-top: 5px; }
+        .points-value { font-size: 20px; font-weight: bold; color: var(--success); min-width: 60px; text-align: right; }
+        .section-title { font-size: 20px; color: #2c3e50; margin: 30px 0 15px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 8px; }
+        .badge-daily { background: #e8f4fc; color: var(--primary); }
+        .badge-special { background: #f0e8fc; color: #9b59b6; }
+        .badge-bonus { background: #fff3cd; color: #856404; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; text-align: center; }
+        .stat-value { font-size: 32px; font-weight: bold; margin: 10px 0; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
+        .how-to-use { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .how-to-use-title { font-weight: bold; color: #2c3e50; margin-bottom: 10px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>💰 積分獲取指南</h1>
+            <div style="color: #7f8c8d; margin-top: 8px;">
+                了解如何獲得積分，提升你的排名！
+            </div>
+        </div>
+        
+        <!-- 統計卡片 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">每日最高積分</div>
+                <div class="stat-value">3 分</div>
+                <div style="font-size: 12px;">可連續累積</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-label">抽獎券兌換率</div>
+                <div class="stat-value">50:1</div>
+                <div style="font-size: 12px;">50積分換1張</div>
+            </div>
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stat-label">積分用途</div>
+                <div class="stat-value">3+</div>
+                <div style="font-size: 12px;">抽獎、排名、獎勵</div>
+            </div>
+        </div>
+        
+        <!-- 每日積分 -->
+        <div class="card">
+            <div class="card-title">📅 每日固定積分</div>
+            <div style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
+                完成每日任務獲取積分，最多可獲得3分
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">⚖️</div>
+                <div class="points-details">
+                    <div class="points-title">
+                        完成一圈（體重+飲食+Shake+直播）
+                        <span class="badge badge-daily">必做</span>
+                    </div>
+                    <div class="points-desc">
+                        連續完成體重記錄、飲食打卡、使用Shake、觀看直播
+                    </div>
+                </div>
+                <div class="points-value">+1 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">🥤</div>
+                <div class="points-details">
+                    <div class="points-title">使用營養奶昔 (Shake)</div>
+                    <div class="points-desc">
+                        每日使用康寶萊營養奶昔至少一次
+                    </div>
+                </div>
+                <div class="points-value">+1 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">🏃</div>
+                <div class="points-details">
+                    <div class="points-title">完成運動任務</div>
+                    <div class="points-desc">
+                        完成當日指定運動項目至少30分鐘
+                    </div>
+                </div>
+                <div class="points-value">+1 分</div>
+            </div>
+        </div>
+        
+        <!-- 特別積分 -->
+        <div class="card">
+            <div class="card-title">🎁 特別任務積分</div>
+            <div style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
+                完成特別任務獲得額外獎勵積分
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">👥</div>
+                <div class="points-details">
+                    <div class="points-title">
+                        轉介紹朋友參加馬拉松
+                        <span class="badge badge-special">高額獎勵</span>
+                    </div>
+                    <div class="points-desc">
+                        介紹1位朋友參加馬拉松並介紹使用慢跑計算
+                    </div>
+                </div>
+                <div class="points-value">+15 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">📣</div>
+                <div class="points-details">
+                    <div class="points-title">邀請新朋友參加研討會</div>
+                    <div class="points-desc">
+                        邀請新朋友參加團隊研討會活動
+                    </div>
+                </div>
+                <div class="points-value">+2 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">🎉</div>
+                <div class="points-details">
+                    <div class="points-title">朋友首次參加研討會</div>
+                    <div class="points-desc">
+                        您邀請的朋友首次參加研討會
+                    </div>
+                </div>
+                <div class="points-value">+2 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">📱</div>
+                <div class="points-details">
+                    <div class="points-title">社交媒體分享</div>
+                    <div class="points-desc">
+                        在社交媒體分享你的馬拉松進度或成果
+                    </div>
+                </div>
+                <div class="points-value">+1 分</div>
+            </div>
+        </div>
+        
+        <!-- 獎勵積分 -->
+        <div class="card">
+            <div class="card-title">🏆 連續獎勵積分</div>
+            <div style="font-size: 14px; color: #7f8c8d; margin-bottom: 15px;">
+                連續完成任務獲得額外獎勵
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">📅</div>
+                <div class="points-details">
+                    <div class="points-title">連續7天完成任務</div>
+                    <div class="points-desc">
+                        連續7天完成所有必做任務
+                    </div>
+                </div>
+                <div class="points-value">+5 分</div>
+            </div>
+            
+            <div class="points-item">
+                <div class="points-icon">🏅</div>
+                <div class="points-details">
+                    <div class="points-title">連續30天完成任務</div>
+                    <div class="points-desc">
+                        連續30天完成所有必做任務
+                    </div>
+                </div>
+                <div class="points-value">+20 分</div>
+            </div>
+        </div>
+        
+        <!-- 積分用途 -->
+        <div class="card">
+            <div class="card-title">🎯 積分用途</div>
+            <div class="how-to-use">
+                <div class="how-to-use-title">1. 兌換抽獎券 🎟️</div>
+                <div style="font-size: 14px; color: #4a5568; margin-bottom: 10px;">
+                    • 50積分可兌換1張抽獎券<br>
+                    • 抽獎券用於研討會抽獎活動<br>
+                    • 獎品包括：產品、優惠券、特別禮物
+                </div>
+                
+                <div class="how-to-use-title">2. 排行榜排名 📊</div>
+                <div style="font-size: 14px; color: #4a5568; margin-bottom: 10px;">
+                    • 個人積分影響個人排行榜排名<br>
+                    • 團隊總積分影響團隊排行榜排名<br>
+                    • 每月排名前3名有特別獎勵
+                </div>
+                
+                <div class="how-to-use-title">3. 特殊獎勵 🏆</div>
+                <div style="font-size: 14px; color: #4a5568;">
+                    • 積分達到特定門檻可獲得成就徽章<br>
+                    • 可用於兌換特別活動參與資格<br>
+                    • 部分產品購買優惠
+                </div>
+            </div>
+        </div>
+        
+        <!-- 積分計算示例 -->
+        <div class="card">
+            <div class="card-title">📝 積分計算示例</div>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 10px;">
+                <div style="margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #2c3e50;">示例1：完成所有每日任務</div>
+                    <div style="font-size: 14px; color: #4a5568; margin-top: 5px;">
+                        • 完成一圈（體重+飲食+Shake+直播）：+1分<br>
+                        • 使用Shake：+1分<br>
+                        • 完成運動：+1分<br>
+                        <strong>總計：3分/天</strong>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <div style="font-weight: bold; color: #2c3e50;">示例2：一週完美表現</div>
+                    <div style="font-size: 14px; color: #4a5568; margin-top: 5px;">
+                        • 每日任務：3分 × 7天 = 21分<br>
+                        • 連續7天獎勵：+5分<br>
+                        • 社交分享：+1分 × 3次 = 3分<br>
+                        <strong>總計：29分/週</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 查看當前積分 -->
+        <div class="card" style="text-align: center; border-left: 5px solid var(--success);">
+            <div class="card-title">📊 我的積分狀態</div>
+            <div id="my-points-status" style="font-size: 16px; color: #4a5568;">
+                載入中...
+            </div>
+            <button style="margin-top: 15px; background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: bold;"
+                    onclick="window.location.href='index.html'">
+                返回個人中心查看積分
+            </button>
+        </div>
+    </div>
+
+<script>
+    // Supabase 配置
+    const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // 頁面載入
+    window.onload = async () => {
+        // 檢查登入狀態
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            document.getElementById('my-points-status').innerHTML = 
+                '<div style="color: var(--danger);">請先登入查看積分狀態</div>';
+            return;
+        }
+        
+        const userId = session.user.id;
+        await loadUserPoints(userId);
+    };
+    
+    // 載入用戶積分
+    async function loadUserPoints(userId) {
+        try {
+            // 獲取用戶資料
+            const { data: profile, error } = await sb
+                .from('profiles')
+                .select('points, full_name')
+                .eq('id', userId)
+                .single();
+            
+            if (error) throw error;
+            
+            // 計算抽獎券數量
+            const tickets = Math.floor((profile.points || 0) / 50);
+            const remainingPoints = (profile.points || 0) % 50;
+            
+            // 獲取連續天數
+            const { data: streakData } = await sb
+                .from('daily_scores')
+                .select('date')
+                .eq('user_id', userId)
+                .eq('weight_recorded', true)
+                .eq('shake_used', true)
+                .eq('task_completed', true)
+                .order('date', { ascending: false });
+            
+            const streakDays = streakData ? streakData.length : 0;
+            
+            // 更新顯示
+            document.getElementById('my-points-status').innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 14px; color: #7f8c8d;">當前積分</div>
+                    <div style="font-size: 36px; font-weight: bold; color: var(--success); margin: 10px 0;">${profile.points || 0}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 15px 0;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #7f8c8d;">抽獎券</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--primary);">${tickets} 張</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 14px; color: #7f8c8d;">連續天數</div>
+                        <div style="font-size: 24px; font-weight: bold; color: var(--warning);">${streakDays} 天</div>
+                    </div>
+                </div>
+                
+                <div style="background: #e8f4fc; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                    <div style="font-size: 12px; color: #4a5568;">
+                        再獲得 <strong>${50 - remainingPoints}</strong> 積分可兌換1張抽獎券
+                    </div>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('載入積分錯誤:', error);
+            document.getElementById('my-points-status').innerHTML = 
+                '<div style="color: var(--danger);">載入積分失敗，請重新整理</div>';
+        }
+    }
+</script>
+</body>
+</html>
