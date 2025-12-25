@@ -511,12 +511,12 @@
             <form id="auth-form">
                 <div class="form-group">
                     <label for="email">電子郵件</label>
-                    <input type="email" id="email" placeholder="your@email.com" required>
+                    <input type="email" id="email" placeholder="your@email.com" required autocomplete="username">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">密碼</label>
-                    <input type="password" id="password" placeholder="至少6個字符" required minlength="6">
+                    <input type="password" id="password" placeholder="至少6個字符" required minlength="6" autocomplete="current-password">
                 </div>
                 
                 <div class="error-message" id="auth-error"></div>
@@ -528,7 +528,7 @@
                 
                 <div class="auth-switch">
                     <span id="auth-switch-text">還沒有帳號？</span>
-                    <a id="auth-switch-link" onclick="switchAuthMode()">立即註冊</a>
+                    <a id="auth-switch-link" href="#" onclick="switchAuthMode(); return false;">立即註冊</a>
                 </div>
             </form>
         </div>
@@ -548,43 +548,43 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                    <a href="#" class="nav-link active" onclick="showSection('dashboard'); return false;">
                         <i class="fas fa-home"></i>
                         <span>儀表板</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('record')">
+                    <a href="#" class="nav-link" onclick="showSection('record'); return false;">
                         <i class="fas fa-pencil-alt"></i>
                         <span>記錄數據</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('history')">
+                    <a href="#" class="nav-link" onclick="showSection('history'); return false;">
                         <i class="fas fa-history"></i>
                         <span>歷史記錄</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('team')">
+                    <a href="#" class="nav-link" onclick="showSection('team'); return false;">
                         <i class="fas fa-users"></i>
                         <span>我的戰隊</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('ranking')">
+                    <a href="#" class="nav-link" onclick="showSection('ranking'); return false;">
                         <i class="fas fa-trophy"></i>
                         <span>排行榜</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('profile')">
+                    <a href="#" class="nav-link" onclick="showSection('profile'); return false;">
                         <i class="fas fa-user-cog"></i>
                         <span>個人設定</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="logout()">
+                    <a href="#" class="nav-link" onclick="logout(); return false;">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>登出</span>
                     </a>
@@ -642,9 +642,9 @@
                     <div class="input-card">
                         <h3>體重 (kg)</h3>
                         <div class="value-control">
-                            <button onclick="adjustValue('weight', -0.1)">-</button>
+                            <button onclick="adjustValue('weight', -0.1); return false;">-</button>
                             <input type="text" class="value-display" id="input-weight" value="65.0" readonly>
-                            <button onclick="adjustValue('weight', 0.1)">+</button>
+                            <button onclick="adjustValue('weight', 0.1); return false;">+</button>
                         </div>
                         <p><small>範圍: 30-200 kg</small></p>
                     </div>
@@ -652,9 +652,9 @@
                     <div class="input-card">
                         <h3>體脂率 (%)</h3>
                         <div class="value-control">
-                            <button onclick="adjustValue('fat', -0.1)">-</button>
+                            <button onclick="adjustValue('fat', -0.1); return false;">-</button>
                             <input type="text" class="value-display" id="input-fat" value="25.0" readonly>
-                            <button onclick="adjustValue('fat', 0.1)">+</button>
+                            <button onclick="adjustValue('fat', 0.1); return false;">+</button>
                         </div>
                         <p><small>範圍: 5-60 %</small></p>
                     </div>
@@ -662,9 +662,9 @@
                     <div class="input-card">
                         <h3>肌肉量 (kg)</h3>
                         <div class="value-control">
-                            <button onclick="adjustValue('muscle', -0.1)">-</button>
+                            <button onclick="adjustValue('muscle', -0.1); return false;">-</button>
                             <input type="text" class="value-display" id="input-muscle" value="30.0" readonly>
-                            <button onclick="adjustValue('muscle', 0.1)">+</button>
+                            <button onclick="adjustValue('muscle', 0.1); return false;">+</button>
                         </div>
                         <p><small>範圍: 10-100 kg</small></p>
                     </div>
@@ -676,10 +676,10 @@
                 </div>
                 
                 <div style="display: flex; gap: 15px; margin-top: 30px;">
-                    <button class="btn btn-secondary" onclick="loadTodayData()">
+                    <button class="btn btn-secondary" onclick="loadTodayData(); return false;">
                         <i class="fas fa-redo"></i> 重新載入
                     </button>
-                    <button class="btn btn-primary" onclick="submitDailyData()" id="submit-btn">
+                    <button class="btn btn-primary" onclick="submitDailyData(); return false;" id="submit-btn">
                         <i class="fas fa-paper-plane"></i> 提交數據
                     </button>
                 </div>
@@ -720,9 +720,9 @@
                 <h2 class="section-title">🏆 排行榜</h2>
                 
                 <div style="margin-bottom: 20px;">
-                    <button class="btn btn-secondary" onclick="loadRanking('weight')">減重排名</button>
-                    <button class="btn btn-secondary" onclick="loadRanking('points')">積分排名</button>
-                    <button class="btn btn-secondary" onclick="loadRanking('teams')">團隊排名</button>
+                    <button class="btn btn-secondary" onclick="loadRanking('weight'); return false;">減重排名</button>
+                    <button class="btn btn-secondary" onclick="loadRanking('points'); return false;">積分排名</button>
+                    <button class="btn btn-secondary" onclick="loadRanking('teams'); return false;">團隊排名</button>
                 </div>
                 
                 <div class="record-list">
@@ -783,7 +783,7 @@
                         <label>加入戰隊 (邀請碼)</label>
                         <input type="text" id="team-invite" placeholder="輸入隊長提供的邀請碼">
                     </div>
-                    <button class="btn btn-primary" onclick="joinTeam()">
+                    <button class="btn btn-primary" onclick="joinTeam(); return false;">
                         <i class="fas fa-users"></i> 加入戰隊
                     </button>
                     <p id="team-invite-code" style="margin-top: 15px; display: none;">
@@ -791,7 +791,7 @@
                     </p>
                 </div>
                 
-                <button class="btn btn-primary" onclick="saveProfile()" style="margin-top: 30px; width: 100%;">
+                <button class="btn btn-primary" onclick="saveProfile(); return false;" style="margin-top: 30px; width: 100%;">
                     <i class="fas fa-save"></i> 儲存所有設定
                 </button>
             </div>
@@ -812,25 +812,6 @@
         let isLoginMode = true;
         let todayData = null;
         
-        // 頁面載入時檢查登入狀態
-        document.addEventListener('DOMContentLoaded', async () => {
-            await checkAuth();
-            setupEventListeners();
-        });
-        
-        // 檢查認證狀態
-        async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session) {
-                currentUser = session.user;
-                await loadUserProfile();
-                showMainApp();
-            } else {
-                showAuth();
-            }
-        }
-        
         // 切換登入/註冊模式
         function switchAuthMode() {
             isLoginMode = !isLoginMode;
@@ -850,6 +831,25 @@
             }
             
             document.getElementById('auth-error').style.display = 'none';
+        }
+        
+        // 頁面載入時檢查登入狀態
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            setupEventListeners();
+        });
+        
+        // 檢查認證狀態
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session) {
+                currentUser = session.user;
+                await loadUserProfile();
+                showMainApp();
+            } else {
+                showAuth();
+            }
         }
         
         // 處理認證表單提交
@@ -1021,7 +1021,10 @@
             document.getElementById(`${sectionId}-section`).style.display = 'block';
             
             // 更新活動的導航連結
-            document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`).classList.add('active');
+            const activeLink = document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
             
             // 載入特定區塊的數據
             if (sectionId === 'ranking') {
@@ -1469,15 +1472,15 @@
                     data.forEach((item, index) => {
                         const rankClass = index < 3 ? `rank-${index + 1}` : '';
                         const value = type === 'weight' 
-                            ? `${item.weightLost.toFixed(1)} kg` 
-                            : `${item.points} 分`;
+                            ? `${item.weightLost?.toFixed(1) || '0'} kg` 
+                            : `${item.points || 0} 分`;
                         
                         html += `
                             <tr>
                                 <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
-                                <td>${item.name}</td>
+                                <td>${item.name || '匿名'}</td>
                                 <td>${value}</td>
-                                <td>${item.team || '無'}</td>
+                                <td>${item.team || item.current_team_id || '無'}</td>
                             </tr>
                         `;
                     });
