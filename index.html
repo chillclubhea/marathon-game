@@ -1,1934 +1,1639 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>馬拉松健身追蹤</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>馬拉松健身追蹤系統</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --primary-color: #3498db;
-            --secondary-color: #2ecc71;
-            --accent-color: #e74c3c;
-            --dark-color: #2c3e50;
-            --light-color: #ecf0f1;
-            --gray-color: #95a5a6;
-            --card-bg: #ffffff;
-            --bg-color: #f8f9fa;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft JhengHei', -apple-system, BlinkMacSystemFont, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        
+
         body {
-            background-color: var(--bg-color);
-            color: var(--dark-color);
-            line-height: 1.5;
-            padding: 16px;
-            max-width: 800px;
-            margin: 0 auto;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* 登入頁面樣式 */
-        .auth-section {
-            max-width: 400px;
-            margin: 40px auto;
-        }
-        
-        .auth-card {
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 30px 25px;
-            box-shadow: var(--shadow);
-            border-top: 6px solid var(--primary-color);
-        }
-        
-        .auth-title {
-            text-align: center;
-            margin-bottom: 25px;
-            color: var(--dark-color);
-            font-size: 1.6rem;
-            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            padding: 20px;
         }
-        
-        .form-group {
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: none;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        /* 登入/註冊頁面 */
+        .auth-container {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-right {
+            flex: 1;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-title {
+            font-size: 2.5rem;
             margin-bottom: 20px;
+            font-weight: 800;
         }
-        
+
+        .auth-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 40px;
+        }
+
+        .feature-list li {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+        }
+
+        .feature-list i {
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 50%;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: var(--dark-color);
+            color: var(--dark);
         }
-        
-        .form-group input, .form-group select {
+
+        .form-group input {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #ddd;
-            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 1rem;
-            transition: border 0.3s;
-            background-color: white;
+            transition: all 0.3s;
         }
-        
-        .form-group input:focus, .form-group select:focus {
-            border-color: var(--primary-color);
+
+        .form-group input:focus {
+            border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
-        
-        .auth-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 25px;
-        }
-        
-        .auth-buttons button {
-            padding: 16px;
-            font-weight: 700;
-            border-radius: 12px;
+
+        .btn {
+            padding: 15px 30px;
             border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
-        
+
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            background: var(--primary);
             color: white;
+            width: 100%;
         }
-        
-        .btn-primary:active {
-            transform: scale(0.98);
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
         }
-        
+
         .btn-secondary {
-            background: linear-gradient(135deg, var(--secondary-color), #27ae60);
-            color: white;
+            background: var(--light);
+            color: var(--dark);
+            width: 100%;
+            border: 2px solid #e0e0e0;
         }
-        
-        .btn-secondary:active {
-            transform: scale(0.98);
+
+        .btn-secondary:hover {
+            background: #f0f0f0;
         }
-        
-        .auth-footer {
+
+        .auth-switch {
             text-align: center;
             margin-top: 20px;
-            color: var(--gray-color);
-            font-size: 0.9rem;
+            color: #666;
         }
-        
-        /* 主應用頁面樣式 */
-        #app-section {
-            display: none;
-        }
-        
-        .app-section.show {
-            display: block;
-        }
-        
-        /* 頂部導航欄 */
-        .top-nav {
-            margin-bottom: 24px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background-color: var(--bg-color);
-            padding-top: 8px;
-            padding-bottom: 8px;
-        }
-        
-        .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            gap: 15px;
-        }
-        
-        .app-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            flex: 1;
-        }
-        
-        .app-logo i {
-            font-size: 1.6rem;
-        }
-        
-        .user-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .day-badge {
-            background: linear-gradient(135deg, var(--primary-color), #2980b9);
-            color: white;
-            border-radius: 16px;
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            min-width: 80px;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .day-badge i {
-            font-size: 0.9rem;
-        }
-        
-        .user-avatar-container {
-            position: relative;
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
             cursor: pointer;
         }
-        
-        .user-avatar-btn {
-            width: 52px;
-            height: 52px;
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* 主應用頁面 */
+        .main-container {
+            display: none;
+            min-height: 700px;
+        }
+
+        .main-container.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background: rgba(255,255,255,0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-            border: 3px solid white;
-            box-shadow: var(--shadow);
-            position: relative;
+            font-size: 1.5rem;
         }
-        
-        .user-menu-dropdown {
-            position: absolute;
-            top: 65px;
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            min-width: 200px;
-            padding: 10px;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .user-menu-dropdown.show {
-            display: block;
-        }
-        
-        .user-menu-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .user-menu-item:hover {
-            background: #f5f7fa;
-        }
-        
-        .user-menu-item i {
-            color: var(--primary-color);
-            width: 20px;
-        }
-        
-        .nav-subheader {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .welcome-message {
+
+        .user-details h3 {
             font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--dark-color);
+            margin-bottom: 5px;
         }
-        
-        .deadline-countdown {
-            background-color: var(--accent-color);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            align-self: flex-start;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
-        }
-        
-        .countdown-timer {
-            font-weight: 700;
-            font-size: 0.95rem;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 0.5px;
-        }
-        
-        /* 每日數據報到卡片 */
-        .daily-checkin-card {
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            padding: 24px 20px;
-            box-shadow: var(--shadow);
-            margin-bottom: 24px;
-            border-top: 6px solid var(--secondary-color);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            color: var(--dark-color);
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-        
-        .card-title i {
-            color: var(--primary-color);
-        }
-        
-        .input-hint {
-            color: var(--gray-color);
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-        
-        .input-container {
-            display: flex;
-            flex-direction: row;
-            gap: 12px;
-            margin-top: 20px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            padding-left: 10px;
-            padding-right: 10px;
-        }
-        
-        .input-container::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .input-box {
-            flex: 0 0 auto;
-            width: 280px;
-            scroll-snap-align: start;
-            text-align: center;
-            padding: 20px 15px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border: 2.5px solid #e9ecef;
-            transition: all 0.25s ease;
-            position: relative;
-            touch-action: manipulation;
-            user-select: none;
-        }
-        
-        @media (max-width: 640px) {
-            .input-box {
-                width: calc(100vw - 60px);
-                min-width: calc(100vw - 60px);
-                margin: 0 5px;
-            }
-            
-            .nav-header {
-                flex-wrap: wrap;
-            }
-            
-            .user-area {
-                order: 3;
-                width: 100%;
-                justify-content: space-between;
-                margin-top: 10px;
-            }
-        }
-        
-        @media (min-width: 641px) and (max-width: 800px) {
-            .input-box {
-                width: calc(33.333% - 16px);
-                min-width: calc(33.333% - 16px);
-            }
-        }
-        
-        @media (min-width: 801px) {
-            .input-box {
-                width: calc(33.333% - 16px);
-                min-width: 220px;
-            }
-        }
-        
-        .input-box.locked {
-            background: linear-gradient(135deg, #e9ecef, #dee2e6);
-            border-color: #ced4da;
+
+        .user-details p {
             opacity: 0.8;
+            font-size: 0.9rem;
         }
-        
-        .value-display {
-            width: 100%;
-            font-size: 2.6rem;
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+        }
+
+        .stat-card h3 {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
             font-weight: 800;
+            color: var(--primary);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .value-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .value-control button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .value-control button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .value-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--dark);
+            min-width: 150px;
             text-align: center;
             border: none;
             background: transparent;
-            color: var(--dark-color);
-            outline: none;
-            padding: 8px 5px;
-            pointer-events: none;
-            user-select: none;
-            font-feature-settings: "tnum";
-            font-variant-numeric: tabular-nums;
-            line-height: 1;
-            margin-bottom: 5px;
         }
-        
-        .input-controls {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 20px;
-            margin-bottom: 15px;
-        }
-        
-        .control-btn {
-            width: 56px;
-            height: 56px;
-            min-width: 56px;
-            min-height: 56px;
-            border-radius: 50%;
+
+        .record-list {
             background: white;
-            border: 3px solid var(--primary-color);
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            touch-action: manipulation;
-            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
-        }
-        
-        .control-btn:active {
-            background: var(--primary-color);
-            color: white;
-            transform: scale(0.92);
-            box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
-        }
-        
-        .data-label {
-            font-size: 1.05rem;
-            color: var(--dark-color);
-            margin-top: 8px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        
-        .data-unit {
-            font-size: 0.95rem;
-            color: var(--gray-color);
-            font-weight: 600;
-        }
-        
-        .swipe-indicator {
-            text-align: center;
-            margin-top: 12px;
-            color: var(--gray-color);
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-        
-        .touch-hint {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: var(--primary-color);
-            font-size: 0.9rem;
-            margin-top: 16px;
-            font-weight: 600;
-            opacity: 0.8;
-        }
-        
-        .button-section {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 28px;
-            flex-wrap: wrap;
-        }
-        
-        .submit-btn {
-            padding: 18px 36px;
-            font-size: 1.2rem;
-            background: linear-gradient(135deg, var(--secondary-color), #27ae60);
-            color: white;
-            border-radius: 60px;
-            border: none;
-            font-weight: 800;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.35);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            touch-action: manipulation;
-        }
-        
-        .submit-btn:active:not(:disabled) {
-            transform: scale(0.96);
-            box-shadow: 0 3px 12px rgba(46, 204, 113, 0.4);
-        }
-        
-        .submit-btn:disabled {
-            background: linear-gradient(135deg, #bdc3c7, #95a5a6);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 4px 12px rgba(189, 195, 199, 0.3);
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-3px); }
-            75% { transform: translateX(3px); }
-        }
-        
-        .shake {
-            animation: shake 0.3s ease;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .status-msg {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 1rem;
-            min-height: 26px;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .status-msg.success {
-            background-color: rgba(46, 204, 113, 0.15);
-            color: var(--secondary-color);
-            border: 2px solid rgba(46, 204, 113, 0.25);
-        }
-        
-        .status-msg.error {
-            background-color: rgba(231, 76, 60, 0.15);
-            color: var(--accent-color);
-            border: 2px solid rgba(231, 76, 60, 0.25);
-        }
-        
-        .status-msg.warning {
-            background-color: rgba(241, 196, 15, 0.15);
-            color: #f39c12;
-            border: 2px solid rgba(241, 196, 15, 0.25);
-        }
-        
-        .logout-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, var(--accent-color), #c0392b);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 24px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-        }
-        
-        .logout-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            display: none;
-        }
-        
-        .modal-overlay.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
+            border-radius: 15px;
             padding: 25px;
-            width: 90%;
-            max-width: 450px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        
-        .modal-header {
+
+        .record-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
         }
-        
-        .modal-title {
-            font-size: 1.3rem;
-            color: var(--dark-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+
+        .record-item:last-child {
+            border-bottom: none;
         }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--gray-color);
-            padding: 5px;
-        }
-        
-        .close-modal:hover {
-            color: var(--accent-color);
-        }
-        
-        .avatar-preview {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid var(--primary-color);
-            margin: 0 auto 20px;
-            display: block;
-        }
-        
-        .row {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .row .form-group {
-            flex: 1;
-        }
-        
-        .error-message {
-            color: var(--accent-color);
-            font-size: 0.9rem;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .error-message.show {
-            display: block;
-        }
-        
-        .external-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-        
-        .daily-counter {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+
+        .record-date {
             font-weight: 600;
-            font-size: 0.9rem;
-            align-self: flex-start;
+            color: var(--dark);
+        }
+
+        .record-values {
+            display: flex;
+            gap: 20px;
+        }
+
+        .record-value {
+            text-align: center;
+        }
+
+        .record-value .label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .record-value .value {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        /* 排行榜頁面 */
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .ranking-table th {
+            background: var(--light);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .ranking-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .ranking-table tr:hover {
+            background: var(--light);
+        }
+
+        .rank-badge {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: 600;
+        }
+
+        .rank-1 { background: gold; color: #333; }
+        .rank-2 { background: silver; color: #333; }
+        .rank-3 { background: #cd7f32; color: white; }
+
+        /* 團隊頁面 */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .team-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
             display: flex;
             align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
-            margin-top: 10px;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 20px;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                min-height: auto;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- 登入頁面（初始顯示） -->
-    <div id="auth-section" class="auth-section">
-        <div class="auth-card">
-            <h2 class="auth-title">
-                <i class="fas fa-running"></i>
-                馬拉松健身追蹤
-            </h2>
+    <!-- 登入/註冊容器 -->
+    <div class="container auth-container" id="auth-container">
+        <div class="auth-left">
+            <h1 class="auth-title">🏃 馬拉松健身追蹤</h1>
+            <p class="auth-subtitle">專為團隊健身設計的全方位追蹤系統</p>
             
-            <div class="form-group">
-                <label for="email">電子郵件</label>
-                <input type="email" id="email" placeholder="輸入您的電子郵件">
-                <div class="error-message" id="email-error"></div>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">密碼</label>
-                <input type="password" id="password" placeholder="輸入密碼">
-                <div class="error-message" id="password-error"></div>
-            </div>
-            
-            <div class="auth-buttons">
-                <button class="btn-primary" id="login-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    登入
-                </button>
-                <button class="btn-secondary" id="signup-btn">
-                    <i class="fas fa-user-plus"></i>
-                    註冊新帳號
-                </button>
-            </div>
-            
-            <div class="auth-footer">
-                <p>登入後可追蹤健身進度</p>
-            </div>
+            <ul class="feature-list">
+                <li><i class="fas fa-chart-line"></i> 每日健康數據追蹤</li>
+                <li><i class="fas fa-users"></i> 團隊激勵與排名</li>
+                <li><i class="fas fa-trophy"></i> 積分系統與成就</li>
+                <li><i class="fas fa-medal"></i> 個人與團隊排行榜</li>
+                <li><i class="fas fa-mobile-alt"></i> 響應式設計，隨處可用</li>
+            </ul>
         </div>
-    </div>
-    
-    <!-- 主應用頁面（初始隱藏） -->
-    <div id="app-section" class="app-section">
-        <!-- 頂部導航欄 -->
-        <div class="top-nav">
-            <div class="nav-header">
-                <div class="app-logo">
-                    <i class="fas fa-running"></i>
-                    <span>馬拉松健身追蹤</span>
+        
+        <div class="auth-right">
+            <h2 id="auth-form-title">歡迎回來</h2>
+            <p id="auth-form-subtitle">請登入您的帳號</p>
+            
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email">電子郵件</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
                 </div>
                 
-                <div class="user-area">
-                    <!-- 今日天數徽章 -->
-                    <div class="day-badge" id="day-badge">
-                        <i class="fas fa-calendar-day"></i>
-                        <span id="current-day">Day 1</span>
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" placeholder="至少6個字符" required minlength="6">
+                </div>
+                
+                <div class="error-message" id="auth-error"></div>
+                
+                <button type="submit" class="btn btn-primary" id="auth-submit-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span id="auth-submit-text">登入</span>
+                </button>
+                
+                <div class="auth-switch">
+                    <span id="auth-switch-text">還沒有帳號？</span>
+                    <a id="auth-switch-link" onclick="switchAuthMode()">立即註冊</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主應用容器 -->
+    <div class="container main-container" id="main-container">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <h3 id="user-name">使用者</h3>
+                    <p id="user-email">user@example.com</p>
+                    <p><small id="user-day">Day 1</small></p>
+                </div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="showSection('dashboard')">
+                        <i class="fas fa-home"></i>
+                        <span>儀表板</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('record')">
+                        <i class="fas fa-pencil-alt"></i>
+                        <span>記錄數據</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('history')">
+                        <i class="fas fa-history"></i>
+                        <span>歷史記錄</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('team')">
+                        <i class="fas fa-users"></i>
+                        <span>我的戰隊</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('ranking')">
+                        <i class="fas fa-trophy"></i>
+                        <span>排行榜</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showSection('profile')">
+                        <i class="fas fa-user-cog"></i>
+                        <span>個人設定</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>登出</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="main-content">
+            <!-- 儀表板區塊 -->
+            <div id="dashboard-section" class="section">
+                <h2 class="section-title">📊 健身儀表板</h2>
+                
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <h3>今日體重</h3>
+                        <div class="stat-value" id="today-weight">-- kg</div>
+                        <p><small id="weight-change">與昨日比較: --</small></p>
                     </div>
                     
-                    <!-- 用戶頭像和下拉菜單 -->
-                    <div class="user-avatar-container">
-                        <div class="user-avatar-btn" id="user-avatar-btn">
+                    <div class="stat-card">
+                        <h3>今日體脂率</h3>
+                        <div class="stat-value" id="today-fat">-- %</div>
+                        <p><small id="fat-change">與昨日比較: --</small></p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>今日肌肉量</h3>
+                        <div class="stat-value" id="today-muscle">-- kg</div>
+                        <p><small id="muscle-change">與昨日比較: --</small></p>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <h3>連續記錄天數</h3>
+                        <div class="stat-value" id="streak-days">0</div>
+                        <p><small>持續努力中！</small></p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <h3>近期趨勢</h3>
+                    <div id="trend-chart-placeholder">
+                        <p style="text-align: center; padding: 40px; color: #666;">
+                            載入數據中... (建議整合 Chart.js 可視化)
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 記錄數據區塊 -->
+            <div id="record-section" class="section" style="display: none;">
+                <h2 class="section-title">📝 記錄今日數據</h2>
+                <p style="color: #666; margin-bottom: 30px;">請輸入您今日的健康數據，每天最多可更新3次</p>
+                
+                <div class="input-group">
+                    <div class="input-card">
+                        <h3>體重 (kg)</h3>
+                        <div class="value-control">
+                            <button onclick="adjustValue('weight', -0.1)">-</button>
+                            <input type="text" class="value-display" id="input-weight" value="65.0" readonly>
+                            <button onclick="adjustValue('weight', 0.1)">+</button>
+                        </div>
+                        <p><small>範圍: 30-200 kg</small></p>
+                    </div>
+                    
+                    <div class="input-card">
+                        <h3>體脂率 (%)</h3>
+                        <div class="value-control">
+                            <button onclick="adjustValue('fat', -0.1)">-</button>
+                            <input type="text" class="value-display" id="input-fat" value="25.0" readonly>
+                            <button onclick="adjustValue('fat', 0.1)">+</button>
+                        </div>
+                        <p><small>範圍: 5-60 %</small></p>
+                    </div>
+                    
+                    <div class="input-card">
+                        <h3>肌肉量 (kg)</h3>
+                        <div class="value-control">
+                            <button onclick="adjustValue('muscle', -0.1)">-</button>
+                            <input type="text" class="value-display" id="input-muscle" value="30.0" readonly>
+                            <button onclick="adjustValue('muscle', 0.1)">+</button>
+                        </div>
+                        <p><small>範圍: 10-100 kg</small></p>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-note">今日備註 (選填)</label>
+                    <textarea id="daily-note" rows="3" placeholder="記錄今日的飲食或運動情況..." style="width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 10px;"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button class="btn btn-secondary" onclick="loadTodayData()">
+                        <i class="fas fa-redo"></i> 重新載入
+                    </button>
+                    <button class="btn btn-primary" onclick="submitDailyData()" id="submit-btn">
+                        <i class="fas fa-paper-plane"></i> 提交數據
+                    </button>
+                </div>
+                
+                <div class="error-message" id="submit-error"></div>
+                
+                <div class="stat-card" style="margin-top: 30px;">
+                    <h3>今日提交狀態</h3>
+                    <p>已提交次數: <span id="submit-count">0</span>/3 次</p>
+                    <p id="submit-time">最後提交時間: --</p>
+                </div>
+            </div>
+            
+            <!-- 歷史記錄區塊 -->
+            <div id="history-section" class="section" style="display: none;">
+                <h2 class="section-title">📋 歷史記錄</h2>
+                
+                <div class="record-list" id="history-list">
+                    <p style="text-align: center; padding: 40px; color: #666;">載入數據中...</p>
+                </div>
+            </div>
+            
+            <!-- 團隊區塊 -->
+            <div id="team-section" class="section" style="display: none;">
+                <h2 class="section-title">👥 我的戰隊</h2>
+                
+                <div id="team-info">
+                    <p style="color: #666; margin-bottom: 20px;">載入團隊資訊中...</p>
+                </div>
+                
+                <div class="team-grid" id="team-members">
+                    <!-- 團隊成員動態載入 -->
+                </div>
+            </div>
+            
+            <!-- 排行榜區塊 -->
+            <div id="ranking-section" class="section" style="display: none;">
+                <h2 class="section-title">🏆 排行榜</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-secondary" onclick="loadRanking('weight')">減重排名</button>
+                    <button class="btn btn-secondary" onclick="loadRanking('points')">積分排名</button>
+                    <button class="btn btn-secondary" onclick="loadRanking('teams')">團隊排名</button>
+                </div>
+                
+                <div class="record-list">
+                    <table class="ranking-table" id="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>姓名</th>
+                                <th>數據</th>
+                                <th>團隊</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ranking-body">
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px;">選擇排名類型</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 個人設定區塊 -->
+            <div id="profile-section" class="section" style="display: none;">
+                <h2 class="section-title">⚙️ 個人設定</h2>
+                
+                <div class="input-group">
+                    <div class="input-card">
+                        <h3>個人頭像</h3>
+                        <div class="user-avatar" id="profile-avatar" style="width: 100px; height: 100px; margin: 20px auto; cursor: pointer;" onclick="document.getElementById('avatar-upload').click()">
                             <i class="fas fa-user"></i>
                         </div>
-                        
-                        <!-- 用戶下拉菜單 -->
-                        <div class="user-menu-dropdown" id="user-menu-dropdown">
-                            <div class="user-menu-item" id="personal-settings-btn">
-                                <i class="fas fa-user-cog"></i>
-                                <span>個人設定</span>
+                        <input type="file" id="avatar-upload" accept="image/*" style="display: none;" onchange="uploadAvatar()">
+                        <p><small>點擊頭像更換</small></p>
+                    </div>
+                    
+                    <div class="input-card">
+                        <h3>個人資訊</h3>
+                        <div style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label>真實姓名</label>
+                                <input type="text" id="profile-name" placeholder="輸入姓名">
                             </div>
-                            <a href="https://marathon-game.vercel.app/team.html" target="_blank" class="external-link">
-                                <div class="user-menu-item">
-                                    <i class="fas fa-trophy"></i>
-                                    <span>🏆 馬拉松戰隊進度</span>
-                                </div>
-                            </a>
-                            <a href="https://marathon-game.vercel.app/leaderboard.html" target="_blank" class="external-link">
-                                <div class="user-menu-item">
-                                    <i class="fas fa-chart-bar"></i>
-                                    <span>排行榜</span>
-                                </div>
-                            </a>
-                            <div class="user-menu-item" id="points-rules-btn">
-                                <i class="fas fa-star"></i>
-                                <span>積分規則</span>
-                            </div>
-                            <div class="user-menu-item" id="schedule-btn">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>每一屆時間表</span>
-                            </div>
-                            <div class="user-menu-item" id="logout-menu-btn">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>登出</span>
+                            <div class="form-group">
+                                <label>計畫類型</label>
+                                <select id="profile-plan" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                                    <option value="slow_run">慢跑計畫</option>
+                                    <option value="fast_run">快跑計畫</option>
+                                    <option value="vip">VIP計畫</option>
+                                </select>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="nav-subheader">
-                <div class="welcome-message" id="welcome-message">歡迎回來</div>
-                <div class="deadline-countdown">
-                    <i class="fas fa-clock"></i>
-                    今日報到截止: <span class="countdown-timer" id="countdown-timer">23:59:59</span>
-                </div>
-                <div class="daily-counter" id="daily-counter">
-                    <i class="fas fa-redo-alt"></i>
-                    <span>今日修改次數: <span id="submit-count">0</span>/3</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 每日數據報到卡片 -->
-        <div class="daily-checkin-card">
-            <h2 class="card-title">
-                <i class="fas fa-calendar-day"></i> 每日數據報到
-            </h2>
-            <p class="input-hint">
-                請輸入今日的數據，可點擊加減按鈕調整，或直接滑動數據區域調整
-            </p>
-            
-            <!-- 三個數據橫向排列 -->
-            <div class="input-container" id="input-container">
-                <!-- 體重輸入 -->
-                <div class="input-box" id="weight-box" data-type="weight">
-                    <input type="text" class="value-display" id="weight-value" value="65.3" readonly>
-                    <div class="input-controls">
-                        <button class="control-btn minus-btn" data-type="weight" data-change="-0.1">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button class="control-btn plus-btn" data-type="weight" data-change="0.1">
-                            <i class="fas fa-plus"></i>
-                        </button>
+                
+                <div class="input-card" style="margin-top: 20px;">
+                    <h3>團隊設定</h3>
+                    <div class="form-group">
+                        <label>加入戰隊 (邀請碼)</label>
+                        <input type="text" id="team-invite" placeholder="輸入隊長提供的邀請碼">
                     </div>
-                    <div class="data-label">體重 <span class="data-unit">kg</span></div>
+                    <button class="btn btn-primary" onclick="joinTeam()">
+                        <i class="fas fa-users"></i> 加入戰隊
+                    </button>
+                    <p id="team-invite-code" style="margin-top: 15px; display: none;">
+                        <strong>您的邀請碼:</strong> <span id="invite-code-display"></span>
+                    </p>
                 </div>
                 
-                <!-- 體脂率輸入 -->
-                <div class="input-box" id="fat-box" data-type="fat">
-                    <input type="text" class="value-display" id="fat-value" value="41.3" readonly>
-                    <div class="input-controls">
-                        <button class="control-btn minus-btn" data-type="fat" data-change="-0.1">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button class="control-btn plus-btn" data-type="fat" data-change="0.1">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    <div class="data-label">體脂率 <span class="data-unit">%</span></div>
-                </div>
-                
-                <!-- 肌肉量輸入 -->
-                <div class="input-box" id="muscle-box" data-type="muscle">
-                    <input type="text" class="value-display" id="muscle-value" value="20.1" readonly>
-                    <div class="input-controls">
-                        <button class="control-btn minus-btn" data-type="muscle" data-change="-0.1">
-                            <i class="fas fa-minus"></i>
-                        </button>
-                        <button class="control-btn plus-btn" data-type="muscle" data-change="0.1">
-                            <i class="fas fa-plus"></i>
-                        </button>
-                    </div>
-                    <div class="data-label">肌肉量 <span class="data-unit">kg</span></div>
-                </div>
-            </div>
-            
-            <!-- 滑動提示 -->
-            <div class="swipe-indicator">
-                <i class="fas fa-arrows-left-right"></i>
-                <span>滑動查看所有數據</span>
-            </div>
-            
-            <!-- 觸控提示 -->
-            <div class="touch-hint">
-                <i class="fas fa-hand-point-up"></i>
-                <span>長按按鈕可快速調整</span>
-            </div>
-            
-            <!-- 按鈕區域 -->
-            <div class="button-section">
-                <button class="submit-btn" id="submitBtn">
-                    <i class="fas fa-paper-plane"></i> 送出今日報到
-                </button>
-            </div>
-            
-            <!-- 狀態訊息 -->
-            <div class="status-msg" id="status-msg"></div>
-        </div>
-        
-        <!-- 底部登出按鈕 -->
-        <button class="logout-btn" id="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> 登出
-        </button>
-    </div>
-    
-    <!-- 個人設定模態框 -->
-    <div class="modal-overlay" id="personal-settings-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">
-                    <i class="fas fa-user-cog"></i>
-                    👤 個人設定 & 加入隊伍
-                </h3>
-                <button class="close-modal" id="close-settings-modal">&times;</button>
-            </div>
-            
-            <img id="avatar-img" class="avatar-preview" src="https://ui-avatars.com/api/?name=User&background=random&size=100">
-            
-            <div class="form-group">
-                <label>更換頭像</label>
-                <input type="file" id="avatar_file" accept="image/*">
-            </div>
-            
-            <div class="form-group">
-                <label>真實姓名</label>
-                <input type="text" id="full_name" placeholder="隊友如何稱呼你">
-            </div>
-            
-            <div class="row">
-                <div class="form-group">
-                    <label>角色</label>
-                    <select id="role">
-                        <option value="member">學員</option>
-                        <option value="captain">隊長</option>
-                        <option value="deputy">副隊長</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>計畫</label>
-                    <select id="plan">
-                        <option value="slow_run">慢跑</option>
-                        <option value="fast_run">快跑</option>
-                        <option value="vip">VIP</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="form-group" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
-                <label>加入隊伍邀請碼 (Team ID)</label>
-                <input type="text" id="team_id_input" placeholder="貼上隊長給的 ID">
-                <small style="color:#666; display:block; margin-top:5px;">若無隊伍代碼，請聯絡隊長</small>
-            </div>
-            
-            <div class="auth-buttons" style="margin-top: 20px;">
-                <button class="btn-primary" id="save-profile-btn">
-                    <i class="fas fa-save"></i>
-                    儲存設定
+                <button class="btn btn-primary" onclick="saveProfile()" style="margin-top: 30px; width: 100%;">
+                    <i class="fas fa-save"></i> 儲存所有設定
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // 使用立即執行函數來避免變數重複聲明
-        (function() {
-            // Supabase配置 - 使用你的Supabase專案
-            const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+        // Supabase 配置 - 替換成您的實際資料
+        const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+        
+        // 初始化 Supabase 客戶端
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 應用狀態
+        let currentUser = null;
+        let userProfile = null;
+        let isLoginMode = true;
+        let todayData = null;
+        
+        // 頁面載入時檢查登入狀態
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            setupEventListeners();
+        });
+        
+        // 檢查認證狀態
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
             
-            // 初始化Supabase
-            let supabaseClient = null;
+            if (session) {
+                currentUser = session.user;
+                await loadUserProfile();
+                showMainApp();
+            } else {
+                showAuth();
+            }
+        }
+        
+        // 切換登入/註冊模式
+        function switchAuthMode() {
+            isLoginMode = !isLoginMode;
+            
+            if (isLoginMode) {
+                document.getElementById('auth-form-title').textContent = '歡迎回來';
+                document.getElementById('auth-form-subtitle').textContent = '請登入您的帳號';
+                document.getElementById('auth-submit-text').textContent = '登入';
+                document.getElementById('auth-switch-text').textContent = '還沒有帳號？';
+                document.getElementById('auth-switch-link').textContent = '立即註冊';
+            } else {
+                document.getElementById('auth-form-title').textContent = '建立新帳號';
+                document.getElementById('auth-form-subtitle').textContent = '註冊開始您的健身旅程';
+                document.getElementById('auth-submit-text').textContent = '註冊';
+                document.getElementById('auth-switch-text').textContent = '已有帳號？';
+                document.getElementById('auth-switch-link').textContent = '立即登入';
+            }
+            
+            document.getElementById('auth-error').style.display = 'none';
+        }
+        
+        // 處理認證表單提交
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            
+            errorElement.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 處理中...';
+            
             try {
-                if (window.supabase) {
-                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('Supabase客戶端初始化成功');
+                if (isLoginMode) {
+                    // 登入
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) throw error;
+                    
+                    currentUser = data.user;
+                    await loadUserProfile();
+                    showMainApp();
+                } else {
+                    // 註冊
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                full_name: email.split('@')[0]
+                            }
+                        }
+                    });
+                    
+                    if (error) throw error;
+                    
+                    alert('註冊成功！請檢查您的電子郵件進行驗證（如需要），然後登入。');
+                    switchAuthMode();
                 }
             } catch (error) {
-                console.error('Supabase初始化失敗:', error);
+                errorElement.textContent = error.message;
+                errorElement.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fas fa-sign-in-alt"></i> <span id="auth-submit-text">${isLoginMode ? '登入' : '註冊'}</span>`;
+            }
+        });
+        
+        // 載入使用者資料
+        async function loadUserProfile() {
+            if (!currentUser) return;
+            
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+            
+            if (error) {
+                console.error('載入使用者資料錯誤:', error);
+                // 如果使用者資料不存在，建立一個
+                await createUserProfile();
+                return;
             }
             
-            // 認證管理
-            class AuthManager {
-                constructor() {
-                    this.currentUser = null;
-                    this.authKey = 'marathon_auth_token';
-                    this.userProfileKey = 'marathon_user_profile';
-                    this.init();
-                }
-                
-                init() {
-                    this.checkAuth();
-                }
-                
-                // 檢查認證狀態
-                checkAuth() {
-                    const token = localStorage.getItem(this.authKey);
-                    const userData = localStorage.getItem('currentUser');
-                    
-                    if (token && userData) {
-                        try {
-                            this.currentUser = JSON.parse(userData);
-                            if (this.currentUser.token === token) {
-                                return true;
-                            }
-                        } catch (e) {
-                            console.error('解析使用者數據錯誤:', e);
-                        }
-                    }
-                    
-                    return false;
-                }
-                
-                // 計算當前是第幾天
-                getCurrentDay() {
-                    const startDateStr = localStorage.getItem('user_start_date');
-                    
-                    if (startDateStr) {
-                        const startDate = new Date(startDateStr);
-                        const today = new Date();
-                        
-                        startDate.setHours(0, 0, 0, 0);
-                        today.setHours(0, 0, 0, 0);
-                        
-                        const timeDiff = today.getTime() - startDate.getTime();
-                        const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
-                        
-                        console.log(`開始日期: ${startDateStr}, 今天: ${today.toISOString().split('T')[0]}, 天數差: ${dayDiff}`);
-                        return Math.max(1, dayDiff);
-                    } else {
-                        const today = new Date();
-                        const startDate = new Date(today);
-                        startDate.setDate(today.getDate() - 3);
-                        
-                        localStorage.setItem('user_start_date', startDate.toISOString().split('T')[0]);
-                        console.log(`新使用者，設定開始日期為: ${startDate.toISOString().split('T')[0]}, 今天是第4天`);
-                        return 4;
-                    }
-                }
-                
-                // 簡易登入系統
-                async simpleLogin(email, password) {
-                    if (!email || !password) {
-                        throw new Error('請輸入電子郵件和密碼');
-                    }
-                    
-                    if (!this.validateEmail(email)) {
-                        throw new Error('請輸入有效的電子郵件');
-                    }
-                    
-                    if (password.length < 6) {
-                        throw new Error('密碼必須至少6個字符');
-                    }
-                    
-                    this.currentUser = {
-                        id: 'user_' + Date.now(),
-                        email: email,
-                        name: email.split('@')[0],
-                        token: this.generateToken()
-                    };
-                    
-                    localStorage.setItem(this.authKey, this.currentUser.token);
-                    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                    
-                    return this.currentUser;
-                }
-                
-                // 登入
-                async login(email, password) {
-                    try {
-                        if (supabaseClient) {
-                            return await this.supabaseLogin(email, password);
-                        }
-                    } catch (supabaseError) {
-                        console.log('Supabase登入失敗，使用本地模式:', supabaseError);
-                    }
-                    
-                    return await this.simpleLogin(email, password);
-                }
-                
-                // Supabase登入 - 簡化版本，避免表結構問題
-                async supabaseLogin(email, password) {
-                    if (!supabaseClient) {
-                        throw new Error('Supabase未正確配置');
-                    }
-                    
-                    try {
-                        // 嘗試登入
-                        const { data, error } = await supabaseClient.auth.signInWithPassword({
-                            email: email,
-                            password: password
-                        });
-                        
-                        if (error) {
-                            // 如果使用者不存在，嘗試註冊
-                            if (error.message.includes('Invalid login credentials')) {
-                                const { data: signupData, error: signupError } = await supabaseClient.auth.signUp({
-                                    email: email,
-                                    password: password
-                                });
-                                
-                                if (signupError) throw signupError;
-                                
-                                this.currentUser = {
-                                    id: signupData.user.id,
-                                    email: signupData.user.email,
-                                    name: email.split('@')[0],
-                                    token: signupData.session?.access_token || this.generateToken()
-                                };
-                            } else {
-                                throw error;
-                            }
-                        } else {
-                            this.currentUser = {
-                                id: data.user.id,
-                                email: data.user.email,
-                                name: data.user.user_metadata?.name || email.split('@')[0],
-                                token: data.session.access_token
-                            };
-                        }
-                        
-                        localStorage.setItem(this.authKey, this.currentUser.token);
-                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                        
-                        return this.currentUser;
-                        
-                    } catch (error) {
-                        console.error('Supabase登入錯誤:', error);
-                        // 回退到本地模式
-                        throw new Error('Supabase登入失敗，使用本地模式');
-                    }
-                }
-                
-                // 註冊
-                async signup(email, password) {
-                    return await this.login(email, password);
-                }
-                
-                // 登出
-                logout() {
-                    this.currentUser = null;
-                    localStorage.removeItem(this.authKey);
-                    localStorage.removeItem('currentUser');
-                    
-                    if (supabaseClient) {
-                        supabaseClient.auth.signOut().catch(error => {
-                            console.error('Supabase登出錯誤:', error);
-                        });
-                    }
-                    
-                    return true;
-                }
-                
-                // 產生token
-                generateToken() {
-                    return 'token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                }
-                
-                // 驗證email格式
-                validateEmail(email) {
-                    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    return re.test(email);
-                }
-                
-                // 獲取當前使用者
-                getUser() {
-                    return this.currentUser;
-                }
-                
-                // 儲存使用者設定
-                saveUserProfile(profile) {
-                    localStorage.setItem(this.userProfileKey, JSON.stringify(profile));
-                    return true;
-                }
-                
-                // 載入使用者設定
-                loadUserProfile() {
-                    const profileStr = localStorage.getItem(this.userProfileKey);
-                    if (profileStr) {
-                        try {
-                            return JSON.parse(profileStr);
-                        } catch (e) {
-                            console.error('解析使用者設定錯誤:', e);
-                        }
-                    }
-                    return null;
-                }
-                
-                // 更新使用者資料
-                updateUser(userData) {
-                    if (this.currentUser) {
-                        this.currentUser = { ...this.currentUser, ...userData };
-                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                        return true;
-                    }
-                    return false;
-                }
+            userProfile = data;
+            updateUserUI();
+            
+            // 載入今日數據
+            await loadTodayData();
+            await loadHistory();
+        }
+        
+        // 建立使用者資料
+        async function createUserProfile() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .insert([{
+                    id: currentUser.id,
+                    email: currentUser.email,
+                    full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                    role: 'member',
+                    plan: 'slow_run',
+                    points: 0
+                }])
+                .select()
+                .single();
+            
+            if (error) {
+                console.error('建立使用者資料錯誤:', error);
+                return;
             }
             
-            // DOM元素
-            const authSection = document.getElementById('auth-section');
-            const appSection = document.getElementById('app-section');
-            const weightValue = document.getElementById('weight-value');
-            const fatValue = document.getElementById('fat-value');
-            const muscleValue = document.getElementById('muscle-value');
-            const submitBtn = document.getElementById('submitBtn');
-            const statusMsg = document.getElementById('status-msg');
-            const welcomeMessage = document.getElementById('welcome-message');
-            const countdownTimer = document.getElementById('countdown-timer');
-            const currentDay = document.getElementById('current-day');
-            const userAvatarBtn = document.getElementById('user-avatar-btn');
-            const userMenuDropdown = document.getElementById('user-menu-dropdown');
-            const emailError = document.getElementById('email-error');
-            const passwordError = document.getElementById('password-error');
-            const dailyCounter = document.getElementById('daily-counter');
-            const submitCountDisplay = document.getElementById('submit-count');
+            userProfile = data;
+            updateUserUI();
+        }
+        
+        // 更新使用者介面
+        function updateUserUI() {
+            if (!userProfile) return;
             
-            // 模態框元素
-            const personalSettingsModal = document.getElementById('personal-settings-modal');
-            const closeSettingsModal = document.getElementById('close-settings-modal');
-            const saveProfileBtn = document.getElementById('save-profile-btn');
-            const avatarImg = document.getElementById('avatar-img');
-            const avatarFile = document.getElementById('avatar_file');
-            const fullNameInput = document.getElementById('full_name');
-            const roleSelect = document.getElementById('role');
-            const planSelect = document.getElementById('plan');
-            const teamIdInput = document.getElementById('team_id_input');
+            document.getElementById('user-name').textContent = userProfile.full_name || '使用者';
+            document.getElementById('user-email').textContent = userProfile.email;
             
-            // 按鈕元素
-            const loginBtn = document.getElementById('login-btn');
-            const signupBtn = document.getElementById('signup-btn');
-            const logoutBtn = document.getElementById('logout-btn');
-            const personalSettingsBtn = document.getElementById('personal-settings-btn');
-            const pointsRulesBtn = document.getElementById('points-rules-btn');
-            const scheduleBtn = document.getElementById('schedule-btn');
-            const logoutMenuBtn = document.getElementById('logout-menu-btn');
+            // 計算天數 (假設從註冊日開始)
+            const startDate = new Date(currentUser.created_at);
+            const today = new Date();
+            const dayDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('user-day').textContent = `Day ${dayDiff}`;
             
-            // 初始化認證管理
-            const authManager = new AuthManager();
+            // 更新頭像
+            const avatarElement = document.getElementById('user-avatar');
+            const profileAvatar = document.getElementById('profile-avatar');
             
-            // 頁面狀態
-            let isSubmitted = false;
-            let countdownInterval = null;
-            let todaySubmitCount = 0;
-            let maxSubmissionsPerDay = 3;
+            if (userProfile.avatar_url) {
+                avatarElement.innerHTML = `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                profileAvatar.innerHTML = `<img src="${userProfile.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+            } else {
+                const initials = (userProfile.full_name || 'U').charAt(0).toUpperCase();
+                avatarElement.innerHTML = initials;
+                profileAvatar.innerHTML = initials;
+            }
             
-            // 初始化頁面
-            document.addEventListener('DOMContentLoaded', function() {
-                checkAndRedirect();
-                setupEventListeners();
-                loadUserProfile();
+            // 更新個人設定表單
+            document.getElementById('profile-name').value = userProfile.full_name || '';
+            document.getElementById('profile-plan').value = userProfile.plan || 'slow_run';
+            
+            // 如果是隊長，顯示邀請碼
+            if (userProfile.role === 'captain' && userProfile.current_team_id) {
+                document.getElementById('team-invite-code').style.display = 'block';
+                document.getElementById('invite-code-display').textContent = userProfile.current_team_id;
+            }
+        }
+        
+        // 顯示認證頁面
+        function showAuth() {
+            document.getElementById('auth-container').classList.add('active');
+            document.getElementById('main-container').classList.remove('active');
+        }
+        
+        // 顯示主應用
+        function showMainApp() {
+            document.getElementById('auth-container').classList.remove('active');
+            document.getElementById('main-container').classList.add('active');
+            
+            // 顯示儀表板
+            showSection('dashboard');
+        }
+        
+        // 切換區塊顯示
+        function showSection(sectionId) {
+            // 隱藏所有區塊
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = 'none';
             });
             
-            // 檢查並導向頁面
-            async function checkAndRedirect() {
-                const isAuthenticated = authManager.checkAuth();
+            // 更新導航選項
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // 顯示目標區塊
+            document.getElementById(`${sectionId}-section`).style.display = 'block';
+            
+            // 更新活動的導航連結
+            document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`).classList.add('active');
+            
+            // 載入特定區塊的數據
+            if (sectionId === 'ranking') {
+                loadRanking('weight');
+            } else if (sectionId === 'team') {
+                loadTeamInfo();
+            }
+        }
+        
+        // 調整輸入數值
+        function adjustValue(type, change) {
+            const inputElement = document.getElementById(`input-${type}`);
+            let currentValue = parseFloat(inputElement.value) || 0;
+            
+            // 根據類型設定範圍
+            const ranges = {
+                weight: { min: 30, max: 200, step: 0.1 },
+                fat: { min: 5, max: 60, step: 0.1 },
+                muscle: { min: 10, max: 100, step: 0.1 }
+            };
+            
+            const range = ranges[type];
+            let newValue = currentValue + change;
+            
+            // 確保在範圍內
+            newValue = Math.max(range.min, Math.min(range.max, newValue));
+            
+            // 四捨五入到小數點後一位
+            inputElement.value = newValue.toFixed(1);
+        }
+        
+        // 載入今日數據
+        async function loadTodayData() {
+            if (!currentUser) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            const { data, error } = await supabase
+                .from('weight_records')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('date', today)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') { // PGRST116 表示沒有找到記錄
+                console.error('載入今日數據錯誤:', error);
+                return;
+            }
+            
+            todayData = data;
+            
+            if (data) {
+                // 更新輸入值
+                document.getElementById('input-weight').value = parseFloat(data.weight).toFixed(1);
+                document.getElementById('input-fat').value = parseFloat(data.fat_rate || 0).toFixed(1);
+                document.getElementById('input-muscle').value = parseFloat(data.muscle_mass || 0).toFixed(1);
+                document.getElementById('daily-note').value = data.daily_note || '';
                 
-                if (isAuthenticated) {
-                    await showAppSection();
+                // 更新儀表板
+                document.getElementById('today-weight').textContent = `${parseFloat(data.weight).toFixed(1)} kg`;
+                document.getElementById('today-fat').textContent = `${parseFloat(data.fat_rate || 0).toFixed(1)} %`;
+                document.getElementById('today-muscle').textContent = `${parseFloat(data.muscle_mass || 0).toFixed(1)} kg`;
+                
+                // 載入昨日數據以計算變化
+                await loadYesterdayComparison();
+                
+                // 更新提交狀態
+                updateSubmitStatus();
+            } else {
+                // 沒有今日數據，重置為預設值
+                document.getElementById('today-weight').textContent = '-- kg';
+                document.getElementById('today-fat').textContent = '-- %';
+                document.getElementById('today-muscle').textContent = '-- kg';
+                
+                document.getElementById('weight-change').textContent = '與昨日比較: --';
+                document.getElementById('fat-change').textContent = '與昨日比較: --';
+                document.getElementById('muscle-change').textContent = '與昨日比較: --';
+            }
+        }
+        
+        // 載入昨日數據比較
+        async function loadYesterdayComparison() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            const { data, error } = await supabase
+                .from('weight_records')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .eq('date', yesterdayStr)
+                .single();
+            
+            if (error || !data) return;
+            
+            // 計算變化
+            const weightChange = todayData.weight - data.weight;
+            const fatChange = (todayData.fat_rate || 0) - (data.fat_rate || 0);
+            const muscleChange = (todayData.muscle_mass || 0) - (data.muscle_mass || 0);
+            
+            // 更新顯示
+            document.getElementById('weight-change').textContent = 
+                `與昨日比較: ${weightChange >= 0 ? '+' : ''}${weightChange.toFixed(1)} kg`;
+            document.getElementById('weight-change').style.color = weightChange < 0 ? '#4CAF50' : '#f44336';
+            
+            document.getElementById('fat-change').textContent = 
+                `與昨日比較: ${fatChange >= 0 ? '+' : ''}${fatChange.toFixed(1)} %`;
+            document.getElementById('fat-change').style.color = fatChange < 0 ? '#4CAF50' : '#f44336';
+            
+            document.getElementById('muscle-change').textContent = 
+                `與昨日比較: ${muscleChange >= 0 ? '+' : ''}${muscleChange.toFixed(1)} kg`;
+            document.getElementById('muscle-change').style.color = muscleChange > 0 ? '#4CAF50' : '#f44336';
+        }
+        
+        // 更新提交狀態
+        function updateSubmitStatus() {
+            if (!todayData) {
+                document.getElementById('submit-count').textContent = '0';
+                document.getElementById('submit-time').textContent = '最後提交時間: --';
+                return;
+            }
+            
+            // 計算今天提交的次數（根據同一天的同user_id記錄數量）
+            // 這需要一個額外的查詢，但為了簡化，我們假設每條記錄都是一次提交
+            document.getElementById('submit-count').textContent = '1';
+            
+            const submitTime = new Date(todayData.created_at).toLocaleTimeString('zh-TW');
+            document.getElementById('submit-time').textContent = `最後提交時間: ${submitTime}`;
+        }
+        
+        // 提交每日數據
+        async function submitDailyData() {
+            if (!currentUser) {
+                alert('請先登入');
+                return;
+            }
+            
+            const weight = parseFloat(document.getElementById('input-weight').value);
+            const fatRate = parseFloat(document.getElementById('input-fat').value);
+            const muscleMass = parseFloat(document.getElementById('input-muscle').value);
+            const dailyNote = document.getElementById('daily-note').value;
+            
+            const submitBtn = document.getElementById('submit-btn');
+            const errorElement = document.getElementById('submit-error');
+            
+            errorElement.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+            
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                // 檢查是否已有今日記錄
+                const { data: existingRecord } = await supabase
+                    .from('weight_records')
+                    .select('id')
+                    .eq('user_id', currentUser.id)
+                    .eq('date', today)
+                    .single();
+                
+                let result;
+                
+                if (existingRecord) {
+                    // 更新現有記錄
+                    result = await supabase
+                        .from('weight_records')
+                        .update({
+                            weight: weight,
+                            fat_rate: fatRate,
+                            muscle_mass: muscleMass,
+                            daily_note: dailyNote,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', existingRecord.id);
                 } else {
-                    showAuthSection();
+                    // 插入新記錄
+                    result = await supabase
+                        .from('weight_records')
+                        .insert([{
+                            user_id: currentUser.id,
+                            weight: weight,
+                            fat_rate: fatRate,
+                            muscle_mass: muscleMass,
+                            date: today,
+                            daily_note: dailyNote
+                        }]);
                 }
+                
+                if (result.error) throw result.error;
+                
+                alert('數據提交成功！');
+                
+                // 重新載入數據
+                await loadTodayData();
+                await loadHistory();
+                
+                // 更新儀表板
+                showSection('dashboard');
+                
+            } catch (error) {
+                errorElement.textContent = `提交失敗: ${error.message}`;
+                errorElement.style.display = 'block';
+                console.error('提交錯誤:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交數據';
             }
+        }
+        
+        // 載入歷史記錄
+        async function loadHistory() {
+            if (!currentUser) return;
             
-            // 顯示登入頁面
-            function showAuthSection() {
-                authSection.style.display = 'block';
-                appSection.style.display = 'none';
-                
-                if (countdownInterval) {
-                    clearInterval(countdownInterval);
-                    countdownInterval = null;
-                }
-                
-                clearErrors();
-            }
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '<p style="text-align: center; padding: 20px; color: #666;">載入中...</p>';
             
-            // 顯示主應用頁面
-            async function showAppSection() {
-                authSection.style.display = 'none';
-                appSection.style.display = 'block';
+            try {
+                const { data, error } = await supabase
+                    .from('weight_records')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('date', { ascending: false })
+                    .limit(20);
                 
-                const user = authManager.getUser();
-                if (user) {
-                    welcomeMessage.textContent = `歡迎，${user.name}`;
-                    
-                    const day = authManager.getCurrentDay();
-                    currentDay.textContent = `Day ${day}`;
-                    
-                    updateCountdown();
-                    countdownInterval = setInterval(updateCountdown, 1000);
-                    
-                    checkTodaySubmission();
-                    loadLastData();
-                    updateSubmitCounter();
-                }
-            }
-            
-            // 清除錯誤訊息
-            function clearErrors() {
-                emailError.textContent = '';
-                emailError.classList.remove('show');
-                passwordError.textContent = '';
-                passwordError.classList.remove('show');
-            }
-            
-            // 載入使用者設定
-            function loadUserProfile() {
-                const profile = authManager.loadUserProfile();
-                if (profile) {
-                    if (profile.fullName) fullNameInput.value = profile.fullName;
-                    if (profile.role) roleSelect.value = profile.role;
-                    if (profile.plan) planSelect.value = profile.plan;
-                    if (profile.teamId) teamIdInput.value = profile.teamId;
-                    if (profile.avatarUrl) avatarImg.src = profile.avatarUrl;
-                    
-                    const user = authManager.getUser();
-                    if (user && profile.fullName) {
-                        user.name = profile.fullName;
-                        authManager.updateUser(user);
-                        welcomeMessage.textContent = `歡迎，${profile.fullName}`;
-                    }
-                }
-            }
-            
-            // 更新提交計數器顯示
-            function updateSubmitCounter() {
-                const user = authManager.getUser();
-                if (!user) return;
+                if (error) throw error;
                 
-                const today = new Date().toDateString();
-                const userDayKey = `submissions_${user.id}_${today}`;
-                
-                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0}');
-                todaySubmitCount = submissionInfo.count || 0;
-                
-                submitCountDisplay.textContent = todaySubmitCount;
-                
-                if (todaySubmitCount >= maxSubmissionsPerDay) {
-                    dailyCounter.innerHTML = `<i class="fas fa-check-circle"></i><span>今日已完成 ${todaySubmitCount} 次報到</span>`;
-                    dailyCounter.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
-                } else {
-                    dailyCounter.innerHTML = `<i class="fas fa-redo-alt"></i><span>今日修改次數: ${todaySubmitCount}/${maxSubmissionsPerDay}</span>`;
-                    dailyCounter.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
-                }
-            }
-            
-            // 載入上次數據
-            async function loadLastData() {
-                const user = authManager.getUser();
-                if (!user) return;
-                
-                const today = new Date().toDateString();
-                const userDayKey = `submissions_${user.id}_${today}`;
-                
-                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0, "lastData": null}');
-                
-                if (submissionInfo.lastData) {
-                    weightValue.value = submissionInfo.lastData.weight || 65.3;
-                    fatValue.value = submissionInfo.lastData.fat_rate || 41.3;
-                    muscleValue.value = submissionInfo.lastData.muscle_mass || 20.1;
+                if (!data || data.length === 0) {
+                    historyList.innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">尚無歷史記錄</p>';
                     return;
                 }
                 
-                const lastData = localStorage.getItem('lastFitnessData');
-                if (lastData) {
-                    try {
-                        const data = JSON.parse(lastData);
-                        weightValue.value = data.weight || 65.3;
-                        fatValue.value = data.fat_rate || 41.3;
-                        muscleValue.value = data.muscle_mass || 20.1;
-                    } catch (e) {
-                        console.error('解析本地數據錯誤:', e);
-                    }
-                }
-            }
-            
-            // 設定事件監聽器
-            function setupEventListeners() {
-                loginBtn.addEventListener('click', handleLogin);
-                signupBtn.addEventListener('click', handleSignup);
-                logoutBtn.addEventListener('click', handleLogout);
-                logoutMenuBtn.addEventListener('click', handleLogout);
-                
-                personalSettingsBtn.addEventListener('click', openPersonalSettings);
-                pointsRulesBtn.addEventListener('click', openPointsRules);
-                scheduleBtn.addEventListener('click', openSchedule);
-                
-                closeSettingsModal.addEventListener('click', closePersonalSettings);
-                saveProfileBtn.addEventListener('click', saveUserProfile);
-                
-                avatarFile.addEventListener('change', previewAvatar);
-                
-                document.querySelectorAll('.control-btn').forEach(btn => {
-                    btn.addEventListener('click', handleButtonClick);
-                    btn.addEventListener('touchstart', handleTouchStart);
-                    btn.addEventListener('touchend', handleTouchEnd);
-                    btn.addEventListener('touchcancel', handleTouchEnd);
+                let html = '';
+                data.forEach(record => {
+                    const date = new Date(record.date).toLocaleDateString('zh-TW');
+                    
+                    html += `
+                        <div class="record-item">
+                            <div class="record-date">${date}</div>
+                            <div class="record-values">
+                                <div class="record-value">
+                                    <div class="label">體重</div>
+                                    <div class="value">${parseFloat(record.weight).toFixed(1)} kg</div>
+                                </div>
+                                <div class="record-value">
+                                    <div class="label">體脂率</div>
+                                    <div class="value">${parseFloat(record.fat_rate || 0).toFixed(1)} %</div>
+                                </div>
+                                <div class="record-value">
+                                    <div class="label">肌肉量</div>
+                                    <div class="value">${parseFloat(record.muscle_mass || 0).toFixed(1)} kg</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
                 
-                submitBtn.addEventListener('click', saveDailyData);
-                
-                setupSwipeGestures();
-                
-                userAvatarBtn.addEventListener('click', toggleUserMenu);
-                
-                document.addEventListener('click', function(event) {
-                    if (!userAvatarBtn.contains(event.target) && !userMenuDropdown.contains(event.target)) {
-                        userMenuDropdown.classList.remove('show');
-                    }
-                    
-                    if (event.target === personalSettingsModal) {
-                        closePersonalSettings();
-                    }
-                });
-                
-                document.getElementById('email').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') handleLogin();
-                });
-                
-                document.getElementById('password').addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') handleLogin();
-                });
-                
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        closePersonalSettings();
-                    }
-                });
+                historyList.innerHTML = html;
+            } catch (error) {
+                console.error('載入歷史記錄錯誤:', error);
+                historyList.innerHTML = '<p style="text-align: center; padding: 40px; color: #f44336;">載入失敗</p>';
             }
-            
-            // 切換用戶菜單
-            function toggleUserMenu(event) {
-                event.stopPropagation();
-                userMenuDropdown.classList.toggle('show');
-            }
-            
-            // 打開個人設定
-            function openPersonalSettings() {
-                userMenuDropdown.classList.remove('show');
-                personalSettingsModal.classList.add('show');
-                loadUserProfile();
-            }
-            
-            // 關閉個人設定
-            function closePersonalSettings() {
-                personalSettingsModal.classList.remove('show');
-            }
-            
-            // 預覽頭像
-            function previewAvatar() {
-                const file = avatarFile.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        avatarImg.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-            
-            // 儲存使用者設定
-            function saveUserProfile() {
-                const profile = {
-                    fullName: fullNameInput.value.trim(),
-                    role: roleSelect.value,
-                    plan: planSelect.value,
-                    teamId: teamIdInput.value.trim(),
-                    avatarUrl: avatarImg.src,
-                    updatedAt: new Date().toISOString()
-                };
-                
-                authManager.saveUserProfile(profile);
-                
-                const user = authManager.getUser();
-                if (user && profile.fullName) {
-                    user.name = profile.fullName;
-                    authManager.updateUser(user);
-                    welcomeMessage.textContent = `歡迎，${profile.fullName}`;
-                }
-                
-                showStatusMessage("個人設定已儲存！", 'success');
-                
-                setTimeout(() => {
-                    statusMsg.textContent = "";
-                    statusMsg.className = "status-msg";
-                }, 2000);
-                
-                closePersonalSettings();
-            }
-            
-            // 處理按鈕點擊
-            function handleButtonClick(e) {
-                e.preventDefault();
-                const type = this.getAttribute('data-type');
-                const change = parseFloat(this.getAttribute('data-change'));
-                adjustValue(type, change);
-            }
-            
-            // 處理觸控開始
-            let longPressTimer = null;
-            let longPressInterval = null;
-            
-            function handleTouchStart(e) {
-                e.preventDefault();
-                const type = this.getAttribute('data-type');
-                const change = parseFloat(this.getAttribute('data-change'));
-                
-                adjustValue(type, change);
-                
-                longPressTimer = setTimeout(() => {
-                    longPressInterval = setInterval(() => {
-                        adjustValue(type, change);
-                    }, 100);
-                }, 500);
-            }
-            
-            function handleTouchEnd(e) {
-                e.preventDefault();
-                clearTimeout(longPressTimer);
-                clearInterval(longPressInterval);
-            }
-            
-            // 設定滑動手勢
-            function setupSwipeGestures() {
-                let touchStartX = 0;
-                
-                document.querySelectorAll('.input-box').forEach(box => {
-                    box.addEventListener('touchstart', function(e) {
-                        const touch = e.touches[0];
-                        touchStartX = touch.clientX;
-                        this.style.transform = 'translateY(2px)';
-                    });
-                    
-                    box.addEventListener('touchmove', function(e) {
-                        e.preventDefault();
-                        const touch = e.touches[0];
-                        const deltaX = touch.clientX - touchStartX;
-                        
-                        if (Math.abs(deltaX) > 20) {
-                            const type = this.getAttribute('data-type');
-                            const change = deltaX > 0 ? 0.1 : -0.1;
-                            adjustValue(type, change);
-                            touchStartX = touch.clientX;
-                        }
-                    });
-                    
-                    box.addEventListener('touchend', function() {
-                        this.style.transform = '';
-                    });
-                });
-            }
-            
-            // 調整數值
-            function adjustValue(type, change) {
-                if (isSubmitted && todaySubmitCount >= maxSubmissionsPerDay) return;
-                
-                let element, currentValue, minValue, maxValue;
-                
-                switch(type) {
-                    case 'weight':
-                        element = weightValue;
-                        currentValue = parseFloat(element.value);
-                        minValue = 30; maxValue = 200;
-                        break;
-                    case 'fat':
-                        element = fatValue;
-                        currentValue = parseFloat(element.value);
-                        minValue = 5; maxValue = 60;
-                        break;
-                    case 'muscle':
-                        element = muscleValue;
-                        currentValue = parseFloat(element.value);
-                        minValue = 10; maxValue = 100;
-                        break;
-                    default:
-                        return;
-                }
-                
-                let newValue = currentValue + change;
-                newValue = Math.max(minValue, Math.min(maxValue, newValue));
-                element.value = newValue.toFixed(1);
-                
-                const box = element.closest('.input-box');
-                box.classList.add('shake');
-                setTimeout(() => box.classList.remove('shake'), 300);
-            }
-            
-            // 更新倒數計時
-            function updateCountdown() {
-                const now = new Date();
-                const endOfDay = new Date();
-                endOfDay.setHours(23, 59, 59, 999);
-                
-                const timeLeft = endOfDay - now;
-                
-                if (timeLeft <= 0) {
-                    countdownTimer.textContent = "00:00:00";
-                    clearInterval(countdownInterval);
-                    
-                    // 新的一天，重置提交狀態
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                    return;
-                }
-                
-                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                
-                countdownTimer.textContent = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-            
-            // 檢查今天是否已提交
-            function checkTodaySubmission() {
-                const user = authManager.getUser();
-                if (!user) return;
-                
-                const today = new Date().toDateString();
-                const userDayKey = `submissions_${user.id}_${today}`;
-                
-                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0}');
-                todaySubmitCount = submissionInfo.count || 0;
-                
-                updateSubmitCounter();
-                
-                if (todaySubmitCount >= maxSubmissionsPerDay) {
-                    lockSubmissionForToday();
-                    statusMsg.textContent = "今日已報到達3次上限，無法繼續修改。";
-                    statusMsg.className = "status-msg warning";
-                } else if (todaySubmitCount > 0) {
-                    statusMsg.textContent = `今日已報到 ${todaySubmitCount} 次，還可修改 ${maxSubmissionsPerDay - todaySubmitCount} 次。`;
-                    statusMsg.className = "status-msg warning";
-                    isSubmitted = false;
-                    document.querySelectorAll('.input-box').forEach(box => box.classList.remove('locked'));
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 更新今日報到';
-                }
-            }
-            
-            // 鎖定提交狀態（當日）
-            function lockSubmissionForToday() {
-                isSubmitted = true;
-                document.querySelectorAll('.input-box').forEach(box => {
-                    box.classList.add('locked');
-                });
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已達上限';
-            }
-            
-            // 顯示錯誤
-            function showError(elementId, message) {
-                const element = document.getElementById(elementId);
-                element.textContent = message;
-                element.classList.add('show');
-            }
-            
-            // 顯示狀態訊息
-            function showStatusMessage(message, type = 'info') {
-                statusMsg.textContent = message;
-                statusMsg.className = `status-msg ${type}`;
-                
-                if (type !== 'warning') {
-                    setTimeout(() => {
-                        statusMsg.textContent = '';
-                        statusMsg.className = 'status-msg';
-                    }, 3000);
-                }
-            }
-            
-            // 處理登入
-            async function handleLogin() {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                clearErrors();
-                
-                let hasError = false;
-                
-                if (!email) {
-                    showError('email-error', '請輸入電子郵件');
-                    hasError = true;
-                } else if (!authManager.validateEmail(email)) {
-                    showError('email-error', '請輸入有效的電子郵件');
-                    hasError = true;
-                }
-                
-                if (!password) {
-                    showError('password-error', '請輸入密碼');
-                    hasError = true;
-                } else if (password.length < 6) {
-                    showError('password-error', '密碼必須至少6個字符');
-                    hasError = true;
-                }
-                
-                if (hasError) return;
-                
-                try {
-                    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登入中...';
-                    loginBtn.disabled = true;
-                    
-                    const user = await authManager.login(email, password);
-                    
-                    if (user) {
-                        await showAppSection();
-                        showStatusMessage('登入成功！', 'success');
-                    }
-                } catch (error) {
-                    console.error('登入錯誤:', error);
-                    
-                    if (error.message.includes('Invalid login credentials')) {
-                        showError('password-error', '電子郵件或密碼不正確');
-                    } else if (error.message.includes('Supabase')) {
-                        showStatusMessage('使用本地模式登入（資料將儲存在瀏覽器中）', 'warning');
-                        
-                        try {
-                            const user = await authManager.simpleLogin(email, password);
-                            if (user) {
-                                await showAppSection();
-                                showStatusMessage('本地登入成功！資料將儲存在瀏覽器中', 'success');
-                            }
-                        } catch (localError) {
-                            showStatusMessage('登入失敗：' + localError.message, 'error');
-                        }
-                    } else {
-                        showStatusMessage('登入失敗：' + error.message, 'error');
-                    }
-                } finally {
-                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
-                    loginBtn.disabled = false;
-                }
-            }
-            
-            // 處理註冊
-            async function handleSignup() {
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                clearErrors();
-                
-                let hasError = false;
-                
-                if (!email) {
-                    showError('email-error', '請輸入電子郵件');
-                    hasError = true;
-                } else if (!authManager.validateEmail(email)) {
-                    showError('email-error', '請輸入有效的電子郵件');
-                    hasError = true;
-                }
-                
-                if (!password) {
-                    showError('password-error', '請輸入密碼');
-                    hasError = true;
-                } else if (password.length < 6) {
-                    showError('password-error', '密碼必須至少6個字符');
-                    hasError = true;
-                }
-                
-                if (hasError) return;
-                
-                try {
-                    signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 註冊中...';
-                    signupBtn.disabled = true;
-                    
-                    const user = await authManager.signup(email, password);
-                    
-                    if (user) {
-                        await showAppSection();
-                        showStatusMessage('註冊成功！', 'success');
-                    }
-                } catch (error) {
-                    console.error('註冊錯誤:', error);
-                    
-                    if (error.message.includes('Invalid login credentials')) {
-                        showError('password-error', '電子郵件或密碼不正確');
-                    } else if (error.message.includes('Supabase')) {
-                        showStatusMessage('使用本地模式註冊（資料將儲存在瀏覽器中）', 'warning');
-                        
-                        try {
-                            const user = await authManager.simpleLogin(email, password);
-                            if (user) {
-                                await showAppSection();
-                                showStatusMessage('本地註冊成功！資料將儲存在瀏覽器中', 'success');
-                            }
-                        } catch (localError) {
-                            showStatusMessage('註冊失敗：' + localError.message, 'error');
-                        }
-                    } else {
-                        showStatusMessage('註冊失敗：' + error.message, 'error');
-                    }
-                } finally {
-                    signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> 註冊新帳號';
-                    signupBtn.disabled = false;
-                }
-            }
-            
-            // 登出
-            function handleLogout() {
-                if (confirm('確定要登出嗎？')) {
-                    authManager.logout();
-                    showAuthSection();
-                    
-                    document.getElementById('email').value = '';
-                    document.getElementById('password').value = '';
-                    
-                    userMenuDropdown.classList.remove('show');
-                }
-            }
-            
-            // 儲存每日數據
-            async function saveDailyData() {
-                const user = authManager.getUser();
-                if (!user) {
-                    showStatusMessage('請先登入', 'error');
-                    return;
-                }
-                
-                const today = new Date().toDateString();
-                const userDayKey = `submissions_${user.id}_${today}`;
-                
-                let submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0, "records": []}');
-                
-                if (submissionInfo.count >= maxSubmissionsPerDay) {
-                    showStatusMessage('今日修改已達3次上限，無法繼續提交。', 'error');
-                    return;
-                }
-                
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
-                
-                const fitnessData = {
-                    user_id: user.id,
-                    weight: parseFloat(weightValue.value),
-                    fat_rate: parseFloat(fatValue.value),
-                    muscle_mass: parseFloat(muscleValue.value),
-                    day: authManager.getCurrentDay(),
-                    created_at: new Date().toISOString(),
-                    submission_number: submissionInfo.count + 1
-                };
-                
-                try {
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient
-                            .from('weight_records')
-                            .insert([fitnessData]);
-                        
-                        if (error) {
-                            // 如果Supabase插入失敗，使用本地存儲
-                            console.log('Supabase插入失敗，使用本地存儲:', error.message);
-                            throw new Error('使用本地儲存');
-                        }
-                        
-                        showStatusMessage('✓ 數據提交成功！已儲存到資料庫', 'success');
-                    } else {
-                        throw new Error('使用本地儲存');
-                    }
-                } catch (error) {
-                    console.log('使用本地儲存模式:', error.message);
-                    
-                    showStatusMessage('✓ 數據已儲存到本地', 'warning');
-                }
-                
-                // 更新本地提交記錄
-                submissionInfo.count += 1;
-                submissionInfo.records.push(fitnessData);
-                submissionInfo.lastData = fitnessData;
-                submissionInfo.lastSubmitted = new Date().toISOString();
-                localStorage.setItem(userDayKey, JSON.stringify(submissionInfo));
-                
-                // 也儲存最後一次數據供快速載入
-                localStorage.setItem('lastFitnessData', JSON.stringify({
-                    weight: fitnessData.weight,
-                    fat_rate: fitnessData.fat_rate,
-                    muscle_mass: fitnessData.muscle_mass
-                }));
-                
-                todaySubmitCount = submissionInfo.count;
-                updateSubmitCounter();
-                
-                const remaining = maxSubmissionsPerDay - submissionInfo.count;
-                if (remaining > 0) {
-                    showStatusMessage(`✓ 提交成功！今日還可修改 ${remaining} 次。`, 'success');
-                    
-                    setTimeout(() => {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 更新數據';
-                        statusMsg.textContent = `可繼續修改，今日剩餘 ${remaining} 次機會。`;
-                        statusMsg.className = "status-msg warning";
-                    }, 1500);
-                } else {
-                    showStatusMessage('✓ 提交成功！今日已達3次提交上限。', 'success');
-                    lockSubmissionForToday();
-                }
-            }
-            
-            // 積分規則功能
-            function openPointsRules() {
-                userMenuDropdown.classList.remove('show');
-                const rules = `
-積分規則說明：
-1. 每日準時報到：+10分
-2. 體重每減少0.1kg：+1分
-3. 體脂率每減少0.1%：+2分
-4. 肌肉量每增加0.1kg：+3分
-5. 連續報到7天：+30分
-6. 完成戰隊任務：+20-100分
-
-*積分由副隊長統一計算和管理
+        }
+        
+        // 載入團隊資訊
+        async function loadTeamInfo() {
+            if (!userProfile || !userProfile.current_team_id) {
+                document.getElementById('team-info').innerHTML = `
+                    <div style="background: #f5f5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3>您尚未加入任何戰隊</h3>
+                        <p>請在個人設定中輸入戰隊邀請碼加入，或聯絡隊長取得邀請碼。</p>
+                    </div>
                 `;
-                alert(rules);
+                document.getElementById('team-members').innerHTML = '';
+                return;
             }
             
-            // 時間表功能
-            function openSchedule() {
-                userMenuDropdown.classList.remove('show');
-                const day = authManager.getCurrentDay();
-                const schedule = `
-每一屆馬拉松時間表：
-第1屆：2024年1月1日 - 2024年3月31日
-第2屆：2024年4月1日 - 2024年6月30日
-第3屆：2024年7月1日 - 2024年9月30日
-第4屆：2024年10月1日 - 2024年12月31日
-第5屆：2025年1月1日 - 2025年3月31日
-第6屆：2025年4月1日 - 2025年6月30日
-第7屆：2025年7月1日 - 2025年9月30日
-第8屆：2025年10月1日 - 2025年12月31日
-第9屆：2026年1月1日 - 2026年3月31日
-第10屆：2026年4月1日 - 2026年6月30日
-第11屆：2026年7月1日 - 2026年9月30日
-第12屆：2026年10月1日 - 2026年12月31日
-
-目前進行中：第${day}天
+            // 載入團隊成員
+            try {
+                const { data: members, error } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, avatar_url, role, points')
+                    .eq('current_team_id', userProfile.current_team_id)
+                    .order('points', { ascending: false });
+                
+                if (error) throw error;
+                
+                let membersHtml = '';
+                if (members && members.length > 0) {
+                    members.forEach(member => {
+                        const avatar = member.avatar_url 
+                            ? `<img src="${member.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`
+                            : member.full_name?.charAt(0).toUpperCase() || 'M';
+                        
+                        membersHtml += `
+                            <div class="team-card">
+                                <div class="team-avatar">${avatar}</div>
+                                <h3>${member.full_name || '成員'}</h3>
+                                <p>${member.role === 'captain' ? '👑 隊長' : member.role === 'deputy' ? '⭐ 副隊長' : '👤 成員'}</p>
+                                <p><strong>${member.points || 0} 分</strong></p>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('team-members').innerHTML = membersHtml;
+                
+                // 顯示團隊資訊
+                document.getElementById('team-info').innerHTML = `
+                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3>戰隊: ${userProfile.current_team_id}</h3>
+                        <p>成員數: ${members?.length || 0} 人</p>
+                        ${userProfile.role === 'captain' ? 
+                            `<p><strong>您的邀請碼: ${userProfile.current_team_id}</strong></p>
+                             <p>分享此邀請碼給隊友讓他們加入</p>` : ''}
+                    </div>
                 `;
-                alert(schedule);
+                
+            } catch (error) {
+                console.error('載入團隊資訊錯誤:', error);
             }
-        })();
+        }
+        
+        // 載入排行榜
+        async function loadRanking(type) {
+            const rankingBody = document.getElementById('ranking-body');
+            rankingBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">載入中...</td></tr>';
+            
+            try {
+                let data;
+                
+                if (type === 'weight') {
+                    // 減重排名 (需要計算總減重)
+                    const { data: records } = await supabase
+                        .from('weight_records')
+                        .select('user_id, weight, date, profiles(full_name, current_team_id)');
+                    
+                    // 計算每個使用者的減重
+                    const userWeightMap = {};
+                    
+                    if (records) {
+                        records.forEach(record => {
+                            const userId = record.user_id;
+                            if (!userWeightMap[userId]) {
+                                userWeightMap[userId] = {
+                                    name: record.profiles?.full_name || '匿名',
+                                    team: record.profiles?.current_team_id || '無',
+                                    weights: []
+                                };
+                            }
+                            userWeightMap[userId].weights.push({
+                                weight: record.weight,
+                                date: record.date
+                            });
+                        });
+                    }
+                    
+                    // 計算減重並排序
+                    const ranking = Object.entries(userWeightMap)
+                        .map(([userId, data]) => {
+                            if (data.weights.length < 2) return null;
+                            
+                            // 按日期排序
+                            data.weights.sort((a, b) => new Date(a.date) - new Date(b.date));
+                            
+                            const firstWeight = data.weights[0].weight;
+                            const lastWeight = data.weights[data.weights.length - 1].weight;
+                            const weightLost = firstWeight - lastWeight;
+                            
+                            return {
+                                userId,
+                                name: data.name,
+                                team: data.team,
+                                weightLost: weightLost > 0 ? weightLost : 0
+                            };
+                        })
+                        .filter(item => item !== null)
+                        .sort((a, b) => b.weightLost - a.weightLost)
+                        .slice(0, 20);
+                    
+                    data = ranking;
+                    
+                } else if (type === 'points') {
+                    // 積分排名
+                    const { data: profiles } = await supabase
+                        .from('profiles')
+                        .select('id, full_name, points, current_team_id')
+                        .order('points', { ascending: false })
+                        .limit(20);
+                    
+                    data = profiles || [];
+                    
+                } else if (type === 'teams') {
+                    // 團隊排名 (平均積分)
+                    const { data: profiles } = await supabase
+                        .from('profiles')
+                        .select('current_team_id, points')
+                        .not('current_team_id', 'is', null);
+                    
+                    // 計算團隊平均積分
+                    const teamMap = {};
+                    
+                    if (profiles) {
+                        profiles.forEach(profile => {
+                            const teamId = profile.current_team_id;
+                            if (!teamMap[teamId]) {
+                                teamMap[teamId] = {
+                                    totalPoints: 0,
+                                    memberCount: 0
+                                };
+                            }
+                            teamMap[teamId].totalPoints += profile.points || 0;
+                            teamMap[teamId].memberCount += 1;
+                        });
+                    }
+                    
+                    const teamRanking = Object.entries(teamMap)
+                        .map(([teamId, data]) => ({
+                            teamId,
+                            avgPoints: data.memberCount > 0 ? Math.round(data.totalPoints / data.memberCount) : 0,
+                            memberCount: data.memberCount
+                        }))
+                        .sort((a, b) => b.avgPoints - a.avgPoints)
+                        .slice(0, 10);
+                    
+                    data = teamRanking;
+                }
+                
+                // 更新表格
+                let html = '';
+                
+                if (type === 'teams') {
+                    data.forEach((team, index) => {
+                        const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                        
+                        html += `
+                            <tr>
+                                <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                                <td>${team.teamId}</td>
+                                <td>${team.avgPoints} 分 (${team.memberCount}人)</td>
+                                <td>平均積分</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    data.forEach((item, index) => {
+                        const rankClass = index < 3 ? `rank-${index + 1}` : '';
+                        const value = type === 'weight' 
+                            ? `${item.weightLost.toFixed(1)} kg` 
+                            : `${item.points} 分`;
+                        
+                        html += `
+                            <tr>
+                                <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                                <td>${item.name}</td>
+                                <td>${value}</td>
+                                <td>${item.team || '無'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                rankingBody.innerHTML = html || '<tr><td colspan="4" style="text-align: center; padding: 40px;">暫無數據</td></tr>';
+                
+            } catch (error) {
+                console.error('載入排行榜錯誤:', error);
+                rankingBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #f44336;">載入失敗</td></tr>';
+            }
+        }
+        
+        // 加入戰隊
+        async function joinTeam() {
+            const inviteCode = document.getElementById('team-invite').value.trim();
+            
+            if (!inviteCode) {
+                alert('請輸入邀請碼');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ current_team_id: inviteCode })
+                    .eq('id', currentUser.id);
+                
+                if (error) throw error;
+                
+                alert('成功加入戰隊！');
+                userProfile.current_team_id = inviteCode;
+                
+                // 重新載入團隊資訊
+                loadTeamInfo();
+                showSection('team');
+                
+            } catch (error) {
+                alert(`加入戰隊失敗: ${error.message}`);
+                console.error('加入戰隊錯誤:', error);
+            }
+        }
+        
+        // 上傳頭像
+        async function uploadAvatar() {
+            const fileInput = document.getElementById('avatar-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                alert('請選擇圖片檔案');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                alert('圖片大小不能超過 5MB');
+                return;
+            }
+            
+            try {
+                // 上傳到 Supabase Storage
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(fileName, file);
+                
+                if (uploadError) throw uploadError;
+                
+                // 取得公開 URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+                
+                // 更新使用者資料
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ avatar_url: publicUrl })
+                    .eq('id', currentUser.id);
+                
+                if (updateError) throw updateError;
+                
+                // 更新本地資料和介面
+                userProfile.avatar_url = publicUrl;
+                updateUserUI();
+                
+                alert('頭像更新成功！');
+                
+            } catch (error) {
+                alert(`上傳頭像失敗: ${error.message}`);
+                console.error('上傳頭像錯誤:', error);
+            }
+        }
+        
+        // 儲存個人設定
+        async function saveProfile() {
+            const fullName = document.getElementById('profile-name').value.trim();
+            const plan = document.getElementById('profile-plan').value;
+            
+            try {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        full_name: fullName,
+                        plan: plan,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+                
+                if (error) throw error;
+                
+                // 更新本地資料
+                userProfile.full_name = fullName;
+                userProfile.plan = plan;
+                updateUserUI();
+                
+                alert('個人設定已儲存！');
+                
+            } catch (error) {
+                alert(`儲存失敗: ${error.message}`);
+                console.error('儲存個人設定錯誤:', error);
+            }
+        }
+        
+        // 登出
+        async function logout() {
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+                console.error('登出錯誤:', error);
+            }
+            
+            currentUser = null;
+            userProfile = null;
+            showAuth();
+        }
+        
+        // 設定事件監聽器
+        function setupEventListeners() {
+            // 輸入框快捷鍵
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    // ESC 鍵重置輸入值
+                    const inputs = ['weight', 'fat', 'muscle'];
+                    inputs.forEach(type => {
+                        const element = document.getElementById(`input-${type}`);
+                        if (element) {
+                            element.value = type === 'weight' ? '65.0' : 
+                                           type === 'fat' ? '25.0' : '30.0';
+                        }
+                    });
+                }
+            });
+        }
     </script>
 </body>
 </html>
