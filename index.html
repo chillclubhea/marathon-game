@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>馬拉松健身追蹤</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -954,8 +955,8 @@
         // 使用立即執行函數來避免變數重複聲明
         (function() {
             // Supabase配置
-            const SUPABASE_URL = 'https://your-project.supabase.co'; // 請替換為您的Supabase URL
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0'; // 請替換為您的Supabase匿名密鑰
+            const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
             
             // 初始化Supabase - 只聲明一次
             let supabaseClient = null;
@@ -1623,196 +1624,352 @@
                 box.classList.add('shake');
                 setTimeout(() => box.classList.remove('shake'), 300);
             }
-
-            async function saveDailyData() {
-    if (isSubmitted) return;
-    
-    const user = authManager.getUser();
-    if (!user) {
-        showStatusMessage('請先登入', 'error');
-        return;
-    }
-    
-    // 顯示載入狀態
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
-    
-    // 收集數據
-    const fitnessData = {
-        user_id: user.id,
-        weight: parseFloat(weightValue.value),
-        fat_rate: parseFloat(fatValue.value),
-        muscle_mass: parseFloat(muscleValue.value),
-        day: authManager.getCurrentDay(),
-        created_at: new Date().toISOString()
-    };
-    
-    try {
-        // 嘗試插入數據到Supabase
-        if (supabaseClient && !SUPABASE_URL.includes('your-project')) {
-            const { data, error } = await supabaseClient
-                .from('weight_records')
-                .insert([fitnessData]);
             
-            if (error) throw error;
-            
-            // 顯示成功訊息
-            showStatusMessage('✓ 數據提交成功！已儲存到資料庫', 'success');
-        } else {
-            // 本地儲存備用
-            throw new Error('使用本地儲存');
-        }
-        
-    } catch (error) {
-        console.log('使用本地儲存模式:', error.message);
-        
-        // 本地儲存備用
-        try {
-            // 儲存到 localStorage
-            const today = new Date().toDateString();
-            const localData = {
-                ...fitnessData,
-                local_timestamp: Date.now()
-            };
-            
-            // 獲取現有的本地數據或創建新陣列
-            let localRecords = JSON.parse(localStorage.getItem('local_weight_records') || '[]');
-            
-            // 檢查今天是否已有記錄
-            const existingIndex = localRecords.findIndex(record => 
-                new Date(record.created_at).toDateString() === today
-            );
-            
-            if (existingIndex >= 0) {
-                // 更新現有記錄
-                localRecords[existingIndex] = localData;
-            } else {
-                // 添加新記錄
-                localRecords.push(localData);
+            // 更新倒數計時
+            function updateCountdown() {
+                const now = new Date();
+                const endOfDay = new Date();
+                endOfDay.setHours(23, 59, 59, 999);
+                
+                const timeLeft = endOfDay - now;
+                
+                if (timeLeft <= 0) {
+                    countdownTimer.textContent = "00:00:00";
+                    clearInterval(countdownInterval);
+                    return;
+                }
+                
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                countdownTimer.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             }
             
-            localStorage.setItem('local_weight_records', JSON.stringify(localRecords));
+            // 檢查今天是否已提交
+            async function checkTodaySubmission() {
+                const user = authManager.getUser();
+                if (!user) return;
+                
+                const today = new Date().toISOString().split('T')[0];
+                
+                try {
+                    if (supabaseClient) {
+                        const { data, error } = await supabaseClient
+                            .from('weight_records')
+                            .select('id')
+                            .eq('user_id', user.id)
+                            .gte('created_at', `${today}T00:00:00`)
+                            .lte('created_at', `${today}T23:59:59`)
+                            .limit(1);
+                        
+                        if (!error && data && data.length > 0) {
+                            lockSubmission();
+                            statusMsg.textContent = "您今天已經報到過了，如需修改請聯絡管理員";
+                            statusMsg.className = "status-msg warning";
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error('檢查提交狀態錯誤:', error);
+                }
+                
+                // 本地檢查
+                const lastDate = localStorage.getItem('lastSubmissionDate');
+                const todayStr = new Date().toDateString();
+                
+                if (lastDate === todayStr) {
+                    lockSubmission();
+                    statusMsg.textContent = "您今天已經報到過了，如需修改請聯絡管理員";
+                    statusMsg.className = "status-msg warning";
+                }
+            }
             
-            // 也儲存最後一次數據供快速載入
-            localStorage.setItem('lastFitnessData', JSON.stringify({
-                weight: fitnessData.weight,
-                fat_rate: fitnessData.fat_rate,
-                muscle_mass: fitnessData.muscle_mass
-            }));
+            // 鎖定提交狀態
+            function lockSubmission() {
+                isSubmitted = true;
+                document.querySelectorAll('.input-box').forEach(box => {
+                    box.classList.add('locked');
+                });
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已報到';
+            }
             
-            localStorage.setItem('lastSubmissionDate', today);
+            // 添加幫助函數
+            function showError(elementId, message) {
+                const element = document.getElementById(elementId);
+                element.textContent = message;
+                element.classList.add('show');
+            }
             
-            showStatusMessage('✓ 數據已儲存到本地（可手動導出）', 'warning');
-            
-        } catch (localError) {
-            console.error('本地儲存失敗:', localError);
-            showStatusMessage('✗ 提交失敗，請檢查數據或聯絡管理員', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出今日報到';
-            return;
-        }
-    }
-    
-    // 鎖定提交狀態
-    lockSubmission();
-    submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已報到';
-    
-    // 3秒後恢復按鈕狀態
-    setTimeout(() => {
-        submitBtn.disabled = true;
-    }, 3000);
-}
+            function showStatusMessage(message, type = 'info') {
+                const statusMsg = document.getElementById('status-msg');
+                statusMsg.textContent = message;
+                statusMsg.className = `status-msg ${type}`;
+                
+                if (type !== 'warning') {
+                    setTimeout(() => {
+                        statusMsg.textContent = '';
+                        statusMsg.className = 'status-msg';
+                    }, 3000);
+                }
+            }
             
             // 處理登入
-            // 更新 handleLogin 和 handleSignup 函數
-async function handleLogin() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    // 清除之前的錯誤訊息
-    clearErrors();
-    
-    // 基本驗證
-    let hasError = false;
-    
-    if (!email) {
-        showError('email-error', '請輸入電子郵件');
-        hasError = true;
-    } else if (!authManager.validateEmail(email)) {
-        showError('email-error', '請輸入有效的電子郵件');
-        hasError = true;
-    }
-    
-    if (!password) {
-        showError('password-error', '請輸入密碼');
-        hasError = true;
-    } else if (password.length < 6) {
-        showError('password-error', '密碼必須至少6個字符');
-        hasError = true;
-    }
-    
-    if (hasError) return;
-    
-    try {
-        // 顯示載入狀態
-        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登入中...';
-        loginBtn.disabled = true;
-        
-        const user = await authManager.login(email, password);
-        
-        if (user) {
-            await showAppSection();
-            showStatusMessage('登入成功！', 'success');
-        }
-    } catch (error) {
-        console.error('登入錯誤:', error);
-        
-        // 根據錯誤類型顯示不同的訊息
-        if (error.message.includes('Invalid login credentials')) {
-            showError('password-error', '電子郵件或密碼不正確');
-        } else if (error.message.includes('Supabase')) {
-            // 使用本地模式
-            showStatusMessage('使用本地模式登入（資料將儲存在瀏覽器中）', 'warning');
-            
-            // 嘗試本地登入
-            try {
-                const user = await authManager.simpleLogin(email, password);
-                if (user) {
-                    await showAppSection();
-                    showStatusMessage('本地登入成功！資料將儲存在瀏覽器中', 'success');
+            async function handleLogin() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // 清除之前的錯誤訊息
+                clearErrors();
+                
+                // 基本驗證
+                let hasError = false;
+                
+                if (!email) {
+                    showError('email-error', '請輸入電子郵件');
+                    hasError = true;
+                } else if (!authManager.validateEmail(email)) {
+                    showError('email-error', '請輸入有效的電子郵件');
+                    hasError = true;
                 }
-            } catch (localError) {
-                showStatusMessage('登入失敗：' + localError.message, 'error');
+                
+                if (!password) {
+                    showError('password-error', '請輸入密碼');
+                    hasError = true;
+                } else if (password.length < 6) {
+                    showError('password-error', '密碼必須至少6個字符');
+                    hasError = true;
+                }
+                
+                if (hasError) return;
+                
+                try {
+                    // 顯示載入狀態
+                    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登入中...';
+                    loginBtn.disabled = true;
+                    
+                    const user = await authManager.login(email, password);
+                    
+                    if (user) {
+                        await showAppSection();
+                        showStatusMessage('登入成功！', 'success');
+                    }
+                } catch (error) {
+                    console.error('登入錯誤:', error);
+                    
+                    // 根據錯誤類型顯示不同的訊息
+                    if (error.message.includes('Invalid login credentials')) {
+                        showError('password-error', '電子郵件或密碼不正確');
+                    } else if (error.message.includes('Supabase')) {
+                        // 使用本地模式
+                        showStatusMessage('使用本地模式登入（資料將儲存在瀏覽器中）', 'warning');
+                        
+                        // 嘗試本地登入
+                        try {
+                            const user = await authManager.simpleLogin(email, password);
+                            if (user) {
+                                await showAppSection();
+                                showStatusMessage('本地登入成功！資料將儲存在瀏覽器中', 'success');
+                            }
+                        } catch (localError) {
+                            showStatusMessage('登入失敗：' + localError.message, 'error');
+                        }
+                    } else {
+                        showStatusMessage('登入失敗：' + error.message, 'error');
+                    }
+                } finally {
+                    // 恢復按鈕狀態
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
+                    loginBtn.disabled = false;
+                }
             }
-        } else {
-            showStatusMessage('登入失敗：' + error.message, 'error');
-        }
-    } finally {
-        // 恢復按鈕狀態
-        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
-        loginBtn.disabled = false;
-    }
-}
-
-// 添加幫助函數
-function showError(elementId, message) {
-    const element = document.getElementById(elementId);
-    element.textContent = message;
-    element.classList.add('show');
-}
-
-function showStatusMessage(message, type = 'info') {
-    const statusMsg = document.getElementById('status-msg');
-    statusMsg.textContent = message;
-    statusMsg.className = `status-msg ${type}`;
-    
-    if (type !== 'warning') {
-        setTimeout(() => {
-            statusMsg.textContent = '';
-            statusMsg.className = 'status-msg';
-        }, 3000);
-    }
-}
+            
+            // 處理註冊
+            async function handleSignup() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                // 清除之前的錯誤訊息
+                clearErrors();
+                
+                // 基本驗證
+                let hasError = false;
+                
+                if (!email) {
+                    showError('email-error', '請輸入電子郵件');
+                    hasError = true;
+                } else if (!authManager.validateEmail(email)) {
+                    showError('email-error', '請輸入有效的電子郵件');
+                    hasError = true;
+                }
+                
+                if (!password) {
+                    showError('password-error', '請輸入密碼');
+                    hasError = true;
+                } else if (password.length < 6) {
+                    showError('password-error', '密碼必須至少6個字符');
+                    hasError = true;
+                }
+                
+                if (hasError) return;
+                
+                try {
+                    // 顯示載入狀態
+                    signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 註冊中...';
+                    signupBtn.disabled = true;
+                    
+                    const user = await authManager.signup(email, password);
+                    
+                    if (user) {
+                        await showAppSection();
+                        showStatusMessage('註冊成功！', 'success');
+                    }
+                } catch (error) {
+                    console.error('註冊錯誤:', error);
+                    
+                    // 根據錯誤類型顯示不同的訊息
+                    if (error.message.includes('Invalid login credentials')) {
+                        showError('password-error', '電子郵件或密碼不正確');
+                    } else if (error.message.includes('Supabase')) {
+                        // 使用本地模式
+                        showStatusMessage('使用本地模式註冊（資料將儲存在瀏覽器中）', 'warning');
+                        
+                        // 嘗試本地註冊
+                        try {
+                            const user = await authManager.simpleLogin(email, password);
+                            if (user) {
+                                await showAppSection();
+                                showStatusMessage('本地註冊成功！資料將儲存在瀏覽器中', 'success');
+                            }
+                        } catch (localError) {
+                            showStatusMessage('註冊失敗：' + localError.message, 'error');
+                        }
+                    } else {
+                        showStatusMessage('註冊失敗：' + error.message, 'error');
+                    }
+                } finally {
+                    // 恢復按鈕狀態
+                    signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> 註冊新帳號';
+                    signupBtn.disabled = false;
+                }
+            }
+            
+            // 登出
+            function handleLogout() {
+                if (confirm('確定要登出嗎？')) {
+                    authManager.logout();
+                    showAuthSection();
+                    
+                    // 清除輸入欄位
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                    
+                    // 關閉下拉菜單
+                    userMenuDropdown.classList.remove('show');
+                }
+            }
+            
+            // 儲存每日數據
+            async function saveDailyData() {
+                if (isSubmitted) return;
+                
+                const user = authManager.getUser();
+                if (!user) {
+                    showStatusMessage('請先登入', 'error');
+                    return;
+                }
+                
+                // 顯示載入狀態
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+                
+                // 收集數據
+                const fitnessData = {
+                    user_id: user.id,
+                    weight: parseFloat(weightValue.value),
+                    fat_rate: parseFloat(fatValue.value),
+                    muscle_mass: parseFloat(muscleValue.value),
+                    day: authManager.getCurrentDay(),
+                    created_at: new Date().toISOString()
+                };
+                
+                try {
+                    // 嘗試插入數據到Supabase
+                    if (supabaseClient && !SUPABASE_URL.includes('your-project')) {
+                        const { data, error } = await supabaseClient
+                            .from('weight_records')
+                            .insert([fitnessData]);
+                        
+                        if (error) throw error;
+                        
+                        // 顯示成功訊息
+                        showStatusMessage('✓ 數據提交成功！已儲存到資料庫', 'success');
+                    } else {
+                        // 本地儲存備用
+                        throw new Error('使用本地儲存');
+                    }
+                    
+                } catch (error) {
+                    console.log('使用本地儲存模式:', error.message);
+                    
+                    // 本地儲存備用
+                    try {
+                        // 儲存到 localStorage
+                        const today = new Date().toDateString();
+                        const localData = {
+                            ...fitnessData,
+                            local_timestamp: Date.now()
+                        };
+                        
+                        // 獲取現有的本地數據或創建新陣列
+                        let localRecords = JSON.parse(localStorage.getItem('local_weight_records') || '[]');
+                        
+                        // 檢查今天是否已有記錄
+                        const existingIndex = localRecords.findIndex(record => 
+                            new Date(record.created_at).toDateString() === today
+                        );
+                        
+                        if (existingIndex >= 0) {
+                            // 更新現有記錄
+                            localRecords[existingIndex] = localData;
+                        } else {
+                            // 添加新記錄
+                            localRecords.push(localData);
+                        }
+                        
+                        localStorage.setItem('local_weight_records', JSON.stringify(localRecords));
+                        
+                        // 也儲存最後一次數據供快速載入
+                        localStorage.setItem('lastFitnessData', JSON.stringify({
+                            weight: fitnessData.weight,
+                            fat_rate: fitnessData.fat_rate,
+                            muscle_mass: fitnessData.muscle_mass
+                        }));
+                        
+                        localStorage.setItem('lastSubmissionDate', today);
+                        
+                        showStatusMessage('✓ 數據已儲存到本地（可手動導出）', 'warning');
+                        
+                    } catch (localError) {
+                        console.error('本地儲存失敗:', localError);
+                        showStatusMessage('✗ 提交失敗，請檢查數據或聯絡管理員', 'error');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出今日報到';
+                        return;
+                    }
+                }
+                
+                // 鎖定提交狀態
+                lockSubmission();
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已報到';
+                
+                // 3秒後恢復按鈕狀態
+                setTimeout(() => {
+                    submitBtn.disabled = true;
+                }, 3000);
+            }
             
             // 積分規則功能
             function openPointsRules() {
