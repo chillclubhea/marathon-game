@@ -528,7 +528,7 @@
                 
                 <div class="auth-switch">
                     <span id="auth-switch-text">還沒有帳號？</span>
-                    <a id="auth-switch-link" href="#" onclick="switchAuthMode(); return false;">立即註冊</a>
+                    <a id="auth-switch-link" href="#" onclick="return switchAuthMode();">立即註冊</a>
                 </div>
             </form>
         </div>
@@ -548,43 +548,43 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#" class="nav-link active" onclick="showSection('dashboard'); return false;">
+                    <a href="#" class="nav-link active" onclick="return showSection('dashboard');">
                         <i class="fas fa-home"></i>
                         <span>儀表板</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('record'); return false;">
+                    <a href="#" class="nav-link" onclick="return showSection('record');">
                         <i class="fas fa-pencil-alt"></i>
                         <span>記錄數據</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('history'); return false;">
+                    <a href="#" class="nav-link" onclick="return showSection('history');">
                         <i class="fas fa-history"></i>
                         <span>歷史記錄</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('team'); return false;">
+                    <a href="#" class="nav-link" onclick="return showSection('team');">
                         <i class="fas fa-users"></i>
                         <span>我的戰隊</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('ranking'); return false;">
+                    <a href="#" class="nav-link" onclick="return showSection('ranking');">
                         <i class="fas fa-trophy"></i>
                         <span>排行榜</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="showSection('profile'); return false;">
+                    <a href="#" class="nav-link" onclick="return showSection('profile');">
                         <i class="fas fa-user-cog"></i>
                         <span>個人設定</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link" onclick="logout(); return false;">
+                    <a href="#" class="nav-link" onclick="return logout();">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>登出</span>
                     </a>
@@ -804,7 +804,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         
         // 初始化 Supabase 客戶端
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabase;
         
         // 應用狀態
         let currentUser = null;
@@ -831,10 +831,14 @@
             }
             
             document.getElementById('auth-error').style.display = 'none';
+            return false; // 防止連結的預設行為
         }
         
         // 頁面載入時檢查登入狀態
         document.addEventListener('DOMContentLoaded', async () => {
+            // 初始化 Supabase
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            
             await checkAuth();
             setupEventListeners();
         });
@@ -1021,7 +1025,7 @@
             document.getElementById(`${sectionId}-section`).style.display = 'block';
             
             // 更新活動的導航連結
-            const activeLink = document.querySelector(`.nav-link[onclick="showSection('${sectionId}')"]`);
+            const activeLink = document.querySelector(`.nav-link[onclick*="showSection('${sectionId}')"]`);
             if (activeLink) {
                 activeLink.classList.add('active');
             }
@@ -1032,6 +1036,7 @@
             } else if (sectionId === 'team') {
                 loadTeamInfo();
             }
+            return false;
         }
         
         // 調整輸入數值
@@ -1054,6 +1059,7 @@
             
             // 四捨五入到小數點後一位
             inputElement.value = newValue.toFixed(1);
+            return false;
         }
         
         // 載入今日數據
@@ -1232,6 +1238,7 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交數據';
             }
+            return false;
         }
         
         // 載入歷史記錄
@@ -1492,6 +1499,7 @@
                 console.error('載入排行榜錯誤:', error);
                 rankingBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #f44336;">載入失敗</td></tr>';
             }
+            return false;
         }
         
         // 加入戰隊
@@ -1500,7 +1508,7 @@
             
             if (!inviteCode) {
                 alert('請輸入邀請碼');
-                return;
+                return false;
             }
             
             try {
@@ -1522,6 +1530,7 @@
                 alert(`加入戰隊失敗: ${error.message}`);
                 console.error('加入戰隊錯誤:', error);
             }
+            return false;
         }
         
         // 上傳頭像
@@ -1605,6 +1614,7 @@
                 alert(`儲存失敗: ${error.message}`);
                 console.error('儲存個人設定錯誤:', error);
             }
+            return false;
         }
         
         // 登出
@@ -1618,6 +1628,7 @@
             currentUser = null;
             userProfile = null;
             showAuth();
+            return false;
         }
         
         // 設定事件監聽器
