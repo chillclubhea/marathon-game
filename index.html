@@ -147,7 +147,7 @@
             display: block;
         }
         
-        /* 頂部導航欄 - 優化佈局 */
+        /* 頂部導航欄 */
         .top-nav {
             margin-bottom: 24px;
             position: sticky;
@@ -180,14 +180,12 @@
             font-size: 1.6rem;
         }
         
-        /* 用戶區域 - 分開頭像和積分 */
         .user-area {
             display: flex;
             align-items: center;
             gap: 15px;
         }
         
-        /* 今日天數徽章 */
         .day-badge {
             background: linear-gradient(135deg, var(--primary-color), #2980b9);
             color: white;
@@ -207,7 +205,6 @@
             font-size: 0.9rem;
         }
         
-        /* 用戶頭像按鈕 - 包含下拉菜單 */
         .user-avatar-container {
             position: relative;
             cursor: pointer;
@@ -229,7 +226,6 @@
             position: relative;
         }
         
-        /* 用戶下拉菜單 */
         .user-menu-dropdown {
             position: absolute;
             top: 65px;
@@ -266,7 +262,6 @@
             width: 20px;
         }
         
-        /* 歡迎訊息 */
         .nav-subheader {
             display: flex;
             flex-direction: column;
@@ -327,7 +322,12 @@
             color: var(--primary-color);
         }
         
-        /* 輸入容器 - 三個數據橫向排列 */
+        .input-hint {
+            color: var(--gray-color);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
         .input-container {
             display: flex;
             flex-direction: row;
@@ -347,7 +347,6 @@
             display: none;
         }
         
-        /* 輸入框 */
         .input-box {
             flex: 0 0 auto;
             width: 280px;
@@ -363,7 +362,6 @@
             user-select: none;
         }
         
-        /* 響應式調整 */
         @media (max-width: 640px) {
             .input-box {
                 width: calc(100vw - 60px);
@@ -403,7 +401,6 @@
             opacity: 0.8;
         }
         
-        /* 值顯示區域 */
         .value-display {
             width: 100%;
             font-size: 2.6rem;
@@ -422,7 +419,6 @@
             margin-bottom: 5px;
         }
         
-        /* 輸入控制按鈕 */
         .input-controls {
             display: flex;
             justify-content: center;
@@ -458,7 +454,6 @@
             box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);
         }
         
-        /* 標籤樣式 */
         .data-label {
             font-size: 1.05rem;
             color: var(--dark-color);
@@ -476,7 +471,6 @@
             font-weight: 600;
         }
         
-        /* 滑動指示器 */
         .swipe-indicator {
             text-align: center;
             margin-top: 12px;
@@ -488,7 +482,6 @@
             gap: 6px;
         }
         
-        /* 觸控提示 */
         .touch-hint {
             display: flex;
             align-items: center;
@@ -501,7 +494,6 @@
             opacity: 0.8;
         }
         
-        /* 按鈕區域 */
         .button-section {
             display: flex;
             justify-content: center;
@@ -539,7 +531,6 @@
             box-shadow: 0 4px 12px rgba(189, 195, 199, 0.3);
         }
         
-        /* 震動反饋模擬 */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-3px); }
@@ -554,7 +545,6 @@
             display: none !important;
         }
         
-        /* 狀態訊息 */
         .status-msg {
             text-align: center;
             margin-top: 20px;
@@ -584,7 +574,6 @@
             border: 2px solid rgba(241, 196, 15, 0.25);
         }
         
-        /* 登出按鈕 */
         .logout-btn {
             position: fixed;
             bottom: 20px;
@@ -607,7 +596,6 @@
             transform: scale(0.95);
         }
         
-        /* 個人設定模態框 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -665,7 +653,6 @@
             color: var(--accent-color);
         }
         
-        /* 頭像預覽 */
         .avatar-preview {
             width: 100px;
             height: 100px;
@@ -676,7 +663,6 @@
             display: block;
         }
         
-        /* 行內表單 */
         .row {
             display: flex;
             gap: 15px;
@@ -686,7 +672,6 @@
             flex: 1;
         }
         
-        /* 錯誤訊息 */
         .error-message {
             color: var(--accent-color);
             font-size: 0.9rem;
@@ -698,11 +683,25 @@
             display: block;
         }
         
-        /* 外部連結樣式 */
         .external-link {
             text-decoration: none;
             color: inherit;
             display: block;
+        }
+        
+        .daily-counter {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -806,7 +805,11 @@
                 <div class="welcome-message" id="welcome-message">歡迎回來</div>
                 <div class="deadline-countdown">
                     <i class="fas fa-clock"></i>
-                    今日報到截止: <span class="countdown-timer" id="countdown-timer">01:04:41</span>
+                    今日報到截止: <span class="countdown-timer" id="countdown-timer">23:59:59</span>
+                </div>
+                <div class="daily-counter" id="daily-counter">
+                    <i class="fas fa-redo-alt"></i>
+                    <span>今日修改次數: <span id="submit-count">0</span>/3</span>
                 </div>
             </div>
         </div>
@@ -954,11 +957,11 @@
     <script>
         // 使用立即執行函數來避免變數重複聲明
         (function() {
-            // Supabase配置
+            // Supabase配置 - 使用你的Supabase專案
             const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
             
-            // 初始化Supabase - 只聲明一次
+            // 初始化Supabase
             let supabaseClient = null;
             try {
                 if (window.supabase) {
@@ -990,7 +993,6 @@
                     if (token && userData) {
                         try {
                             this.currentUser = JSON.parse(userData);
-                            // 驗證token是否有效（簡單檢查）
                             if (this.currentUser.token === token) {
                                 return true;
                             }
@@ -1002,29 +1004,24 @@
                     return false;
                 }
                 
-                // 計算當前是第幾天 - 基於使用者開始日期
+                // 計算當前是第幾天
                 getCurrentDay() {
-                    // 嘗試從localStorage獲取使用者的開始日期
                     const startDateStr = localStorage.getItem('user_start_date');
                     
                     if (startDateStr) {
-                        // 如果有儲存的開始日期，使用該日期計算
                         const startDate = new Date(startDateStr);
                         const today = new Date();
                         
-                        // 確保時間設置正確
                         startDate.setHours(0, 0, 0, 0);
                         today.setHours(0, 0, 0, 0);
                         
                         const timeDiff = today.getTime() - startDate.getTime();
-                        const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1; // +1 因為第一天是Day 1
+                        const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24)) + 1;
                         
                         console.log(`開始日期: ${startDateStr}, 今天: ${today.toISOString().split('T')[0]}, 天數差: ${dayDiff}`);
-                        return Math.max(1, dayDiff); // 確保不會小於1
+                        return Math.max(1, dayDiff);
                     } else {
-                        // 如果沒有儲存的開始日期，設定今天為第4天
                         const today = new Date();
-                        // 將開始日期設定為3天前（因為今天是第4天）
                         const startDate = new Date(today);
                         startDate.setDate(today.getDate() - 3);
                         
@@ -1034,9 +1031,8 @@
                     }
                 }
                 
-                // 簡易登入系統（如果Supabase未設置）
+                // 簡易登入系統
                 async simpleLogin(email, password) {
-                    // 驗證輸入
                     if (!email || !password) {
                         throw new Error('請輸入電子郵件和密碼');
                     }
@@ -1049,7 +1045,6 @@
                         throw new Error('密碼必須至少6個字符');
                     }
                     
-                    // 創建本地用戶
                     this.currentUser = {
                         id: 'user_' + Date.now(),
                         email: email,
@@ -1057,7 +1052,6 @@
                         token: this.generateToken()
                     };
                     
-                    // 儲存到localStorage
                     localStorage.setItem(this.authKey, this.currentUser.token);
                     localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
                     
@@ -1067,7 +1061,6 @@
                 // 登入
                 async login(email, password) {
                     try {
-                        // 先嘗試Supabase登入
                         if (supabaseClient) {
                             return await this.supabaseLogin(email, password);
                         }
@@ -1075,18 +1068,17 @@
                         console.log('Supabase登入失敗，使用本地模式:', supabaseError);
                     }
                     
-                    // 如果Supabase失敗，使用本地模式
                     return await this.simpleLogin(email, password);
                 }
                 
-                // Supabase登入
+                // Supabase登入 - 簡化版本，避免表結構問題
                 async supabaseLogin(email, password) {
                     if (!supabaseClient) {
                         throw new Error('Supabase未正確配置');
                     }
                     
                     try {
-                        // 使用Supabase Auth進行登入
+                        // 嘗試登入
                         const { data, error } = await supabaseClient.auth.signInWithPassword({
                             email: email,
                             password: password
@@ -1102,33 +1094,16 @@
                                 
                                 if (signupError) throw signupError;
                                 
-                                // 創建使用者資料
-                                const { error: profileError } = await supabaseClient
-                                    .from('users')
-                                    .insert([
-                                        {
-                                            id: signupData.user.id,
-                                            email: email,
-                                            name: email.split('@')[0],
-                                            created_at: new Date().toISOString()
-                                        }
-                                    ]);
-                                
-                                if (profileError) {
-                                    console.error('創建使用者資料錯誤:', profileError);
-                                }
-                                
                                 this.currentUser = {
                                     id: signupData.user.id,
                                     email: signupData.user.email,
                                     name: email.split('@')[0],
-                                    token: signupData.session.access_token
+                                    token: signupData.session?.access_token || this.generateToken()
                                 };
                             } else {
                                 throw error;
                             }
                         } else {
-                            // 登入成功
                             this.currentUser = {
                                 id: data.user.id,
                                 email: data.user.email,
@@ -1137,7 +1112,6 @@
                             };
                         }
                         
-                        // 儲存到localStorage
                         localStorage.setItem(this.authKey, this.currentUser.token);
                         localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
                         
@@ -1145,13 +1119,14 @@
                         
                     } catch (error) {
                         console.error('Supabase登入錯誤:', error);
-                        throw error;
+                        // 回退到本地模式
+                        throw new Error('Supabase登入失敗，使用本地模式');
                     }
                 }
                 
                 // 註冊
                 async signup(email, password) {
-                    return await this.login(email, password); // 簡化處理，與登入相同
+                    return await this.login(email, password);
                 }
                 
                 // 登出
@@ -1160,7 +1135,6 @@
                     localStorage.removeItem(this.authKey);
                     localStorage.removeItem('currentUser');
                     
-                    // 嘗試Supabase登出
                     if (supabaseClient) {
                         supabaseClient.auth.signOut().catch(error => {
                             console.error('Supabase登出錯誤:', error);
@@ -1231,6 +1205,8 @@
             const userMenuDropdown = document.getElementById('user-menu-dropdown');
             const emailError = document.getElementById('email-error');
             const passwordError = document.getElementById('password-error');
+            const dailyCounter = document.getElementById('daily-counter');
+            const submitCountDisplay = document.getElementById('submit-count');
             
             // 模態框元素
             const personalSettingsModal = document.getElementById('personal-settings-modal');
@@ -1258,16 +1234,13 @@
             // 頁面狀態
             let isSubmitted = false;
             let countdownInterval = null;
+            let todaySubmitCount = 0;
+            let maxSubmissionsPerDay = 3;
             
             // 初始化頁面
             document.addEventListener('DOMContentLoaded', function() {
-                // 檢查登入狀態並導向正確頁面
                 checkAndRedirect();
-                
-                // 設定事件監聽器
                 setupEventListeners();
-                
-                // 載入使用者設定
                 loadUserProfile();
             });
             
@@ -1287,13 +1260,11 @@
                 authSection.style.display = 'block';
                 appSection.style.display = 'none';
                 
-                // 清除倒數計時
                 if (countdownInterval) {
                     clearInterval(countdownInterval);
                     countdownInterval = null;
                 }
                 
-                // 清除錯誤訊息
                 clearErrors();
             }
             
@@ -1302,26 +1273,20 @@
                 authSection.style.display = 'none';
                 appSection.style.display = 'block';
                 
-                // 更新使用者資訊
                 const user = authManager.getUser();
                 if (user) {
                     welcomeMessage.textContent = `歡迎，${user.name}`;
-                    submitBtn.disabled = false;
                     
-                    // 更新今日天數
                     const day = authManager.getCurrentDay();
                     currentDay.textContent = `Day ${day}`;
+                    
+                    updateCountdown();
+                    countdownInterval = setInterval(updateCountdown, 1000);
+                    
+                    checkTodaySubmission();
+                    loadLastData();
+                    updateSubmitCounter();
                 }
-                
-                // 啟動倒數計時
-                updateCountdown();
-                countdownInterval = setInterval(updateCountdown, 1000);
-                
-                // 檢查今天是否已提交
-                await checkTodaySubmission();
-                
-                // 載入上次數據
-                await loadLastData();
             }
             
             // 清除錯誤訊息
@@ -1336,14 +1301,12 @@
             function loadUserProfile() {
                 const profile = authManager.loadUserProfile();
                 if (profile) {
-                    // 更新模態框中的表單
                     if (profile.fullName) fullNameInput.value = profile.fullName;
                     if (profile.role) roleSelect.value = profile.role;
                     if (profile.plan) planSelect.value = profile.plan;
                     if (profile.teamId) teamIdInput.value = profile.teamId;
                     if (profile.avatarUrl) avatarImg.src = profile.avatarUrl;
                     
-                    // 更新使用者名稱顯示
                     const user = authManager.getUser();
                     if (user && profile.fullName) {
                         user.name = profile.fullName;
@@ -1353,34 +1316,45 @@
                 }
             }
             
+            // 更新提交計數器顯示
+            function updateSubmitCounter() {
+                const user = authManager.getUser();
+                if (!user) return;
+                
+                const today = new Date().toDateString();
+                const userDayKey = `submissions_${user.id}_${today}`;
+                
+                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0}');
+                todaySubmitCount = submissionInfo.count || 0;
+                
+                submitCountDisplay.textContent = todaySubmitCount;
+                
+                if (todaySubmitCount >= maxSubmissionsPerDay) {
+                    dailyCounter.innerHTML = `<i class="fas fa-check-circle"></i><span>今日已完成 ${todaySubmitCount} 次報到</span>`;
+                    dailyCounter.style.background = 'linear-gradient(135deg, #27ae60, #2ecc71)';
+                } else {
+                    dailyCounter.innerHTML = `<i class="fas fa-redo-alt"></i><span>今日修改次數: ${todaySubmitCount}/${maxSubmissionsPerDay}</span>`;
+                    dailyCounter.style.background = 'linear-gradient(135deg, #f39c12, #e67e22)';
+                }
+            }
+            
             // 載入上次數據
             async function loadLastData() {
                 const user = authManager.getUser();
                 if (!user) return;
                 
-                try {
-                    // 從Supabase載入上次記錄
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient
-                            .from('weight_records')
-                            .select('weight, fat_rate, muscle_mass')
-                            .eq('user_id', user.id)
-                            .order('created_at', { ascending: false })
-                            .limit(1)
-                            .single();
-                        
-                        if (!error && data) {
-                            weightValue.value = data.weight || 65.3;
-                            fatValue.value = data.fat_rate || 41.3;
-                            muscleValue.value = data.muscle_mass || 20.1;
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('載入Supabase數據錯誤:', error);
+                const today = new Date().toDateString();
+                const userDayKey = `submissions_${user.id}_${today}`;
+                
+                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0, "lastData": null}');
+                
+                if (submissionInfo.lastData) {
+                    weightValue.value = submissionInfo.lastData.weight || 65.3;
+                    fatValue.value = submissionInfo.lastData.fat_rate || 41.3;
+                    muscleValue.value = submissionInfo.lastData.muscle_mass || 20.1;
+                    return;
                 }
                 
-                // 載入本地數據
                 const lastData = localStorage.getItem('lastFitnessData');
                 if (lastData) {
                     try {
@@ -1396,25 +1370,20 @@
             
             // 設定事件監聽器
             function setupEventListeners() {
-                // 登入相關按鈕
                 loginBtn.addEventListener('click', handleLogin);
                 signupBtn.addEventListener('click', handleSignup);
                 logoutBtn.addEventListener('click', handleLogout);
                 logoutMenuBtn.addEventListener('click', handleLogout);
                 
-                // 用戶菜單按鈕
                 personalSettingsBtn.addEventListener('click', openPersonalSettings);
                 pointsRulesBtn.addEventListener('click', openPointsRules);
                 scheduleBtn.addEventListener('click', openSchedule);
                 
-                // 個人設定模態框按鈕
                 closeSettingsModal.addEventListener('click', closePersonalSettings);
                 saveProfileBtn.addEventListener('click', saveUserProfile);
                 
-                // 頭像文件選擇
                 avatarFile.addEventListener('change', previewAvatar);
                 
-                // 加減按鈕事件
                 document.querySelectorAll('.control-btn').forEach(btn => {
                     btn.addEventListener('click', handleButtonClick);
                     btn.addEventListener('touchstart', handleTouchStart);
@@ -1422,28 +1391,22 @@
                     btn.addEventListener('touchcancel', handleTouchEnd);
                 });
                 
-                // 提交按鈕事件
                 submitBtn.addEventListener('click', saveDailyData);
                 
-                // 滑動手勢調整數值
                 setupSwipeGestures();
                 
-                // 用戶頭像點擊事件
                 userAvatarBtn.addEventListener('click', toggleUserMenu);
                 
-                // 點擊其他地方關閉下拉菜單
                 document.addEventListener('click', function(event) {
                     if (!userAvatarBtn.contains(event.target) && !userMenuDropdown.contains(event.target)) {
                         userMenuDropdown.classList.remove('show');
                     }
                     
-                    // 點擊模態框外部關閉模態框
                     if (event.target === personalSettingsModal) {
                         closePersonalSettings();
                     }
                 });
                 
-                // Enter鍵登入功能
                 document.getElementById('email').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') handleLogin();
                 });
@@ -1452,7 +1415,6 @@
                     if (e.key === 'Enter') handleLogin();
                 });
                 
-                // Escape鍵關閉模態框
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') {
                         closePersonalSettings();
@@ -1470,8 +1432,6 @@
             function openPersonalSettings() {
                 userMenuDropdown.classList.remove('show');
                 personalSettingsModal.classList.add('show');
-                
-                // 載入目前的設定
                 loadUserProfile();
             }
             
@@ -1503,10 +1463,8 @@
                     updatedAt: new Date().toISOString()
                 };
                 
-                // 儲存設定
                 authManager.saveUserProfile(profile);
                 
-                // 更新使用者名稱顯示
                 const user = authManager.getUser();
                 if (user && profile.fullName) {
                     user.name = profile.fullName;
@@ -1514,16 +1472,13 @@
                     welcomeMessage.textContent = `歡迎，${profile.fullName}`;
                 }
                 
-                // 顯示成功訊息
-                statusMsg.textContent = "個人設定已儲存！";
-                statusMsg.className = "status-msg success";
+                showStatusMessage("個人設定已儲存！", 'success');
                 
                 setTimeout(() => {
                     statusMsg.textContent = "";
                     statusMsg.className = "status-msg";
                 }, 2000);
                 
-                // 關閉模態框
                 closePersonalSettings();
             }
             
@@ -1591,7 +1546,7 @@
             
             // 調整數值
             function adjustValue(type, change) {
-                if (isSubmitted) return;
+                if (isSubmitted && todaySubmitCount >= maxSubmissionsPerDay) return;
                 
                 let element, currentValue, minValue, maxValue;
                 
@@ -1619,7 +1574,6 @@
                 newValue = Math.max(minValue, Math.min(maxValue, newValue));
                 element.value = newValue.toFixed(1);
                 
-                // 視覺反饋
                 const box = element.closest('.input-box');
                 box.classList.add('shake');
                 setTimeout(() => box.classList.remove('shake'), 300);
@@ -1636,6 +1590,11 @@
                 if (timeLeft <= 0) {
                     countdownTimer.textContent = "00:00:00";
                     clearInterval(countdownInterval);
+                    
+                    // 新的一天，重置提交狀態
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
                     return;
                 }
                 
@@ -1648,63 +1607,51 @@
             }
             
             // 檢查今天是否已提交
-            async function checkTodaySubmission() {
+            function checkTodaySubmission() {
                 const user = authManager.getUser();
                 if (!user) return;
                 
-                const today = new Date().toISOString().split('T')[0];
+                const today = new Date().toDateString();
+                const userDayKey = `submissions_${user.id}_${today}`;
                 
-                try {
-                    if (supabaseClient) {
-                        const { data, error } = await supabaseClient
-                            .from('weight_records')
-                            .select('id')
-                            .eq('user_id', user.id)
-                            .gte('created_at', `${today}T00:00:00`)
-                            .lte('created_at', `${today}T23:59:59`)
-                            .limit(1);
-                        
-                        if (!error && data && data.length > 0) {
-                            lockSubmission();
-                            statusMsg.textContent = "您今天已經報到過了，如需修改請聯絡管理員";
-                            statusMsg.className = "status-msg warning";
-                            return;
-                        }
-                    }
-                } catch (error) {
-                    console.error('檢查提交狀態錯誤:', error);
-                }
+                const submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0}');
+                todaySubmitCount = submissionInfo.count || 0;
                 
-                // 本地檢查
-                const lastDate = localStorage.getItem('lastSubmissionDate');
-                const todayStr = new Date().toDateString();
+                updateSubmitCounter();
                 
-                if (lastDate === todayStr) {
-                    lockSubmission();
-                    statusMsg.textContent = "您今天已經報到過了，如需修改請聯絡管理員";
+                if (todaySubmitCount >= maxSubmissionsPerDay) {
+                    lockSubmissionForToday();
+                    statusMsg.textContent = "今日已報到達3次上限，無法繼續修改。";
                     statusMsg.className = "status-msg warning";
+                } else if (todaySubmitCount > 0) {
+                    statusMsg.textContent = `今日已報到 ${todaySubmitCount} 次，還可修改 ${maxSubmissionsPerDay - todaySubmitCount} 次。`;
+                    statusMsg.className = "status-msg warning";
+                    isSubmitted = false;
+                    document.querySelectorAll('.input-box').forEach(box => box.classList.remove('locked'));
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 更新今日報到';
                 }
             }
             
-            // 鎖定提交狀態
-            function lockSubmission() {
+            // 鎖定提交狀態（當日）
+            function lockSubmissionForToday() {
                 isSubmitted = true;
                 document.querySelectorAll('.input-box').forEach(box => {
                     box.classList.add('locked');
                 });
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已報到';
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已達上限';
             }
             
-            // 添加幫助函數
+            // 顯示錯誤
             function showError(elementId, message) {
                 const element = document.getElementById(elementId);
                 element.textContent = message;
                 element.classList.add('show');
             }
             
+            // 顯示狀態訊息
             function showStatusMessage(message, type = 'info') {
-                const statusMsg = document.getElementById('status-msg');
                 statusMsg.textContent = message;
                 statusMsg.className = `status-msg ${type}`;
                 
@@ -1721,10 +1668,8 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
-                // 清除之前的錯誤訊息
                 clearErrors();
                 
-                // 基本驗證
                 let hasError = false;
                 
                 if (!email) {
@@ -1746,7 +1691,6 @@
                 if (hasError) return;
                 
                 try {
-                    // 顯示載入狀態
                     loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登入中...';
                     loginBtn.disabled = true;
                     
@@ -1759,14 +1703,11 @@
                 } catch (error) {
                     console.error('登入錯誤:', error);
                     
-                    // 根據錯誤類型顯示不同的訊息
                     if (error.message.includes('Invalid login credentials')) {
                         showError('password-error', '電子郵件或密碼不正確');
                     } else if (error.message.includes('Supabase')) {
-                        // 使用本地模式
                         showStatusMessage('使用本地模式登入（資料將儲存在瀏覽器中）', 'warning');
                         
-                        // 嘗試本地登入
                         try {
                             const user = await authManager.simpleLogin(email, password);
                             if (user) {
@@ -1780,7 +1721,6 @@
                         showStatusMessage('登入失敗：' + error.message, 'error');
                     }
                 } finally {
-                    // 恢復按鈕狀態
                     loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登入';
                     loginBtn.disabled = false;
                 }
@@ -1791,10 +1731,8 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
-                // 清除之前的錯誤訊息
                 clearErrors();
                 
-                // 基本驗證
                 let hasError = false;
                 
                 if (!email) {
@@ -1816,7 +1754,6 @@
                 if (hasError) return;
                 
                 try {
-                    // 顯示載入狀態
                     signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 註冊中...';
                     signupBtn.disabled = true;
                     
@@ -1829,14 +1766,11 @@
                 } catch (error) {
                     console.error('註冊錯誤:', error);
                     
-                    // 根據錯誤類型顯示不同的訊息
                     if (error.message.includes('Invalid login credentials')) {
                         showError('password-error', '電子郵件或密碼不正確');
                     } else if (error.message.includes('Supabase')) {
-                        // 使用本地模式
                         showStatusMessage('使用本地模式註冊（資料將儲存在瀏覽器中）', 'warning');
                         
-                        // 嘗試本地註冊
                         try {
                             const user = await authManager.simpleLogin(email, password);
                             if (user) {
@@ -1850,7 +1784,6 @@
                         showStatusMessage('註冊失敗：' + error.message, 'error');
                     }
                 } finally {
-                    // 恢復按鈕狀態
                     signupBtn.innerHTML = '<i class="fas fa-user-plus"></i> 註冊新帳號';
                     signupBtn.disabled = false;
                 }
@@ -1862,113 +1795,97 @@
                     authManager.logout();
                     showAuthSection();
                     
-                    // 清除輸入欄位
                     document.getElementById('email').value = '';
                     document.getElementById('password').value = '';
                     
-                    // 關閉下拉菜單
                     userMenuDropdown.classList.remove('show');
                 }
             }
             
             // 儲存每日數據
             async function saveDailyData() {
-                if (isSubmitted) return;
-                
                 const user = authManager.getUser();
                 if (!user) {
                     showStatusMessage('請先登入', 'error');
                     return;
                 }
                 
-                // 顯示載入狀態
+                const today = new Date().toDateString();
+                const userDayKey = `submissions_${user.id}_${today}`;
+                
+                let submissionInfo = JSON.parse(localStorage.getItem(userDayKey) || '{"count": 0, "records": []}');
+                
+                if (submissionInfo.count >= maxSubmissionsPerDay) {
+                    showStatusMessage('今日修改已達3次上限，無法繼續提交。', 'error');
+                    return;
+                }
+                
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
                 
-                // 收集數據
                 const fitnessData = {
                     user_id: user.id,
                     weight: parseFloat(weightValue.value),
                     fat_rate: parseFloat(fatValue.value),
                     muscle_mass: parseFloat(muscleValue.value),
                     day: authManager.getCurrentDay(),
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    submission_number: submissionInfo.count + 1
                 };
                 
                 try {
-                    // 嘗試插入數據到Supabase
-                    if (supabaseClient && !SUPABASE_URL.includes('your-project')) {
+                    if (supabaseClient) {
                         const { data, error } = await supabaseClient
                             .from('weight_records')
                             .insert([fitnessData]);
                         
-                        if (error) throw error;
+                        if (error) {
+                            // 如果Supabase插入失敗，使用本地存儲
+                            console.log('Supabase插入失敗，使用本地存儲:', error.message);
+                            throw new Error('使用本地儲存');
+                        }
                         
-                        // 顯示成功訊息
                         showStatusMessage('✓ 數據提交成功！已儲存到資料庫', 'success');
                     } else {
-                        // 本地儲存備用
                         throw new Error('使用本地儲存');
                     }
-                    
                 } catch (error) {
                     console.log('使用本地儲存模式:', error.message);
                     
-                    // 本地儲存備用
-                    try {
-                        // 儲存到 localStorage
-                        const today = new Date().toDateString();
-                        const localData = {
-                            ...fitnessData,
-                            local_timestamp: Date.now()
-                        };
-                        
-                        // 獲取現有的本地數據或創建新陣列
-                        let localRecords = JSON.parse(localStorage.getItem('local_weight_records') || '[]');
-                        
-                        // 檢查今天是否已有記錄
-                        const existingIndex = localRecords.findIndex(record => 
-                            new Date(record.created_at).toDateString() === today
-                        );
-                        
-                        if (existingIndex >= 0) {
-                            // 更新現有記錄
-                            localRecords[existingIndex] = localData;
-                        } else {
-                            // 添加新記錄
-                            localRecords.push(localData);
-                        }
-                        
-                        localStorage.setItem('local_weight_records', JSON.stringify(localRecords));
-                        
-                        // 也儲存最後一次數據供快速載入
-                        localStorage.setItem('lastFitnessData', JSON.stringify({
-                            weight: fitnessData.weight,
-                            fat_rate: fitnessData.fat_rate,
-                            muscle_mass: fitnessData.muscle_mass
-                        }));
-                        
-                        localStorage.setItem('lastSubmissionDate', today);
-                        
-                        showStatusMessage('✓ 數據已儲存到本地（可手動導出）', 'warning');
-                        
-                    } catch (localError) {
-                        console.error('本地儲存失敗:', localError);
-                        showStatusMessage('✗ 提交失敗，請檢查數據或聯絡管理員', 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出今日報到';
-                        return;
-                    }
+                    showStatusMessage('✓ 數據已儲存到本地', 'warning');
                 }
                 
-                // 鎖定提交狀態
-                lockSubmission();
-                submitBtn.innerHTML = '<i class="fas fa-check"></i> 今日已報到';
+                // 更新本地提交記錄
+                submissionInfo.count += 1;
+                submissionInfo.records.push(fitnessData);
+                submissionInfo.lastData = fitnessData;
+                submissionInfo.lastSubmitted = new Date().toISOString();
+                localStorage.setItem(userDayKey, JSON.stringify(submissionInfo));
                 
-                // 3秒後恢復按鈕狀態
-                setTimeout(() => {
-                    submitBtn.disabled = true;
-                }, 3000);
+                // 也儲存最後一次數據供快速載入
+                localStorage.setItem('lastFitnessData', JSON.stringify({
+                    weight: fitnessData.weight,
+                    fat_rate: fitnessData.fat_rate,
+                    muscle_mass: fitnessData.muscle_mass
+                }));
+                
+                todaySubmitCount = submissionInfo.count;
+                updateSubmitCounter();
+                
+                const remaining = maxSubmissionsPerDay - submissionInfo.count;
+                if (remaining > 0) {
+                    showStatusMessage(`✓ 提交成功！今日還可修改 ${remaining} 次。`, 'success');
+                    
+                    setTimeout(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 更新數據';
+                        statusMsg.textContent = `可繼續修改，今日剩餘 ${remaining} 次機會。`;
+                        statusMsg.className = "status-msg warning";
+                    }, 1500);
+                } else {
+                    showStatusMessage('✓ 提交成功！今日已達3次提交上限。', 'success');
+                    lockSubmissionForToday();
+                }
             }
             
             // 積分規則功能
@@ -2011,7 +1928,7 @@
                 `;
                 alert(schedule);
             }
-        })(); // 立即執行函數結束
+        })();
     </script>
 </body>
 </html>
