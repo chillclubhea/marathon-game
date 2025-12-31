@@ -17,10 +17,38 @@
         input {
             user-select: auto; 
         }
+        /* 彈幕容器層 */
+    #danmu-layer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 50%; /* 彈幕只出現在螢幕上半部，避免遮擋按鈕 */
+        pointer-events: none; /* 讓彈幕不影響點擊 */
+        z-index: 100;
+        overflow: hidden;
+    }
+
+    /* 彈幕本體樣式 */
+    .danmu {
+        position: absolute;
+        white-space: nowrap;
+        font-weight: bold;
+        font-size: 1.25rem;
+        color: #f97316; /* 橘色 */
+        text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+        animation: danmu-run 5s linear forwards;
+    }
+
+    @keyframes danmu-run {
+        from { transform: translateX(100vw); }
+        to { transform: translateX(-100%); }
+    }
+</style>
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
-
+<div id="danmu-layer"></div>
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
@@ -68,7 +96,42 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+// 產生彈幕的函數
+function createDanmu(text) {
+    const layer = document.getElementById('danmu-layer');
+    const danmu = document.createElement('div');
+    danmu.className = 'danmu';
+    danmu.innerText = text;
 
+    // 隨機高度 (10% ~ 90%)
+    const randomTop = Math.floor(Math.random() * 80) + 10;
+    danmu.style.top = randomTop + '%';
+
+    layer.appendChild(danmu);
+
+    // 動畫結束後自動移除，釋放記憶體
+    danmu.addEventListener('animationend', () => {
+        danmu.remove();
+    });
+}
+
+// 根據報數結果產生成就文字
+function triggerSuccessDanmu(username, diff) {
+    let message = `${username} 剛剛回報了數據！加油！`;
+    
+    if (diff < 0) {
+        message = `🎉 太強了！${username} 剛剛又瘦了 ${Math.abs(diff)}kg！`;
+    } else if (diff > 0) {
+        message = `💪 ${username} 正在增肌中！大家一起加油！`;
+    } else {
+        message = `✨ ${username} 成功維持體重！穩如泰山！`;
+    }
+
+    // 連續噴出三條彈幕增加氣氛
+    createDanmu(message);
+    setTimeout(() => createDanmu(message), 800);
+    setTimeout(() => createDanmu(message), 1600);
+}
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
 
@@ -134,42 +197,108 @@
             }
             btn.disabled = false;
             btn.innerText = "送出今日數據";
+            // ... 在 submitWeight 函數內 ...
+if (error) {
+    alert("錯誤：" + error.message);
+} else {
+    // 1. 取得剛剛輸入的數據與初始體重的差值（為了顯示文字）
+    const initialWeight = parseFloat(document.getElementById('initialWeight')?.value || 0); // 這裡需確保能拿到初始體重，或從 profiles 重新抓
+    const username = document.getElementById('displayUsername').innerText;
+    
+    // 這裡我們簡化處理，直接顯示加油訊息
+    createDanmu(`🔥 賀！${username} 報數成功！戰況更新中...`);
+
+    document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
+    document.getElementById('currentWeight').value = '';
+    
+    // 重新刷九宮格
+    await refreshGrid(); 
+}
         }
 
         async function refreshGrid() {
-            const gridContainer = document.getElementById('gridContainer');
-            const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode).order('created_at', { ascending: true }).limit(9);
-            gridContainer.innerHTML = ''; 
-            for (let i = 0; i < 9; i++) {
-                const member = members && members[i];
-                const card = document.createElement('div');
-                card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2";
-                if (member) {
-                    const { data: weightData } = await _client.from('weight_logs').select('weight').eq('user_id', member.id).order('created_at', { ascending: false }).limit(1);
-                    const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
-                    const diff = (latestWeight && member.initial_weight) ? (latestWeight - member.initial_weight).toFixed(1) : null;
-                    let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
-                    if (diff !== null) {
-                        const color = diff < 0 ? 'text-green-500' : (diff > 0 ? 'text-red-400' : 'text-gray-400');
-                        const icon = diff < 0 ? '↓' : (diff > 0 ? '↑' : '-');
-                        diffHtml = `<div class="text-[11px] font-bold ${color}">${icon} ${Math.abs(diff)}kg</div>`;
-                    }
-                    const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
-                    card.innerHTML = `
-                        <img src="${avatar}" class="w-8 h-8 rounded-full mb-1">
-                        <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
-                        <div class="text-sm font-black text-blue-600">${latestWeight || '--'}</div>
-                        ${diffHtml}
-                    `;
-                    if (member.id === userId) card.classList.add('border-blue-400', 'bg-blue-50');
-                    else card.classList.add('border-transparent');
-                } else {
-                    card.innerHTML = `<div class="text-gray-200 text-[20px]">+</div>`;
-                    card.classList.add('border-transparent', 'bg-gray-50/50');
-                }
-                gridContainer.appendChild(card);
+    const gridContainer = document.getElementById('gridContainer');
+    if (!_client) return;
+
+    // 1. 抓取小組內所有成員
+    const { data: members, error: profileErr } = await _client
+        .from('profiles')
+        .select('*')
+        .eq('group_code', groupCode);
+
+    if (profileErr) return;
+
+    // 2. 獲取每個成員的最新體重並計算減重差值
+    const memberResults = await Promise.all(members.map(async (member) => {
+        const { data: weightData } = await _client
+            .from('weight_logs')
+            .select('weight')
+            .eq('user_id', member.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+        const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
+        const initialWeight = member.initial_weight;
+        
+        // 計算減重差值 (例如：70 - 72 = -2，代表瘦了 2 公斤)
+        const diff = (latestWeight && initialWeight) ? (latestWeight - initialWeight) : 0;
+
+        return {
+            ...member,
+            latestWeight,
+            diff: parseFloat(diff.toFixed(1))
+        };
+    }));
+
+    // 3. 【核心邏輯】按照減重幅度排序 (負值越大的排越前面，例如 -3kg > -1kg > 0kg)
+    memberResults.sort((a, b) => a.diff - b.diff);
+
+    // 4. 開始渲染
+    gridContainer.innerHTML = ''; 
+
+    for (let i = 0; i < 9; i++) {
+        const member = memberResults[i];
+        const card = document.createElement('div');
+        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 transition-all duration-500";
+        
+        if (member) {
+            const diff = member.diff;
+            let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
+            let crownHtml = ''; // 冠軍皇冠
+
+            // 第一名加個小皇冠標誌
+            if (i === 0 && diff < 0) {
+                crownHtml = '<div class="absolute -top-1 -right-1 text-lg">👑</div>';
+                card.classList.add('relative');
             }
+
+            if (member.latestWeight !== null) {
+                const color = diff < 0 ? 'text-green-500 font-bold' : (diff > 0 ? 'text-red-400' : 'text-gray-400');
+                const icon = diff < 0 ? '↓' : (diff > 0 ? '↑' : '-');
+                diffHtml = `<div class="text-[11px] ${color}">${icon} ${Math.abs(diff)}kg</div>`;
+            }
+
+            const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
+            card.innerHTML = `
+                ${crownHtml}
+                <img src="${avatar}" class="w-8 h-8 rounded-full mb-1 shadow-inner">
+                <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
+                <div class="text-sm font-black text-blue-600">${member.latestWeight || '--'}</div>
+                ${diffHtml}
+            `;
+            
+            if (member.id === userId) {
+                card.classList.add('border-blue-400', 'bg-blue-50', 'z-10');
+            } else {
+                card.classList.add('border-transparent');
+            }
+        } else {
+            card.innerHTML = `<div class="text-gray-200 text-[20px]">+</div>`;
+            card.classList.add('border-transparent', 'bg-gray-50/50');
         }
+        gridContainer.appendChild(card);
+    }
+}
     </script>
 </body>
 </html>
