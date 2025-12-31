@@ -87,18 +87,22 @@
         }
         async function refreshGrid() {
     const gridContainer = document.getElementById('gridContainer');
-    gridContainer.innerHTML = '<div class="col-span-3 text-center p-10 text-gray-400">數據同步中...</div>';
+    const myGroup = localStorage.getItem('my_group_code') || '預設小組';
+    
+    gridContainer.innerHTML = `<div class="col-span-3 text-center p-4">正在載入 ${myGroup} 的成員...</div>`;
 
-    // 1. 抓取所有成員，並按建立時間排序（先來的排前面）
+    // 關鍵：增加 .eq('group_code', myGroup) 只篩選同組的人
     const { data: members, error: profileErr } = await _client
         .from('profiles')
         .select('*')
+        .eq('group_code', myGroup)
         .order('created_at', { ascending: true })
         .limit(9);
 
     if (profileErr) return showMsg("讀取成員失敗", true);
 
-    gridContainer.innerHTML = ''; 
+    gridContainer.innerHTML = '';
+            
 
     for (let i = 0; i < 9; i++) {
         const member = members[i];
@@ -152,25 +156,32 @@ window.onload = () => {
         
         // 1. 登記使用者功能
         async function registerUser() {
-            const username = document.getElementById('username').value;
-            const role = document.getElementById('role').value;
-            const plan = document.getElementById('plan').value;
+    const username = document.getElementById('username').value;
+    const role = document.getElementById('role').value;
+    const plan = document.getElementById('plan').value;
+    const groupCode = document.getElementById('groupCode').value || '預設小組'; // 取得組碼
 
-            if (!username) return alert("請輸入姓名");
+    if (!username) return alert("請輸入姓名");
 
-            const { data, error } = await _client
-                .from('profiles')
-                .insert([{ username, role, plan_name: plan }])
-                .select();
+    const { data, error } = await _client
+        .from('profiles')
+        .insert([{ 
+            username, 
+            role, 
+            plan_name: plan,
+            group_code: groupCode // 存入資料庫
+        }])
+        .select();
 
-            if (error) {
-                showMsg("登記失敗：" + error.message, true);
-                console.error(error);
-            } else {
-                localStorage.setItem('my_user_id', data[0].id); 
-                showMsg("✅ 登記成功！已記住你的 ID: " + data[0].id);
-            }
-        }
+    if (error) {
+        showMsg("登記失敗：" + error.message, true);
+    } else {
+        localStorage.setItem('my_user_id', data[0].id); 
+        localStorage.setItem('my_group_code', groupCode); // 把組碼存起來，下次刷新用
+        showMsg("✅ 登記成功！小組: " + groupCode);
+        refreshGrid();
+    }
+}
 
         // 2. 提交體重功能
         async function submitWeight() {
