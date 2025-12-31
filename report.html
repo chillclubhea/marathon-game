@@ -10,55 +10,38 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        body {
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
+        body { -webkit-tap-highlight-color: transparent; user-select: none; }
+        input { user-select: auto; }
+        #danmu-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 50%;
+            pointer-events: none; z-index: 100; overflow: hidden;
         }
-        input {
-            user-select: auto; 
+        .danmu {
+            position: absolute; white-space: nowrap; font-weight: bold;
+            font-size: 1.25rem; color: #f97316;
+            text-shadow: 1px 1px 2px white, -1px -1px 2px white;
+            animation: danmu-run 5s linear forwards;
         }
-        /* 彈幕容器層 */
-    #danmu-layer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 50%; /* 彈幕只出現在螢幕上半部，避免遮擋按鈕 */
-        pointer-events: none; /* 讓彈幕不影響點擊 */
-        z-index: 100;
-        overflow: hidden;
-    }
-
-    /* 彈幕本體樣式 */
-    .danmu {
-        position: absolute;
-        white-space: nowrap;
-        font-weight: bold;
-        font-size: 1.25rem;
-        color: #f97316; /* 橘色 */
-        text-shadow: 1px 1px 2px white, -1px -1px 2px white;
-        animation: danmu-run 5s linear forwards;
-    }
-
-    @keyframes danmu-run {
-        from { transform: translateX(100vw); }
-        to { transform: translateX(-100%); }
-    }
-</style>
+        @keyframes danmu-run {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-100%); }
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
     <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
-    <div class="flex justify-between items-center mb-2">
-        <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
-        <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
+            <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+            <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+        </div>
+        <p id="progressMotto" class="text-[10px] text-gray-400 mt-2 text-center italic">「一個人走得快，一群人走得遠」</p>
     </div>
-    <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-        <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
-    </div>
-    <p id="progressMotto" class="text-[10px] text-gray-400 mt-2 text-center italic">「一個人走得快，一群人走得遠」</p>
-</div>
-<div id="danmu-layer"></div>
+
+    <div id="danmu-layer"></div>
+
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
@@ -74,9 +57,7 @@
             <div class="space-y-4">
                 <div>
                     <label class="block text-center text-sm font-medium text-gray-500 mb-2">今日體重 (kg)</label>
-                    <input type="number" id="currentWeight" step="0.1" 
-                        class="block w-full text-center text-3xl font-black border-2 border-blue-100 rounded-xl p-4 focus:border-blue-500 focus:outline-none" 
-                        placeholder="00.0">
+                    <input type="number" id="currentWeight" step="0.1" class="block w-full text-center text-3xl font-black border-2 border-blue-100 rounded-xl p-4 focus:border-blue-500 focus:outline-none" placeholder="00.0">
                 </div>
                 <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">
                     送出今日數據
@@ -89,291 +70,151 @@
             <h3 class="text-lg font-bold text-gray-800">🏆 小組即時戰報</h3>
             <span id="groupLabel" class="text-xs text-blue-500 font-bold"></span>
         </div>
-        <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner"></div>
+        <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner min-h-[300px]"></div>
     </div>
 
     <div id="addToHomeModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
         <div class="bg-white rounded-2xl p-6 w-full max-w-sm text-center">
             <h3 class="text-xl font-bold mb-4">把馬拉松帶在身邊！🏃‍♂️</h3>
             <p id="instructionText" class="text-gray-600 mb-6 text-sm leading-relaxed"></p>
-            <button onclick="document.getElementById('addToHomeModal').classList.add('hidden')" 
-                    class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">
-                我知道了
-            </button>
+            <button onclick="document.getElementById('addToHomeModal').classList.add('hidden')" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">我知道了</button>
         </div>
     </div>
 
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-async function playbackRecentDanmu() {
-    // 1. 抓取最近 10 筆報數紀錄 (不限小組或指定小組)
-    const { data: logs, error } = await _client
-        .from('weight_logs')
-        .select(`
-            weight,
-            created_at,
-            profiles ( username, initial_weight, group_code )
-        `)
-        .eq('profiles.group_code', groupCode) // 只看自己小組的戰況
-        .order('created_at', { ascending: false })
-        .limit(5); // 回放最近 5 筆就好，太多會太吵
-
-    if (error || !logs) return;
-
-    // 2. 將紀錄反轉，從舊到新噴出來
-    logs.reverse().forEach((log, index) => {
-        const username = log.profiles.username;
-        const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
         
-        let message = "";
-        if (diff < 0) {
-            message = `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！`;
-        } else {
-            message = `📢 隊員 ${username} 完成今日報數！`;
-        }
-
-        // 3. 設定延遲，讓彈幕一個接一個出現，而不是同時塞車
-        setTimeout(() => {
-            createDanmu(message);
-        }, index * 2000); // 每隔 2 秒噴出一條
-    });
-}
-        // 產生彈幕的函數
-function createDanmu(text) {
-    const layer = document.getElementById('danmu-layer');
-    const danmu = document.createElement('div');
-    danmu.className = 'danmu';
-    danmu.innerText = text;
-
-    // 隨機高度 (10% ~ 90%)
-    const randomTop = Math.floor(Math.random() * 80) + 10;
-    danmu.style.top = randomTop + '%';
-
-    layer.appendChild(danmu);
-
-    // 動畫結束後自動移除，釋放記憶體
-    danmu.addEventListener('animationend', () => {
-        danmu.remove();
-    });
-}
-
-// 根據報數結果產生成就文字
-function triggerSuccessDanmu(username, diff) {
-    let message = `${username} 剛剛回報了數據！加油！`;
-    
-    if (diff < 0) {
-        message = `🎉 太強了！${username} 剛剛又瘦了 ${Math.abs(diff)}kg！`;
-    } else if (diff > 0) {
-        message = `💪 ${username} 正在增肌中！大家一起加油！`;
-    } else {
-        message = `✨ ${username} 成功維持體重！穩如泰山！`;
-    }
-
-    // 連續噴出三條彈幕增加氣氛
-    createDanmu(message);
-    setTimeout(() => createDanmu(message), 800);
-    setTimeout(() => createDanmu(message), 1600);
-}
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
 
-        // 偵測並引導加入桌面
+        // 彈幕功能
+        function createDanmu(text) {
+            const layer = document.getElementById('danmu-layer');
+            const danmu = document.createElement('div');
+            danmu.className = 'danmu';
+            danmu.innerText = text;
+            danmu.style.top = (Math.floor(Math.random() * 80) + 10) + '%';
+            layer.appendChild(danmu);
+            danmu.addEventListener('animationend', () => danmu.remove());
+        }
+
+        async function playbackRecentDanmu() {
+            const { data: logs, error } = await _client
+                .from('weight_logs')
+                .select('weight, profiles(username, initial_weight, group_code)')
+                .eq('profiles.group_code', groupCode)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error || !logs) return;
+            logs.reverse().forEach((log, index) => {
+                const username = log.profiles.username;
+                const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
+                const msg = diff < 0 ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${username} 完成今日報數！`;
+                setTimeout(() => createDanmu(msg), index * 2000);
+            });
+        }
+
+        // PWA 檢查
         function checkPWA() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
             if (isStandalone) return;
-
             const lastPrompt = localStorage.getItem('last_pwa_prompt');
-            const now = new Date().getTime();
-            // 為了測試，我們先把時間縮短，讓你立刻看得到 (正式用可以改回 24 小時)
-            if (lastPrompt && now - lastPrompt < 5000) return; 
+            if (lastPrompt && new Date().getTime() - lastPrompt < 86400000) return;
 
             const modal = document.getElementById('addToHomeModal');
             const text = document.getElementById('instructionText');
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
             if (isIOS) {
-                text.innerHTML = `請點擊下方瀏覽器的 <span class="font-bold text-blue-500">「分享按鈕」📤</span>，<br>然後選擇 <span class="font-bold text-blue-500">「加入主畫面」➕</span>。`;
+                text.innerHTML = `請點擊下方 <span class="font-bold text-blue-500">「分享按鈕」📤</span>，<br>選擇 <span class="font-bold text-blue-500">「加入主畫面」➕</span>。`;
                 modal.classList.remove('hidden');
-            } else if (isAndroid) {
-                text.innerHTML = `請點擊右上角 <span class="font-bold text-blue-500">「三個點 ⋮ 」</span>，<br>然後選擇 <span class="font-bold text-blue-500">「加入主畫面」</span>。`;
+            } else if (/Android/.test(navigator.userAgent)) {
+                text.innerHTML = `請點擊右上角 <span class="font-bold text-blue-500">「三個點 ⋮ 」</span>，<br>選擇 <span class="font-bold text-blue-500">「加入主畫面」</span>。`;
                 modal.classList.remove('hidden');
             }
-            localStorage.setItem('last_pwa_prompt', now);
+            localStorage.setItem('last_pwa_prompt', new Date().getTime());
         }
 
-       window.onload = async () => {
-    if (!userId) {
-        alert("找不到登記資料，請先去登記頁面！");
-        window.location.href = "index.html";
-        return;
-    }
-    
-    checkPWA();
-
-    // 1. 讀取個人資訊
-    const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
-    if (data) {
-        document.getElementById('displayUsername').innerText = data.username;
-        document.getElementById('groupLabel').innerText = "小組：" + groupCode;
-    }
-
-    // 2. 顯示九宮格
-    await refreshGrid();
-
-    // 3. ✨ 核心功能：回放最近的戰報彈幕
-    playbackRecentDanmu();
-};
-            
-            // 執行加入桌面引導
+        window.onload = async () => {
+            if (!userId) {
+                window.location.href = "index.html";
+                return;
+            }
             checkPWA();
-
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
             if (data) {
                 document.getElementById('displayUsername').innerText = data.username;
                 document.getElementById('groupLabel').innerText = "小組：" + groupCode;
             }
-            refreshGrid();
+            await refreshGrid();
+            playbackRecentDanmu();
         };
 
         async function submitWeight() {
-            const weight = document.getElementById('currentWeight').value;
+            const weightVal = document.getElementById('currentWeight').value;
+            if (!weightVal) return alert("請輸入數字");
+            
             const btn = document.getElementById('btnSubmit');
-            if (!weight) return alert("請輸入數字");
             btn.disabled = true;
             btn.innerText = "傳送中...";
-            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weight) }]);
+
+            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+            
             if (error) {
                 alert("錯誤：" + error.message);
             } else {
+                createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
                 document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
                 document.getElementById('currentWeight').value = '';
-                refreshGrid();
+                await refreshGrid();
             }
             btn.disabled = false;
             btn.innerText = "送出今日數據";
-            // ... 在 submitWeight 函數內 ...
-if (error) {
-    alert("錯誤：" + error.message);
-} else {
-    // 1. 取得剛剛輸入的數據與初始體重的差值（為了顯示文字）
-    const initialWeight = parseFloat(document.getElementById('initialWeight')?.value || 0); // 這裡需確保能拿到初始體重，或從 profiles 重新抓
-    const username = document.getElementById('displayUsername').innerText;
-    
-    // 這裡我們簡化處理，直接顯示加油訊息
-    createDanmu(`🔥 賀！${username} 報數成功！戰況更新中...`);
-
-    document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
-    document.getElementById('currentWeight').value = '';
-    
-    // 重新刷九宮格
-    await refreshGrid(); 
-}
         }
 
-       async function refreshGrid() {
-    const gridContainer = document.getElementById('gridContainer');
-    if (!_client) return;
+        async function refreshGrid() {
+            const gridContainer = document.getElementById('gridContainer');
+            const { data: members, error } = await _client.from('profiles').select('*').eq('group_code', groupCode);
+            if (error || !members) return;
 
-    // 1. 抓取小組所有成員
-    const { data: members, error: profileErr } = await _client
-        .from('profiles')
-        .select('*')
-        .eq('group_code', groupCode);
+            let reportCount = 0;
+            const memberResults = await Promise.all(members.map(async (m) => {
+                const { data: w } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(1);
+                const latest = (w && w.length > 0) ? w[0].weight : null;
+                if (latest) reportCount++;
+                const percent = (latest && m.initial_weight) ? ((latest - m.initial_weight) / m.initial_weight * 100) : 0;
+                return { ...m, latest, percent: parseFloat(percent.toFixed(2)) };
+            }));
 
-    if (profileErr) return;
+            // 更新進度條
+            const progress = (reportCount / members.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
 
-    // 2. 獲取數據並計算「減重百分比」
-    let reportCount = 0; // 今日報數人數
-    const memberResults = await Promise.all(members.map(async (member) => {
-        const { data: weightData } = await _client
-            .from('weight_logs')
-            .select('weight, created_at')
-            .eq('user_id', member.id)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
-        const initialWeight = member.initial_weight;
-        
-        // 判斷今天是否已報數 (簡單判斷：是否有最新體重且為最新一筆)
-        // 進階可判斷 created_at 是否為今日，這裡先以「有紀錄」為準
-        if (latestWeight) reportCount++;
-
-        // 計算減重百分比：% = (目前 - 初始) / 初始 * 100
-        const percent = (latestWeight && initialWeight) 
-            ? ((latestWeight - initialWeight) / initialWeight * 100) 
-            : 0;
-
-        const diffKg = (latestWeight && initialWeight) ? (latestWeight - initialWeight) : 0;
-
-        return {
-            ...member,
-            latestWeight,
-            diffKg: parseFloat(diffKg.toFixed(1)),
-            percent: parseFloat(percent.toFixed(2)) // 存入百分比
-        };
-    }));
-
-    // 3. 更新全隊進度條
-    const totalMembers = members.length;
-    const progressPercent = (reportCount / totalMembers) * 100;
-    document.getElementById('progressBar').style.width = progressPercent + '%';
-    document.getElementById('progressText').innerText = `${reportCount} / ${totalMembers}`;
-    
-    if (reportCount === totalMembers && totalMembers > 0) {
-        document.getElementById('progressMotto').innerText = "🎊 太棒了！今日全隊達成 100% 報數！";
-        document.getElementById('progressMotto').classList.add('text-orange-500', 'font-bold');
-    }
-
-    // 4. 【排序】按照減重百分比排序 (負值越大的排前面)
-    memberResults.sort((a, b) => a.percent - b.percent);
-
-    // 5. 渲染九宮格
-    gridContainer.innerHTML = ''; 
-    memberResults.forEach((member, i) => {
-        const card = document.createElement('div');
-        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all";
-        
-        const isMe = member.id === userId;
-        const diff = member.diffKg;
-        const percent = member.percent;
-
-        let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
-        let crownHtml = (i === 0 && percent < 0) ? '<div class="absolute -top-1 -right-1 text-lg z-10">👑</div>' : '';
-
-        if (member.latestWeight !== null) {
-            const color = percent < 0 ? 'text-green-500 font-bold' : (percent > 0 ? 'text-red-400' : 'text-gray-400');
-            const icon = percent < 0 ? '↓' : (percent > 0 ? '↑' : '-');
-            // 這裡顯示百分比，更專業！
-            diffHtml = `<div class="text-[11px] ${color}">${icon} ${Math.abs(percent)}%</div>`;
+            // 排序並渲染
+            memberResults.sort((a, b) => a.percent - b.percent);
+            gridContainer.innerHTML = '';
+            memberResults.forEach((m, i) => {
+                const card = document.createElement('div');
+                card.className = `bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative ${m.id === userId ? 'border-blue-400 bg-blue-50' : 'border-transparent'}`;
+                const diffHtml = m.latest ? `<div class="text-[11px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent < 0 ? '↓' : ''}${Math.abs(m.percent)}%</div>` : '<div class="text-[10px] text-gray-300">等待中</div>';
+                card.innerHTML = `${(i === 0 && m.percent < 0) ? '<div class="absolute -top-1 -right-1 text-lg">👑</div>' : ''}
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
+                    <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
+                    <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
+                    ${diffHtml}`;
+                gridContainer.appendChild(card);
+            });
+            // 補齊 9 格
+            for (let i = memberResults.length; i < 9; i++) {
+                gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl">+</div>`;
+            }
         }
-
-        const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
-        card.innerHTML = `
-            ${crownHtml}
-            <img src="${avatar}" class="w-8 h-8 rounded-full mb-1">
-            <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
-            <div class="text-sm font-black text-blue-600">${member.latestWeight || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
-            ${diffHtml}
-        `;
-        
-        card.classList.add(isMe ? 'border-blue-400 bg-blue-50' : 'border-transparent');
-        gridContainer.appendChild(card);
-    });
-
-    // 補齊 9 格
-    for (let i = memberResults.length; i < 9; i++) {
-        const emptyCard = document.createElement('div');
-        emptyCard.className = "bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl";
-        emptyCard.innerText = "+";
-        gridContainer.appendChild(emptyCard);
-    }
-}
     </script>
 </body>
 </html>
