@@ -38,6 +38,16 @@
                     完成登記
                 </button>
             </div>
+
+            <section class="mt-8">
+                <h2 class="text-xl font-semibold mb-4 text-center text-orange-600">🏆 九宮格即時戰報</h2>
+                <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-lg">
+                    
+                </div>
+                <button onclick="refreshGrid()" class="w-full mt-4 bg-gray-600 text-white py-2 rounded shadow">
+        更新數據
+    </button>
+</section>
         </section>
 
         <section>
@@ -71,7 +81,60 @@
             msgEl.innerText = text;
             msgEl.className = isError ? "mt-4 text-center text-red-500" : "mt-4 text-center text-green-500";
         }
+        async function refreshGrid() {
+    const gridContainer = document.getElementById('gridContainer');
+    gridContainer.innerHTML = '讀取中...';
 
+    // 1. 抓取所有成員
+    const { data: members, error: profileErr } = await _client
+        .from('profiles')
+        .select('*')
+        .limit(9); // 只抓前 9 人
+
+    if (profileErr) return showMsg("讀取成員失敗", true);
+
+    gridContainer.innerHTML = ''; // 清空
+
+    // 2. 針對每一位成員，抓取最新體重
+    for (let i = 0; i < 9; i++) {
+        const member = members[i];
+        const card = document.createElement('div');
+        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-2 rounded shadow text-center border-2 border-transparent";
+        
+        if (member) {
+            // 抓取該學員最新的一筆體重
+            const { data: logs } = await _client
+                .from('weight_logs')
+                .select('weight')
+                .eq('user_id', member.id)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            const latestWeight = logs && logs[0] ? logs[0].weight + 'kg' : '未量測';
+            
+            card.innerHTML = `
+                <div class="font-bold text-blue-800">${member.username}</div>
+                <div class="text-xs text-gray-500">${member.role === 'captain' ? '⭐隊長' : '學員'}</div>
+                <div class="text-lg font-black text-red-500">${latestWeight}</div>
+            `;
+            
+            // 如果是目前使用者，加個框
+            if (member.id === localStorage.getItem('my_user_id')) {
+                card.classList.add('border-blue-500', 'bg-blue-50');
+            }
+        } else {
+            // 湊不滿 9 人時顯示空格
+            card.innerHTML = `<div class="text-gray-300 italic text-xs">待加入</div>`;
+        }
+        gridContainer.appendChild(card);
+    }
+}
+
+// 網頁開啟時自動執行一次
+window.onload = () => {
+    if(typeof _client !== 'undefined') refreshGrid();
+};
+        
         // 1. 登記使用者功能
         async function registerUser() {
             const username = document.getElementById('username').value;
