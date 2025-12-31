@@ -84,6 +84,7 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+
         
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
@@ -91,6 +92,13 @@
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
 
+        function playSound(type) {
+    const coinSound = "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"; // 清脆金幣聲
+    const drumSound = "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3";  // 沉悶鼓聲
+    const audio = new Audio(type === 'win' ? coinSound : drumSound);
+    audio.play().catch(e => console.log("音效播放被瀏覽器阻擋:", e));
+}
+        
         // 彈幕功能
         function createDanmu(text) {
             const layer = document.getElementById('danmu-layer');
@@ -101,7 +109,17 @@
             layer.appendChild(danmu);
             danmu.addEventListener('animationend', () => danmu.remove());
         }
-
+// 直接放在腳本區塊，與 playSound 放在一起即可
+async function knockBowl(targetName, targetId) {
+    if (targetId === userId) return; // 不能敲自己碗
+    
+    await _client.channel(`user_${targetId}`).send({
+        type: 'broadcast',
+        event: 'knock',
+        payload: { from: document.getElementById('displayUsername').innerText }
+    });
+    alert(`已向 ${targetName} 敲碗催促！🍜`);
+}
         async function playbackRecentDanmu() {
             const { data: logs, error } = await _client
                 .from('weight_logs')
@@ -151,33 +169,59 @@
                 document.getElementById('displayUsername').innerText = data.username;
                 document.getElementById('groupLabel').innerText = "小組：" + groupCode;
             }
-            await refreshGrid();
-            playbackRecentDanmu();
+            aconst myChannel = _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
+        // 觸發手機震動
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        // 彈出提醒
+        alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
+    }).subscribe();
+    // ----------------------------------
+
+    await refreshGrid();
+    playbackRecentDanmu();
+            
         };
 
         async function submitWeight() {
-            const weightVal = document.getElementById('currentWeight').value;
-            if (!weightVal) return alert("請輸入數字");
-            
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.innerText = "傳送中...";
+    const weightVal = document.getElementById('currentWeight').value;
+    if (!weightVal) return alert("請輸入數字");
+    
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.innerText = "傳送中...";
 
-            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            
-            if (error) {
-                alert("錯誤：" + error.message);
-            } else {
-                createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
-                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
-                document.getElementById('currentWeight').value = '';
-                await refreshGrid();
-            }
-            btn.disabled = false;
-            btn.innerText = "送出今日數據";
+    // 1. 執行寫入
+    const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+    
+    if (error) {
+        alert("錯誤：" + error.message);
+    } else {
+        // --- 這裡開始是播放音效的關鍵邏輯 ---
+        
+        // 抓取初始體重來比較 (從頁面上的隱藏資訊或 profiles 抓取)
+        // 假設我們在 refreshGrid 時已經處理好百分比，這裡我們簡單用這一次的結果
+        const { data: profile } = await _client.from('profiles').select('initial_weight').eq('id', userId).single();
+        const diff = parseFloat(weightVal) - profile.initial_weight;
+
+        if (diff < 0) {
+            playSound('win'); // 瘦了，播金幣聲
+        } else if (diff > 0) {
+            playSound('fail'); // 胖了，播鼓聲
         }
 
+        // --- 結束音效邏輯 ---
+
+        createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
+        document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
+        document.getElementById('currentWeight').value = '';
+        await refreshGrid();
+    }
+    btn.disabled = false;
+    btn.innerText = "送出今日數據";
+}
+
         async function refreshGrid() {
+            
             const gridContainer = document.getElementById('gridContainer');
             const { data: members, error } = await _client.from('profiles').select('*').eq('group_code', groupCode);
             if (error || !members) return;
@@ -208,6 +252,22 @@
                     <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
                     <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
                     ${diffHtml}`;
+                // ... 在 refreshGrid 的循環內 ...
+memberResults.forEach((m, i) => {
+    const card = document.createElement('div');
+    // ... 原有的 card.className 設定 ...
+
+    // --- 插入這段：點擊敲碗功能 ---
+    if (!m.latest) { 
+        card.onclick = () => knockBowl(m.username, m.id);
+        card.classList.add('cursor-pointer', 'active:bg-red-100');
+        card.title = "點擊敲碗催促";
+    }
+    // ----------------------------
+
+    // ... 原有的 card.innerHTML 設定與 appendChild ...
+    gridContainer.appendChild(card);
+});
                 gridContainer.appendChild(card);
             });
             // 補齊 9 格
