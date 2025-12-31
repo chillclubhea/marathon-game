@@ -235,15 +235,35 @@
             }
         }
 
-        async function playbackRecentDanmu() {
-            const { data: logs } = await _client.from('weight_logs').select('weight, profiles(username, initial_weight)').eq('profiles.group_code', groupCode).order('created_at', { ascending: false }).limit(5);
-            if (!logs) return;
-            logs.reverse().forEach((log, index) => {
-                const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
-                const msg = diff < 0 ? `🔥 戰報：${log.profiles.username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${log.profiles.username} 完成今日報數！`;
-                setTimeout(() => createDanmu(msg), index * 2000);
-            });
-        }
+        aasync function playbackRecentDanmu() {
+    // 抓取最近 5 筆日誌，並關聯 profiles 取得用戶名與初始體重
+    const { data: logs, error } = await _client
+        .from('weight_logs')
+        .select('weight, profiles(username, initial_weight, group_code)')
+        .eq('profiles.group_code', groupCode)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+    if (error || !logs) return;
+
+    // 修復點：過濾掉 profiles 為 null 的異常資料，避免報錯
+    const validLogs = logs.filter(log => log.profiles !== null);
+
+    validLogs.reverse().forEach((log, index) => {
+        // 使用安全鏈存取資料
+        const username = log.profiles?.username || '某位隊員';
+        const initialWeight = log.profiles?.initial_weight || 0;
+        
+        // 計算差距
+        const diff = (log.weight - initialWeight).toFixed(1);
+        
+        const msg = diff < 0 
+            ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` 
+            : `📢 隊員 ${username} 完成今日報數！`;
+            
+        setTimeout(() => createDanmu(msg), index * 2000);
+    });
+}
     </script>
 </body>
 </html>
