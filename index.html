@@ -83,26 +83,27 @@
         }
         async function refreshGrid() {
     const gridContainer = document.getElementById('gridContainer');
-    gridContainer.innerHTML = '讀取中...';
+    gridContainer.innerHTML = '<div class="col-span-3 text-center p-10 text-gray-400">數據同步中...</div>';
 
-    // 1. 抓取所有成員
+    // 1. 抓取所有成員，並按建立時間排序（先來的排前面）
     const { data: members, error: profileErr } = await _client
         .from('profiles')
         .select('*')
-        .limit(9); // 只抓前 9 人
+        .order('created_at', { ascending: true })
+        .limit(9);
 
     if (profileErr) return showMsg("讀取成員失敗", true);
 
-    gridContainer.innerHTML = ''; // 清空
+    gridContainer.innerHTML = ''; 
 
-    // 2. 針對每一位成員，抓取最新體重
     for (let i = 0; i < 9; i++) {
         const member = members[i];
         const card = document.createElement('div');
-        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-2 rounded shadow text-center border-2 border-transparent";
+        // 加入更漂亮的陰影與轉場效果
+        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-2 rounded-xl shadow-sm border-2 transition-all hover:shadow-md";
         
         if (member) {
-            // 抓取該學員最新的一筆體重
+            // 抓取最新體重
             const { data: logs } = await _client
                 .from('weight_logs')
                 .select('weight')
@@ -110,21 +111,31 @@
                 .order('created_at', { ascending: false })
                 .limit(1);
 
-            const latestWeight = logs && logs[0] ? logs[0].weight + 'kg' : '未量測';
+            const latestWeight = logs && logs[0] ? logs[0].weight : '---';
+            
+            // 使用 DiceBear 根據姓名生成唯一頭像
+            const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
             
             card.innerHTML = `
-                <div class="font-bold text-blue-800">${member.username}</div>
-                <div class="text-xs text-gray-500">${member.role === 'captain' ? '⭐隊長' : '學員'}</div>
-                <div class="text-lg font-black text-red-500">${latestWeight}</div>
+                <img src="${avatar}" class="w-12 h-12 rounded-full bg-gray-100 mb-1">
+                <div class="font-bold text-gray-800 text-sm truncate w-full">${member.username}</div>
+                <div class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 mb-1">
+                    ${member.role === 'captain' ? '⭐ 隊長' : '隊員'}
+                </div>
+                <div class="text-lg font-black text-blue-600">${latestWeight}<span class="text-[10px] ml-0.5 text-gray-400">kg</span></div>
             `;
             
-            // 如果是目前使用者，加個框
             if (member.id === localStorage.getItem('my_user_id')) {
-                card.classList.add('border-blue-500', 'bg-blue-50');
+                card.classList.add('border-blue-400', 'ring-4', 'ring-blue-50');
+            } else {
+                card.classList.add('border-transparent');
             }
         } else {
-            // 湊不滿 9 人時顯示空格
-            card.innerHTML = `<div class="text-gray-300 italic text-xs">待加入</div>`;
+            card.innerHTML = `
+                <div class="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 mb-1 flex items-center justify-center text-gray-300">+</div>
+                <div class="text-gray-300 text-xs italic">待入隊</div>
+            `;
+            card.classList.add('border-transparent', 'bg-gray-50/50');
         }
         gridContainer.appendChild(card);
     }
