@@ -1,12 +1,28 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3663/3663335.png">
+<meta name="apple-mobile-web-app-title" content="馬拉松報數">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>每日報數 - 馬拉松挑戰</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            /* 防止手機點擊時出現醜醜的藍色區塊 */
+            user-select: none;
+            /* 防止使用者長按文字彈出複製選單，增加 App 感 */
+        }
+        input {
+            user-select: auto; 
+            /* 必須保留輸入框可以選取，否則無法打字 */
+        }
+    </style>
 </head>
+    
 <body class="bg-gray-50 min-h-screen p-4">
 
     <div class="max-w-md mx-auto">
