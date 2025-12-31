@@ -45,13 +45,6 @@
                 <button onclick="registerUser()" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition">
                     完成登記
                 </button>
-                // 在 index.html 的 registerUser 成功處加入
-if (!error) {
-    localStorage.setItem('my_user_id', data[0].id); 
-    localStorage.setItem('my_group_code', groupCode);
-    alert("登記成功！現在帶你去報數頁面。");
-    window.location.href = "report.html"; // 跳轉
-}
             </div>
 
             <section class="mt-8">
@@ -176,7 +169,8 @@ window.onload = () => {
 };
         
         // 1. 登記使用者功能
-      async function registerUser() {
+// 1. 登記使用者功能
+async function registerUser() {
     const username = document.getElementById('username').value;
     const role = document.getElementById('role').value;
     const plan = document.getElementById('plan').value;
@@ -185,7 +179,6 @@ window.onload = () => {
 
     if (!username || !initialWeight) return alert("姓名與初始體重為必填！");
 
-    // 1. 建立個人檔案並存入初始體重
     const { data, error } = await _client
         .from('profiles')
         .insert([{ 
@@ -199,18 +192,21 @@ window.onload = () => {
 
     if (error) {
         showMsg("登記失敗：" + error.message, true);
+        console.error(error);
     } else {
+        // --- 就是加在這裡 ---
         const newUserId = data[0].id;
         localStorage.setItem('my_user_id', newUserId); 
         localStorage.setItem('my_group_code', groupCode);
 
-        // 2. 自動幫他建立第一筆體重紀錄，這樣九宮格立刻就有數字
+        // 自動建立第一筆體重紀錄
         await _client.from('weight_logs').insert([
             { user_id: newUserId, weight: parseFloat(initialWeight) }
         ]);
 
-        showMsg("✅ 歡迎入隊！你的起點是 " + initialWeight + "kg");
-        refreshGrid();
+        alert("登記成功！現在帶你去報數頁面。");
+        window.location.href = "report.html"; // 執行跳轉
+        // -------------------
     }
 }
 
