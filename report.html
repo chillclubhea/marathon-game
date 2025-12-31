@@ -96,7 +96,40 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-// 產生彈幕的函數
+async function playbackRecentDanmu() {
+    // 1. 抓取最近 10 筆報數紀錄 (不限小組或指定小組)
+    const { data: logs, error } = await _client
+        .from('weight_logs')
+        .select(`
+            weight,
+            created_at,
+            profiles ( username, initial_weight, group_code )
+        `)
+        .eq('profiles.group_code', groupCode) // 只看自己小組的戰況
+        .order('created_at', { ascending: false })
+        .limit(5); // 回放最近 5 筆就好，太多會太吵
+
+    if (error || !logs) return;
+
+    // 2. 將紀錄反轉，從舊到新噴出來
+    logs.reverse().forEach((log, index) => {
+        const username = log.profiles.username;
+        const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
+        
+        let message = "";
+        if (diff < 0) {
+            message = `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！`;
+        } else {
+            message = `📢 隊員 ${username} 完成今日報數！`;
+        }
+
+        // 3. 設定延遲，讓彈幕一個接一個出現，而不是同時塞車
+        setTimeout(() => {
+            createDanmu(message);
+        }, index * 2000); // 每隔 2 秒噴出一條
+    });
+}
+        // 產生彈幕的函數
 function createDanmu(text) {
     const layer = document.getElementById('danmu-layer');
     const danmu = document.createElement('div');
@@ -163,12 +196,28 @@ function triggerSuccessDanmu(username, diff) {
             localStorage.setItem('last_pwa_prompt', now);
         }
 
-        window.onload = async () => {
-            if (!userId) {
-                alert("找不到登記資料，請先去登記頁面！");
-                window.location.href = "index.html";
-                return;
-            }
+       window.onload = async () => {
+    if (!userId) {
+        alert("找不到登記資料，請先去登記頁面！");
+        window.location.href = "index.html";
+        return;
+    }
+    
+    checkPWA();
+
+    // 1. 讀取個人資訊
+    const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
+    if (data) {
+        document.getElementById('displayUsername').innerText = data.username;
+        document.getElementById('groupLabel').innerText = "小組：" + groupCode;
+    }
+
+    // 2. 顯示九宮格
+    await refreshGrid();
+
+    // 3. ✨ 核心功能：回放最近的戰報彈幕
+    playbackRecentDanmu();
+};
             
             // 執行加入桌面引導
             checkPWA();
