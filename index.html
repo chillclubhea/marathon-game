@@ -90,29 +90,12 @@
             msgEl.className = isError ? "mt-4 text-center text-red-500" : "mt-4 text-center text-green-500";
         }
         async function refreshGrid() {
-            const latestWeight = logs && logs[0] ? logs[0].weight : null;
-const initialWeight = member.initial_weight || 0;
-let weightDiffText = "";
-let diffColor = "text-gray-400";
-
-if (latestWeight && initialWeight) {
-    const diff = (latestWeight - initialWeight).toFixed(1);
-    if (diff < 0) {
-        weightDiffText = `↓ ${Math.abs(diff)} kg`; // 瘦了用向下箭頭
-        diffColor = "text-green-500 font-bold";
-    } else if (diff > 0) {
-        weightDiffText = `↑ ${diff} kg`; // 胖了用向上箭頭
-        diffColor = "text-red-400";
-    } else {
-        weightDiffText = "持平";
-    }
-}
     const gridContainer = document.getElementById('gridContainer');
     const myGroup = localStorage.getItem('my_group_code') || '預設小組';
     
-    gridContainer.innerHTML = `<div class="col-span-3 text-center p-4">正在載入 ${myGroup} 的成員...</div>`;
+    gridContainer.innerHTML = `<div class="col-span-3 text-center p-4">讀取 ${myGroup} 戰報中...</div>`;
 
-    // 關鍵：增加 .eq('group_code', myGroup) 只篩選同組的人
+    // 1. 抓取同組成員
     const { data: members, error: profileErr } = await _client
         .from('profiles')
         .select('*')
@@ -120,47 +103,70 @@ if (latestWeight && initialWeight) {
         .order('created_at', { ascending: true })
         .limit(9);
 
-    if (profileErr) return showMsg("讀取成員失敗", true);
+    if (profileErr) {
+        console.error(profileErr);
+        return showMsg("讀取成員失敗", true);
+    }
 
-    gridContainer.innerHTML = '';
-            
+    gridContainer.innerHTML = ''; 
 
+    // 2. 渲染 9 個格子
     for (let i = 0; i < 9; i++) {
         const member = members[i];
         const card = document.createElement('div');
-        // 加入更漂亮的陰影與轉場效果
         card.className = "bg-white aspect-square flex flex-col items-center justify-center p-2 rounded-xl shadow-sm border-2 transition-all hover:shadow-md";
         
         if (member) {
-            // 抓取最新體重
-            const { data: logs } = await _client
+            // --- 關鍵修正區：確保正確抓取該成員的最新體重 ---
+            const { data: weightData, error: weightErr } = await _client
                 .from('weight_logs')
                 .select('weight')
                 .eq('user_id', member.id)
                 .order('created_at', { ascending: false })
                 .limit(1);
 
-            const latestWeight = logs && logs[0] ? logs[0].weight : '---';
+            // 定義變數防止報錯
+            const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
+            const initialWeight = member.initial_weight;
             
-            // 使用 DiceBear 根據姓名生成唯一頭像
+            let weightDiffText = "等待紀錄";
+            let diffColor = "text-gray-400";
+
+            // 計算幅度
+            if (latestWeight !== null && initialWeight) {
+                const diff = (latestWeight - initialWeight).toFixed(1);
+                if (diff < 0) {
+                    weightDiffText = `↓ ${Math.abs(diff)} kg`;
+                    diffColor = "text-green-500 font-bold";
+                } else if (diff > 0) {
+                    weightDiffText = `↑ ${diff} kg`;
+                    diffColor = "text-red-400";
+                } else {
+                    weightDiffText = "持平";
+                    diffColor = "text-gray-400";
+                }
+            }
+
             const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
             
             card.innerHTML = `
-    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}" class="w-10 h-10 rounded-full mb-1">
-    <div class="font-bold text-gray-800 text-xs truncate w-full">${member.username}</div>
-    <div class="text-[14px] font-black text-blue-600">${latestWeight || '---'}<span class="text-[10px] ml-0.5">kg</span></div>
-    <div class="text-[12px] ${diffColor}">${weightDiffText}</div>
-`;
+                <img src="${avatar}" class="w-10 h-10 rounded-full mb-1 bg-gray-50">
+                <div class="font-bold text-gray-800 text-xs truncate w-full px-1">${member.username}</div>
+                <div class="text-[14px] font-black text-blue-600">${latestWeight || '---'}<span class="text-[10px] ml-0.5">kg</span></div>
+                <div class="text-[11px] mt-1 ${diffColor}">${weightDiffText}</div>
+            `;
             
+            // 高亮顯示自己
             if (member.id === localStorage.getItem('my_user_id')) {
-                card.classList.add('border-blue-400', 'ring-4', 'ring-blue-50');
+                card.classList.add('border-blue-400', 'bg-blue-50');
             } else {
                 card.classList.add('border-transparent');
             }
         } else {
+            // 空位顯示
             card.innerHTML = `
-                <div class="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 mb-1 flex items-center justify-center text-gray-300">+</div>
-                <div class="text-gray-300 text-xs italic">待入隊</div>
+                <div class="w-8 h-8 rounded-full border-2 border-dashed border-gray-200 mb-1 flex items-center justify-center text-gray-200 text-lg">+</div>
+                <div class="text-gray-300 text-[10px] italic">待加入</div>
             `;
             card.classList.add('border-transparent', 'bg-gray-50/50');
         }
