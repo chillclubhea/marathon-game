@@ -8,36 +8,27 @@
     <title>每日報數 - 馬拉松挑戰</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; }
         input { user-select: auto; }
-        #danmu-layer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 50%;
-            pointer-events: none; z-index: 100; overflow: hidden;
-        }
-        .danmu {
-            position: absolute; white-space: nowrap; font-weight: bold;
-            font-size: 1.25rem; color: #f97316;
-            text-shadow: 1px 1px 2px white, -1px -1px 2px white;
-            animation: danmu-run 5s linear forwards;
-        }
-        @keyframes danmu-run {
-            from { transform: translateX(100vw); }
-            to { transform: translateX(-100%); }
-        }
+        #danmu-layer { position: fixed; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 100; overflow: hidden; }
+        .danmu { position: absolute; white-space: nowrap; font-weight: bold; font-size: 1.25rem; color: #f97316; text-shadow: 1px 1px 2px white, -1px -1px 2px white; animation: danmu-run 5s linear forwards; }
+        @keyframes danmu-run { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
     <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
         <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
-            <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+            <span id="countdownText" class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded-md font-mono">截止倒數 --:--:--</span>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-2">
             <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
         </div>
-        <p id="progressMotto" class="text-[10px] text-gray-400 mt-2 text-center italic">「一個人走得快，一群人走得遠」</p>
+        <div class="flex justify-between items-center">
+            <p id="progressMotto" class="text-[10px] text-gray-400 italic">「一個人走得快，一群人走得遠」</p>
+            <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+        </div>
     </div>
 
     <div id="danmu-layer"></div>
@@ -53,15 +44,12 @@
                 <p class="text-gray-500 text-sm">歡迎回來</p>
                 <h2 id="displayUsername" class="text-xl font-bold text-gray-800">載入中...</h2>
             </div>
-
             <div class="space-y-4">
                 <div>
                     <label class="block text-center text-sm font-medium text-gray-500 mb-2">今日體重 (kg)</label>
                     <input type="number" id="currentWeight" step="0.1" class="block w-full text-center text-3xl font-black border-2 border-blue-100 rounded-xl p-4 focus:border-blue-500 focus:outline-none" placeholder="00.0">
                 </div>
-                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">
-                    送出今日數據
-                </button>
+                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">送出今日數據</button>
             </div>
             <div id="statusMsg" class="mt-4 text-center text-sm"></div>
         </div>
@@ -84,22 +72,45 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-
         
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
-
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
 
+        // 音效
         function playSound(type) {
-    const coinSound = "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"; // 清脆金幣聲
-    const drumSound = "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3";  // 沉悶鼓聲
-    const audio = new Audio(type === 'win' ? coinSound : drumSound);
-    audio.play().catch(e => console.log("音效播放被瀏覽器阻擋:", e));
-}
-        
-        // 彈幕功能
+            const coinSound = "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3";
+            const drumSound = "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3";
+            const audio = new Audio(type === 'win' ? coinSound : drumSound);
+            audio.play().catch(e => console.log("音效被攔截"));
+        }
+
+        // 敲碗功能
+        async function knockBowl(targetName, targetId) {
+            if (targetId === userId) return;
+            await _client.channel(`user_${targetId}`).send({
+                type: 'broadcast', event: 'knock',
+                payload: { from: document.getElementById('displayUsername').innerText }
+            });
+            alert(`已向 ${targetName} 敲碗催促！🍜`);
+        }
+
+        // 倒數計時
+        function updateCountdown() {
+            const now = new Date();
+            const deadline = new Date();
+            deadline.setHours(12, 0, 0, 0);
+            if (now > deadline) deadline.setDate(deadline.getDate() + 1);
+            const diff = deadline - now;
+            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
+        }
+        setInterval(updateCountdown, 1000);
+
+        // 彈幕
         function createDanmu(text) {
             const layer = document.getElementById('danmu-layer');
             const danmu = document.createElement('div');
@@ -109,119 +120,51 @@
             layer.appendChild(danmu);
             danmu.addEventListener('animationend', () => danmu.remove());
         }
-// 直接放在腳本區塊，與 playSound 放在一起即可
-async function knockBowl(targetName, targetId) {
-    if (targetId === userId) return; // 不能敲自己碗
-    
-    await _client.channel(`user_${targetId}`).send({
-        type: 'broadcast',
-        event: 'knock',
-        payload: { from: document.getElementById('displayUsername').innerText }
-    });
-    alert(`已向 ${targetName} 敲碗催促！🍜`);
-}
-        async function playbackRecentDanmu() {
-            const { data: logs, error } = await _client
-                .from('weight_logs')
-                .select('weight, profiles(username, initial_weight, group_code)')
-                .eq('profiles.group_code', groupCode)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (error || !logs) return;
-            logs.reverse().forEach((log, index) => {
-                const username = log.profiles.username;
-                const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
-                const msg = diff < 0 ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${username} 完成今日報數！`;
-                setTimeout(() => createDanmu(msg), index * 2000);
-            });
-        }
-
-        // PWA 檢查
-        function checkPWA() {
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-            if (isStandalone) return;
-            const lastPrompt = localStorage.getItem('last_pwa_prompt');
-            if (lastPrompt && new Date().getTime() - lastPrompt < 86400000) return;
-
-            const modal = document.getElementById('addToHomeModal');
-            const text = document.getElementById('instructionText');
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            
-            if (isIOS) {
-                text.innerHTML = `請點擊下方 <span class="font-bold text-blue-500">「分享按鈕」📤</span>，<br>選擇 <span class="font-bold text-blue-500">「加入主畫面」➕</span>。`;
-                modal.classList.remove('hidden');
-            } else if (/Android/.test(navigator.userAgent)) {
-                text.innerHTML = `請點擊右上角 <span class="font-bold text-blue-500">「三個點 ⋮ 」</span>，<br>選擇 <span class="font-bold text-blue-500">「加入主畫面」</span>。`;
-                modal.classList.remove('hidden');
-            }
-            localStorage.setItem('last_pwa_prompt', new Date().getTime());
-        }
 
         window.onload = async () => {
-            if (!userId) {
-                window.location.href = "index.html";
-                return;
-            }
-            checkPWA();
+            if (!userId) { window.location.href = "index.html"; return; }
+            
+            // 監聽敲碗
+            _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
+            }).subscribe();
+
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
             if (data) {
                 document.getElementById('displayUsername').innerText = data.username;
                 document.getElementById('groupLabel').innerText = "小組：" + groupCode;
             }
-            aconst myChannel = _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
-        // 觸發手機震動
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-        // 彈出提醒
-        alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
-    }).subscribe();
-    // ----------------------------------
-
-    await refreshGrid();
-    playbackRecentDanmu();
-            
+            await refreshGrid();
+            playbackRecentDanmu();
         };
 
         async function submitWeight() {
-    const weightVal = document.getElementById('currentWeight').value;
-    if (!weightVal) return alert("請輸入數字");
-    
-    const btn = document.getElementById('btnSubmit');
-    btn.disabled = true;
-    btn.innerText = "傳送中...";
+            const weightVal = document.getElementById('currentWeight').value;
+            if (!weightVal) return alert("請輸入數字");
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "傳送中...";
 
-    // 1. 執行寫入
-    const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-    
-    if (error) {
-        alert("錯誤：" + error.message);
-    } else {
-        // --- 這裡開始是播放音效的關鍵邏輯 ---
-        
-        // 抓取初始體重來比較 (從頁面上的隱藏資訊或 profiles 抓取)
-        // 假設我們在 refreshGrid 時已經處理好百分比，這裡我們簡單用這一次的結果
-        const { data: profile } = await _client.from('profiles').select('initial_weight').eq('id', userId).single();
-        const diff = parseFloat(weightVal) - profile.initial_weight;
-
-        if (diff < 0) {
-            playSound('win'); // 瘦了，播金幣聲
-        } else if (diff > 0) {
-            playSound('fail'); // 胖了，播鼓聲
+            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+            
+            if (error) {
+                alert("錯誤：" + error.message);
+            } else {
+                const { data: profile } = await _client.from('profiles').select('initial_weight').eq('id', userId).single();
+                const diff = parseFloat(weightVal) - profile.initial_weight;
+                playSound(diff < 0 ? 'win' : 'fail');
+                
+                createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
+                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
+                document.getElementById('currentWeight').value = '';
+                await refreshGrid();
+            }
+            btn.disabled = false;
+            btn.innerText = "送出今日數據";
         }
 
-        // --- 結束音效邏輯 ---
-
-        createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
-        document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
-        document.getElementById('currentWeight').value = '';
-        await refreshGrid();
-    }
-    btn.disabled = false;
-    btn.innerText = "送出今日數據";
-}
-
         async function refreshGrid() {
-            
             const gridContainer = document.getElementById('gridContainer');
             const { data: members, error } = await _client.from('profiles').select('*').eq('group_code', groupCode);
             if (error || !members) return;
@@ -235,45 +178,42 @@ async function knockBowl(targetName, targetId) {
                 return { ...m, latest, percent: parseFloat(percent.toFixed(2)) };
             }));
 
-            // 更新進度條
             const progress = (reportCount / members.length) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
             document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
 
-            // 排序並渲染
             memberResults.sort((a, b) => a.percent - b.percent);
             gridContainer.innerHTML = '';
             memberResults.forEach((m, i) => {
                 const card = document.createElement('div');
-                card.className = `bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative ${m.id === userId ? 'border-blue-400 bg-blue-50' : 'border-transparent'}`;
-                const diffHtml = m.latest ? `<div class="text-[11px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent < 0 ? '↓' : ''}${Math.abs(m.percent)}%</div>` : '<div class="text-[10px] text-gray-300">等待中</div>';
+                card.className = `bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${m.id === userId ? 'border-blue-400 bg-blue-50' : 'border-transparent'}`;
+                
+                if (!m.latest) {
+                    card.onclick = () => knockBowl(m.username, m.id);
+                    card.classList.add('cursor-pointer', 'active:bg-red-50');
+                }
+
+                const diffHtml = m.latest ? `<div class="text-[11px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent < 0 ? '↓' : ''}${Math.abs(m.percent)}%</div>` : '<div class="text-[10px] text-gray-300 italic">點擊敲碗</div>';
                 card.innerHTML = `${(i === 0 && m.percent < 0) ? '<div class="absolute -top-1 -right-1 text-lg">👑</div>' : ''}
                     <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
                     <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
                     <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
                     ${diffHtml}`;
-                // ... 在 refreshGrid 的循環內 ...
-memberResults.forEach((m, i) => {
-    const card = document.createElement('div');
-    // ... 原有的 card.className 設定 ...
-
-    // --- 插入這段：點擊敲碗功能 ---
-    if (!m.latest) { 
-        card.onclick = () => knockBowl(m.username, m.id);
-        card.classList.add('cursor-pointer', 'active:bg-red-100');
-        card.title = "點擊敲碗催促";
-    }
-    // ----------------------------
-
-    // ... 原有的 card.innerHTML 設定與 appendChild ...
-    gridContainer.appendChild(card);
-});
                 gridContainer.appendChild(card);
             });
-            // 補齊 9 格
             for (let i = memberResults.length; i < 9; i++) {
                 gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl">+</div>`;
             }
+        }
+
+        async function playbackRecentDanmu() {
+            const { data: logs } = await _client.from('weight_logs').select('weight, profiles(username, initial_weight)').eq('profiles.group_code', groupCode).order('created_at', { ascending: false }).limit(5);
+            if (!logs) return;
+            logs.reverse().forEach((log, index) => {
+                const diff = (log.weight - log.profiles.initial_weight).toFixed(1);
+                const msg = diff < 0 ? `🔥 戰報：${log.profiles.username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${log.profiles.username} 完成今日報數！`;
+                setTimeout(() => createDanmu(msg), index * 2000);
+            });
         }
     </script>
 </body>
