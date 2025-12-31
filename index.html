@@ -45,6 +45,13 @@
                 <button onclick="registerUser()" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition">
                     完成登記
                 </button>
+                // 在 index.html 的 registerUser 成功處加入
+if (!error) {
+    localStorage.setItem('my_user_id', data[0].id); 
+    localStorage.setItem('my_group_code', groupCode);
+    alert("登記成功！現在帶你去報數頁面。");
+    window.location.href = "report.html"; // 跳轉
+}
             </div>
 
             <section class="mt-8">
