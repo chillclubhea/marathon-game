@@ -44,6 +44,36 @@
     </div>
 
     <script>
+
+        // 偵測是否已加入桌面，若還沒則顯示教學
+function checkPWA() {
+    // 如果是從桌面開啟的，就不顯示引導
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isStandalone) return;
+
+    // 如果這兩天已經顯示過了，就不再顯示 (避免干擾)
+    const lastPrompt = localStorage.getItem('last_pwa_prompt');
+    const now = new Date().getTime();
+    if (lastPrompt && now - lastPrompt < 24 * 60 * 60 * 1000) return;
+
+    const modal = document.getElementById('addToHomeModal');
+    const text = document.getElementById('instructionText');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isAndroid = /Android/.test(navigator.userAgent);
+
+    if (isIOS) {
+        text.innerHTML = `請點擊下方瀏覽器的 <span class="font-bold text-blue-500">「分享按鈕」📤</span>，<br>然後選擇 <span class="font-bold text-blue-500">「加入主畫面」➕</span>。`;
+        modal.classList.remove('hidden');
+    } else if (isAndroid) {
+        text.innerHTML = `請點擊右上角 <span class="font-bold text-blue-500">「三個點 ⋮ 」</span>，<br>然後選擇 <span class="font-bold text-blue-500">「安裝應用程式」</span> 或 <span class="font-bold text-blue-500">「加入主畫面」</span>。`;
+        modal.classList.remove('hidden');
+    }
+    
+    localStorage.setItem('last_pwa_prompt', now);
+}
+
+// 在 window.onload 裡面執行它
+// window.onload = () => { ... 原有的程式碼 ... checkPWA(); }
         // --- 請填入你的 Supabase 資訊 ---
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
