@@ -222,6 +222,7 @@
                 const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
                 const diffHtml = m.latest ? `<div class="text-[10px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent}%</div>` : `<div class="text-[9px] text-gray-400 italic">點擊敲碗</div>`;
 
+                // 移除原有的 <br> 讓佈局更緊湊
                 card.innerHTML = `${topIcon}
                     <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
                     <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
@@ -235,35 +236,31 @@
             }
         }
         
-        aasync function playbackRecentDanmu() {
-    // 抓取最近 5 筆日誌，並關聯 profiles 取得用戶名與初始體重
-    const { data: logs, error } = await _client
-        .from('weight_logs')
-        .select('weight, profiles(username, initial_weight, group_code)')
-        .eq('profiles.group_code', groupCode)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        // 修正：aasync 改為 async
+        async function playbackRecentDanmu() {
+            const { data: logs, error } = await _client
+                .from('weight_logs')
+                .select('weight, profiles(username, initial_weight, group_code)')
+                .eq('profiles.group_code', groupCode)
+                .order('created_at', { ascending: false })
+                .limit(5);
 
-    if (error || !logs) return;
+            if (error || !logs) return;
 
-    // 修復點：過濾掉 profiles 為 null 的異常資料，避免報錯
-    const validLogs = logs.filter(log => log.profiles !== null);
+            const validLogs = logs.filter(log => log.profiles !== null);
 
-    validLogs.reverse().forEach((log, index) => {
-        // 使用安全鏈存取資料
-        const username = log.profiles?.username || '某位隊員';
-        const initialWeight = log.profiles?.initial_weight || 0;
-        
-        // 計算差距
-        const diff = (log.weight - initialWeight).toFixed(1);
-        
-        const msg = diff < 0 
-            ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` 
-            : `📢 隊員 ${username} 完成今日報數！`;
-            
-        setTimeout(() => createDanmu(msg), index * 2000);
-    });
-}
+            validLogs.reverse().forEach((log, index) => {
+                const username = log.profiles?.username || '某位隊員';
+                const initialWeight = log.profiles?.initial_weight || 0;
+                const diff = (log.weight - initialWeight).toFixed(1);
+                
+                const msg = diff < 0 
+                    ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` 
+                    : `📢 隊員 ${username} 完成今日報數！`;
+                    
+                setTimeout(() => createDanmu(msg), index * 2000);
+            });
+        }
     </script>
 </body>
 </html>
