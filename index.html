@@ -57,68 +57,63 @@
     </div>
 
     <script>
-        // --- 這裡請填入你的 Supabase 資訊 ---
-        const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.coL';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-        
- // --- 這裡請填入你的 Supabase 資訊 ---
-const SUPABASE_URL = '你的_SUPABASE_URL';
-const SUPABASE_ANON_KEY = '你的_SUPABASE_ANON_KEY';
+        // --- 這裡請填入你的 Supabase 資訊 (確保只會出現這一次) ---
+        const MY_SUPABASE_URL = '你的_SUPABASE_URL';
+        const MY_SUPABASE_KEY = '你的_SUPABASE_ANON_KEY';
 
-// 修正點：改用不同的變數名稱，例如 supabaseClient
-// 並且從全域的 supabase 物件中解構出 createClient
-const { createClient } = supabase; 
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 初始化 Supabase Client
+        const { createClient } = supabase;
+        const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
 
-// 簡易狀態顯示函數
-function showMsg(text, isError = false) {
-    const msgEl = document.getElementById('statusMsg');
-    msgEl.innerText = text;
-    msgEl.className = isError ? "mt-4 text-center text-red-500" : "mt-4 text-center text-green-500";
-}
+        // 顯示訊息的小工具
+        function showMsg(text, isError = false) {
+            const msgEl = document.getElementById('statusMsg');
+            msgEl.innerText = text;
+            msgEl.className = isError ? "mt-4 text-center text-red-500" : "mt-4 text-center text-green-500";
+        }
 
-// 1. 登記使用者功能
-async function registerUser() {
-    const username = document.getElementById('username').value;
-    const role = document.getElementById('role').value;
-    const plan = document.getElementById('plan').value;
+        // 1. 登記使用者功能
+        async function registerUser() {
+            const username = document.getElementById('username').value;
+            const role = document.getElementById('role').value;
+            const plan = document.getElementById('plan').value;
 
-    if (!username) return alert("請輸入姓名");
+            if (!username) return alert("請輸入姓名");
 
-    // 修正點：這裡也要改用 supabaseClient
-    const { data, error } = await supabaseClient
-        .from('profiles')
-        .insert([{ username, role, plan_name: plan }])
-        .select();
+            const { data, error } = await _client
+                .from('profiles')
+                .insert([{ username, role, plan_name: plan }])
+                .select();
 
-    if (error) {
-        showMsg("登記失敗：" + error.message, true);
-    } else {
-        localStorage.setItem('my_user_id', data[0].id); 
-        showMsg("登記成功！已記住你的身分。");
-    }
-}
+            if (error) {
+                showMsg("登記失敗：" + error.message, true);
+                console.error(error);
+            } else {
+                localStorage.setItem('my_user_id', data[0].id); 
+                showMsg("✅ 登記成功！已記住你的 ID: " + data[0].id);
+            }
+        }
 
-// 2. 提交體重功能
-async function submitWeight() {
-    const weight = document.getElementById('currentWeight').value;
-    const userId = localStorage.getItem('my_user_id'); 
+        // 2. 提交體重功能
+        async function submitWeight() {
+            const weight = document.getElementById('currentWeight').value;
+            const userId = localStorage.getItem('my_user_id'); 
 
-    if (!userId) return alert("請先完成上方登記");
-    if (!weight) return alert("請輸入體重");
+            if (!userId) return alert("請先完成上方登記");
+            if (!weight) return alert("請輸入體重");
 
-    // 修正點：這裡也要改用 supabaseClient
-    const { error } = await supabaseClient
-        .from('weight_logs')
-        .insert([{ user_id: userId, weight: parseFloat(weight) }]);
+            const { error } = await _client
+                .from('weight_logs')
+                .insert([{ user_id: userId, weight: parseFloat(weight) }]);
 
-    if (error) {
-        showMsg("提交失敗：" + error.message, true);
-    } else {
-        showMsg("✅ 今日體重已更新！");
-        document.getElementById('currentWeight').value = '';
-    }
-}
+            if (error) {
+                showMsg("提交失敗：" + error.message, true);
+                console.error(error);
+            } else {
+                showMsg("✅ 今日體重已更新！");
+                document.getElementById('currentWeight').value = '';
+            }
+        }
     </script>
 </body>
 </html>
