@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>馬拉松健身 - 體重記錄</title>
-    <!-- 使用 Supabase v1 版本避免 Locks API 問題 -->
+    <!-- 使用 Supabase v1 版本 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -568,21 +568,26 @@
             document.getElementById('login-password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') handleLogin();
             });
+            
+            // 按 Enter 鍵註冊
+            document.getElementById('signup-confirm').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSignup();
+            });
         }
         
-        // 檢查認證狀態 - 簡化版本避免 Locks API 問題
-        async function checkAuthStatus() {
+        // 檢查認證狀態 - 簡化版本
+        function checkAuthStatus() {
             try {
                 console.log('檢查登入狀態...');
                 
-                // 直接檢查當前 session，不使用可能觸發 Locks API 的方法
+                // 直接檢查當前 session
                 const session = supabaseClient.auth.session();
                 
                 if (session && session.user) {
                     // 已登入
                     console.log('使用者已登入:', session.user.email);
                     currentUser = session.user;
-                    await loadUserData();
+                    loadUserData();
                     showAppSection();
                 } else {
                     // 未登入
@@ -722,7 +727,7 @@
             try {
                 console.log('註冊中...');
                 
-                // 註冊使用者 - 使用 v1 API
+                // 註冊使用者
                 const { user, error } = await supabaseClient.auth.signUp({
                     email,
                     password
@@ -732,29 +737,33 @@
                 
                 console.log('註冊成功:', user);
                 
-                // 建立使用者資料（在 profiles 表）
                 if (user) {
-                    const { error: profileError } = await supabaseClient
+                    // 直接顯示主應用頁面，不等待 profiles 表創建
+                    currentUser = user;
+                    
+                    // 建立使用者資料（在後台執行，不等待）
+                    supabaseClient
                         .from('profiles')
                         .insert([{
                             id: user.id,
                             email: user.email,
                             full_name: fullName
-                        }]);
+                        }])
+                        .then(() => {
+                            console.log('使用者資料建立成功');
+                        })
+                        .catch(err => {
+                            console.error('建立使用者資料錯誤（非關鍵）:', err);
+                        });
                     
-                    if (profileError) {
-                        console.error('建立使用者資料錯誤:', profileError);
-                    }
+                    // 更新使用者介面
+                    updateUserUI({
+                        full_name: fullName,
+                        email: user.email
+                    });
+                    
+                    showAppSection();
                 }
-                
-                // 顯示成功訊息
-                showAuthMessage('註冊成功！請登入您的帳號', 'success', 'signup-message');
-                
-                // 3秒後返回登入頁面
-                setTimeout(() => {
-                    showLoginForm();
-                    document.getElementById('login-email').value = email;
-                }, 2000);
                 
             } catch (error) {
                 console.error('註冊錯誤:', error);
@@ -764,6 +773,8 @@
                     message = '此電子郵件已註冊';
                 } else if (error.message.includes('Invalid email')) {
                     message = '請輸入有效的電子郵件地址';
+                } else if (error.message.includes('already been taken')) {
+                    message = '此電子郵件已被使用';
                 }
                 
                 showAuthMessage(message, 'error', 'signup-message');
@@ -778,21 +789,26 @@
         async function loadUserData() {
             if (!currentUser) return;
             
+            // 更新使用者介面（基本資料）
+            updateUserUI({
+                full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
+                email: currentUser.email
+            });
+            
             try {
-                // 載入使用者資料
+                // 嘗試載入使用者資料
                 const { data: profile, error } = await supabaseClient
                     .from('profiles')
                     .select('*')
                     .eq('id', currentUser.id)
                     .single();
                 
-                if (error) {
-                    console.error('載入使用者資料錯誤:', error);
-                    // 如果沒有使用者資料，建立一個
-                    await createUserProfile();
-                } else {
-                    // 更新使用者介面
+                if (!error && profile) {
+                    // 如果有資料，更新使用者介面
                     updateUserUI(profile);
+                } else {
+                    // 如果沒有資料，建立一個
+                    await createUserProfile();
                 }
                 
                 // 檢查今日記錄
@@ -802,7 +818,10 @@
                 await loadHistory();
                 
             } catch (error) {
-                console.error('載入使用者資料失敗:', error);
+                console.error('載入使用者資料失敗（非關鍵）:', error);
+                // 即使失敗，仍然繼續
+                await checkTodayRecord();
+                await loadHistory();
             }
         }
         
@@ -817,28 +836,30 @@
                         full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
                     }]);
                 
-                if (error) throw error;
-                
-                console.log('使用者資料建立成功');
-                updateUserUI({
-                    full_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0],
-                    email: currentUser.email
-                });
+                if (error) {
+                    // 如果已經存在，忽略錯誤
+                    if (!error.message.includes('duplicate key')) {
+                        throw error;
+                    }
+                } else {
+                    console.log('使用者資料建立成功');
+                }
                 
             } catch (error) {
-                console.error('建立使用者資料錯誤:', error);
+                console.error('建立使用者資料錯誤（非關鍵）:', error);
             }
         }
         
         // 更新使用者介面
         function updateUserUI(profile) {
             // 更新使用者名稱
-            document.getElementById('userName').textContent = profile.full_name || currentUser.email;
+            const displayName = profile.full_name || currentUser.email.split('@')[0];
+            document.getElementById('userName').textContent = displayName;
             document.getElementById('userEmail').textContent = currentUser.email;
             
             // 更新頭像
             const avatarElement = document.getElementById('userAvatar');
-            const initials = (profile.full_name || currentUser.email.charAt(0)).toUpperCase();
+            const initials = displayName.charAt(0).toUpperCase();
             avatarElement.textContent = initials;
         }
         
@@ -857,7 +878,10 @@
                     .single();
                 
                 if (error && error.code !== 'PGRST116') {
-                    console.error('檢查今日記錄錯誤:', error);
+                    // 忽略特定錯誤代碼
+                    if (error.code !== '42P01') { // 表不存在
+                        console.error('檢查今日記錄錯誤:', error);
+                    }
                     return;
                 }
                 
@@ -868,7 +892,7 @@
                 }
                 
             } catch (error) {
-                console.error('檢查今日記錄失敗:', error);
+                console.error('檢查今日記錄失敗（非關鍵）:', error);
             }
         }
         
@@ -885,14 +909,17 @@
                     .limit(7);
                 
                 if (error) {
-                    console.error('載入歷史記錄錯誤:', error);
+                    // 忽略特定錯誤
+                    if (error.code !== '42P01') { // 表不存在
+                        console.error('載入歷史記錄錯誤:', error);
+                    }
                     return;
                 }
                 
                 updateHistoryList(data || []);
                 
             } catch (error) {
-                console.error('載入歷史記錄失敗:', error);
+                console.error('載入歷史記錄失敗（非關鍵）:', error);
             }
         }
         
@@ -949,7 +976,7 @@
             input.value = value.toFixed(1);
         }
         
-        // 儲存體重
+        // 儲存體重 - 簡化版本
         async function saveWeight() {
             if (!currentUser) {
                 showRecordMessage('請先登入', 'error');
@@ -973,37 +1000,19 @@
             try {
                 const today = new Date().toISOString().split('T')[0];
                 
-                // 檢查是否已有今日記錄
-                const { data: existingRecord } = await supabaseClient
+                // 使用 upsert 方法，自動處理更新或插入
+                const { error } = await supabaseClient
                     .from('weight_records')
-                    .select('id')
-                    .eq('user_id', currentUser.id)
-                    .eq('date', today)
-                    .single();
+                    .upsert({
+                        user_id: currentUser.id,
+                        weight: weight,
+                        date: today,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id,date'
+                    });
                 
-                let result;
-                
-                if (existingRecord) {
-                    // 更新現有記錄
-                    result = await supabaseClient
-                        .from('weight_records')
-                        .update({
-                            weight: weight,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', existingRecord.id);
-                } else {
-                    // 插入新記錄
-                    result = await supabaseClient
-                        .from('weight_records')
-                        .insert([{
-                            user_id: currentUser.id,
-                            weight: weight,
-                            date: today
-                        }]);
-                }
-                
-                if (result.error) throw result.error;
+                if (error) throw error;
                 
                 // 顯示成功訊息
                 showRecordMessage('✅ 體重記錄儲存成功！', 'success');
@@ -1052,6 +1061,11 @@
             }
             
             element.classList.remove('hidden');
+            
+            // 自動隱藏訊息
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 3000);
         }
         
         // 顯示記錄訊息
@@ -1072,7 +1086,7 @@
             
             // 3秒後自動隱藏
             setTimeout(() => {
-                hideMessage('record-message');
+                element.classList.add('hidden');
             }, 3000);
         }
         
