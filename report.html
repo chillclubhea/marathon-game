@@ -72,7 +72,37 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-        
+        const THEMES = {
+    christmas: {
+        name: '聖誕節',
+        match: (d) => d.getMonth() === 11 && d.getDate() >= 20, // 12/20 - 12/31
+        border: 'border-red-500',
+        bg: 'bg-green-50',
+        icon: '🎄',
+        motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！'
+    },
+    cny: {
+        name: '農曆新年',
+        match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), // 1月底到2月初
+        border: 'border-yellow-500',
+        bg: 'bg-red-50',
+        icon: '🧧',
+        motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！'
+    },
+    default: {
+        border: 'border-blue-400',
+        bg: 'bg-blue-50',
+        icon: '👑',
+        motto: '「一個人走得快，一群人走得遠」'
+    }
+};
+
+function getActiveTheme() {
+    const now = new Date();
+    if (THEMES.christmas.match(now)) return THEMES.christmas;
+    if (THEMES.cny.match(now)) return THEMES.cny;
+    return THEMES.default;
+}
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
         const userId = localStorage.getItem('my_user_id');
@@ -165,42 +195,34 @@
         }
 
         async function refreshGrid() {
-            const gridContainer = document.getElementById('gridContainer');
-            const { data: members, error } = await _client.from('profiles').select('*').eq('group_code', groupCode);
-            if (error || !members) return;
+    const theme = getActiveTheme(); // 獲取當前主題
+    
+    // 更新格言
+    document.getElementById('progressMotto').innerText = theme.motto || THEMES.default.motto;
 
-            let reportCount = 0;
-            const memberResults = await Promise.all(members.map(async (m) => {
-                const { data: w } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(1);
-                const latest = (w && w.length > 0) ? w[0].weight : null;
-                if (latest) reportCount++;
-                const percent = (latest && m.initial_weight) ? ((latest - m.initial_weight) / m.initial_weight * 100) : 0;
-                return { ...m, latest, percent: parseFloat(percent.toFixed(2)) };
-            }));
+    // ... 之前的資料抓取邏輯 ...
 
-            const progress = (reportCount / members.length) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
+    memberResults.forEach((m, i) => {
+        const card = document.createElement('div');
+        // 使用主題色
+        const borderClass = m.id === userId ? theme.border : 'border-transparent';
+        const bgClass = m.id === userId ? theme.bg : 'bg-white';
+        
+        card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${bgClass} ${borderClass}`;
 
-            memberResults.sort((a, b) => a.percent - b.percent);
-            gridContainer.innerHTML = '';
-            memberResults.forEach((m, i) => {
-                const card = document.createElement('div');
-                card.className = `bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${m.id === userId ? 'border-blue-400 bg-blue-50' : 'border-transparent'}`;
-                
-                if (!m.latest) {
-                    card.onclick = () => knockBowl(m.username, m.id);
-                    card.classList.add('cursor-pointer', 'active:bg-red-50');
-                }
+        // 更換第一名的圖示 (原本是 👑)
+        const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
 
-                const diffHtml = m.latest ? `<div class="text-[11px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent < 0 ? '↓' : ''}${Math.abs(m.percent)}%</div>` : '<div class="text-[10px] text-gray-300 italic">點擊敲碗</div>';
-                card.innerHTML = `${(i === 0 && m.percent < 0) ? '<div class="absolute -top-1 -right-1 text-lg">👑</div>' : ''}
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
-                    <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
-                    <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
-                    ${diffHtml}`;
-                gridContainer.appendChild(card);
-            });
+        card.innerHTML = `
+            ${topIcon}
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
+            <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
+            <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
+            ${diffHtml}`;
+        
+        gridContainer.appendChild(card);
+    });
+}
             for (let i = memberResults.length; i < 9; i++) {
                 gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl">+</div>`;
             }
