@@ -16,7 +16,7 @@
         @keyframes danmu-run { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen p-4">
+<body class="bg-gray-50 min-h-screen p-4 pb-20">
     <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
         <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
@@ -25,9 +25,14 @@
         <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-2">
             <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between items-center">
-            <p id="progressMotto" class="text-[10px] text-gray-400 italic">「一個人走得快，一群人走得遠」</p>
+        <div class="flex justify-between items-center mb-2">
+            <p id="progressMotto" class="text-[10px] text-gray-400 italic">載入中...</p>
             <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+        </div>
+
+        <div id="adviceBox" class="hidden mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
+            <h4 class="font-bold text-blue-800 text-sm mb-2">💡 專屬你的今日建議</h4>
+            <ul id="adviceList" class="text-[11px] text-blue-700 space-y-1.5 leading-relaxed"></ul>
         </div>
     </div>
 
@@ -61,72 +66,39 @@
         <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner min-h-[300px]"></div>
     </div>
 
-    <div id="addToHomeModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm text-center">
-            <h3 class="text-xl font-bold mb-4">把馬拉松帶在身邊！🏃‍♂️</h3>
-            <p id="instructionText" class="text-gray-600 mb-6 text-sm leading-relaxed"></p>
-            <button onclick="document.getElementById('addToHomeModal').classList.add('hidden')" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">我知道了</button>
-        </div>
-    </div>
-
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
+        
         const THEMES = {
-    christmas: {
-        name: '聖誕節',
-        match: (d) => d.getMonth() === 11 && d.getDate() >= 20, // 12/20 - 12/31
-        border: 'border-red-500',
-        bg: 'bg-green-50',
-        icon: '🎄',
-        motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！'
-    },
-    cny: {
-        name: '農曆新年',
-        match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), // 1月底到2月初
-        border: 'border-yellow-500',
-        bg: 'bg-red-50',
-        icon: '🧧',
-        motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！'
-    },
-    default: {
-        border: 'border-blue-400',
-        bg: 'bg-blue-50',
-        icon: '👑',
-        motto: '「一個人走得快，一群人走得遠」'
-    }
-};
+            christmas: { name: '聖誕節', match: (d) => d.getMonth() === 11 && d.getDate() >= 20, border: 'border-red-500', bg: 'bg-green-50', icon: '🎄', motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！' },
+            cny: { name: '農曆新年', match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！' },
+            default: { border: 'border-blue-400', bg: 'bg-blue-50', icon: '👑', motto: '「一個人走得快，一群人走得遠」' }
+        };
 
-function getActiveTheme() {
-    const now = new Date();
-    if (THEMES.christmas.match(now)) return THEMES.christmas;
-    if (THEMES.cny.match(now)) return THEMES.cny;
-    return THEMES.default;
-}
+        function getActiveTheme() {
+            const now = new Date();
+            if (THEMES.christmas.match(now)) return THEMES.christmas;
+            if (THEMES.cny.match(now)) return THEMES.cny;
+            return THEMES.default;
+        }
+
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
 
-        // 音效
         function playSound(type) {
-            const coinSound = "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3";
-            const drumSound = "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3";
-            const audio = new Audio(type === 'win' ? coinSound : drumSound);
-            audio.play().catch(e => console.log("音效被攔截"));
+            const audio = new Audio(type === 'win' ? "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3");
+            audio.play().catch(() => {});
         }
 
-        // 敲碗功能
         async function knockBowl(targetName, targetId) {
             if (targetId === userId) return;
-            await _client.channel(`user_${targetId}`).send({
-                type: 'broadcast', event: 'knock',
-                payload: { from: document.getElementById('displayUsername').innerText }
-            });
+            await _client.channel(`user_${targetId}`).send({ type: 'broadcast', event: 'knock', payload: { from: document.getElementById('displayUsername').innerText } });
             alert(`已向 ${targetName} 敲碗催促！🍜`);
         }
 
-        // 倒數計時
         function updateCountdown() {
             const now = new Date();
             const deadline = new Date();
@@ -140,7 +112,6 @@ function getActiveTheme() {
         }
         setInterval(updateCountdown, 1000);
 
-        // 彈幕
         function createDanmu(text) {
             const layer = document.getElementById('danmu-layer');
             const danmu = document.createElement('div');
@@ -153,8 +124,6 @@ function getActiveTheme() {
 
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
-            
-            // 監聽敲碗
             _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
@@ -169,6 +138,24 @@ function getActiveTheme() {
             playbackRecentDanmu();
         };
 
+        function generatePersonalAdvice(currentWeight, profile) {
+            let advices = [];
+            const now = new Date();
+            if (profile.gender === 'female' && profile.last_period_date) {
+                const lastPeriod = new Date(profile.last_period_date);
+                const daysDiff = Math.floor((now - lastPeriod) / (1000 * 60 * 60 * 24)) % 28;
+                if (daysDiff >= 21 || daysDiff <= 3) advices.push("🌸 生理期水腫提示：目前處於易水腫期，體重微升是正常的，放鬆心情！");
+            }
+            advices.push(`🥩 蛋白質建議：你今日需攝取約 ${Math.round(currentWeight * 1.2)}g 蛋白質。`);
+            if (profile.target_weight) {
+                if ((currentWeight - profile.target_weight) > 10) advices.push("🎯 目標建議：大目標路長，先以「瘦 2kg」為本週小目標。");
+                advices.push("🔥 熱量建議：建議今日攝取 1600-1800 卡，創造健康缺口。");
+            }
+            if (now.getHours() >= 22 || now.getHours() <= 4) advices.push("🌙 睡眠提醒：報數較晚，睡眠不足會提升皮質醇影響代謝，快去睡吧！");
+            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘，減脂效果更佳。");
+            return advices;
+        }
+
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
             if (!weightVal) return alert("請輸入數字");
@@ -177,16 +164,21 @@ function getActiveTheme() {
             btn.innerText = "傳送中...";
 
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            
             if (error) {
                 alert("錯誤：" + error.message);
             } else {
-                const { data: profile } = await _client.from('profiles').select('initial_weight').eq('id', userId).single();
+                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
                 const diff = parseFloat(weightVal) - profile.initial_weight;
                 playSound(diff < 0 ? 'win' : 'fail');
+                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
                 
-                createDanmu(`🔥 賀！${document.getElementById('displayUsername').innerText} 報數成功！`);
-                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！</span>";
+                // 顯示個人化建議
+                const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
+                const adviceList = document.getElementById('adviceList');
+                adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
+                document.getElementById('adviceBox').classList.remove('hidden');
+                
+                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 報數成功！建議已更新</span>";
                 document.getElementById('currentWeight').value = '';
                 await refreshGrid();
             }
@@ -195,36 +187,51 @@ function getActiveTheme() {
         }
 
         async function refreshGrid() {
-    const theme = getActiveTheme(); // 獲取當前主題
-    
-    // 更新格言
-    document.getElementById('progressMotto').innerText = theme.motto || THEMES.default.motto;
+            const theme = getActiveTheme();
+            document.getElementById('progressMotto').innerText = theme.motto;
+            const gridContainer = document.getElementById('gridContainer');
+            
+            const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
+            if (!members) return;
 
-    // ... 之前的資料抓取邏輯 ...
+            let reportCount = 0;
+            const memberResults = await Promise.all(members.map(async (m) => {
+                const { data: w } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(1);
+                const latest = w?.[0]?.weight || null;
+                if (latest) reportCount++;
+                const percent = latest ? ((latest - m.initial_weight) / m.initial_weight * 100) : 0;
+                return { ...m, latest, percent: parseFloat(percent.toFixed(2)) };
+            }));
 
-    memberResults.forEach((m, i) => {
-        const card = document.createElement('div');
-        // 使用主題色
-        const borderClass = m.id === userId ? theme.border : 'border-transparent';
-        const bgClass = m.id === userId ? theme.bg : 'bg-white';
-        
-        card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${bgClass} ${borderClass}`;
+            document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
+            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
 
-        // 更換第一名的圖示 (原本是 👑)
-        const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
+            memberResults.sort((a, b) => a.percent - b.percent);
+            gridContainer.innerHTML = '';
 
-        card.innerHTML = `
-            ${topIcon}
-            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
-            <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
-            <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
-            ${diffHtml}`;
-        
-        gridContainer.appendChild(card);
-    });
-}
+            memberResults.forEach((m, i) => {
+                const card = document.createElement('div');
+                const isMe = m.id === userId;
+                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${isMe ? theme.bg + ' ' + theme.border : 'bg-white border-transparent'}`;
+                
+                if (!m.latest) {
+                    card.onclick = () => knockBowl(m.username, m.id);
+                    card.classList.add('cursor-pointer', 'opacity-60');
+                }
+
+                const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
+                const diffHtml = m.latest ? `<div class="text-[10px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent}%</div>` : `<div class="text-[9px] text-gray-400 italic">點擊敲碗</div>`;
+
+                card.innerHTML = `${topIcon}
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
+                    <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
+                    <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
+                    ${diffHtml}`;
+                gridContainer.appendChild(card);
+            });
+
             for (let i = memberResults.length; i < 9; i++) {
-                gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl">+</div>`;
+                gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl text-gray-200 text-xl font-light">+</div>`;
             }
         }
 
