@@ -164,15 +164,15 @@
             btn.innerText = "傳送中...";
 
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+            
             if (error) {
                 alert("錯誤：" + error.message);
             } else {
                 const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
-                const diff = parseFloat(weightVal) - profile.initial_weight;
+                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
                 playSound(diff < 0 ? 'win' : 'fail');
                 createDanmu(`🔥 賀！${profile.username} 報數成功！`);
                 
-                // 顯示個人化建議
                 const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
                 const adviceList = document.getElementById('adviceList');
                 adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
@@ -186,7 +186,7 @@
             btn.innerText = "送出今日數據";
         }
 
-        async function refreshGrid() {
+       async function refreshGrid() {
             const theme = getActiveTheme();
             document.getElementById('progressMotto').innerText = theme.motto;
             const gridContainer = document.getElementById('gridContainer');
@@ -234,7 +234,7 @@
                 gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl text-gray-200 text-xl font-light">+</div>`;
             }
         }
-
+        
         aasync function playbackRecentDanmu() {
     // 抓取最近 5 筆日誌，並關聯 profiles 取得用戶名與初始體重
     const { data: logs, error } = await _client
