@@ -48,6 +48,16 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4">
+    <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
+    <div class="flex justify-between items-center mb-2">
+        <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
+        <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+        <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+    </div>
+    <p id="progressMotto" class="text-[10px] text-gray-400 mt-2 text-center italic">「一個人走得快，一群人走得遠」</p>
+</div>
 <div id="danmu-layer"></div>
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
@@ -265,11 +275,11 @@ if (error) {
 }
         }
 
-        async function refreshGrid() {
+       async function refreshGrid() {
     const gridContainer = document.getElementById('gridContainer');
     if (!_client) return;
 
-    // 1. 抓取小組內所有成員
+    // 1. 抓取小組所有成員
     const { data: members, error: profileErr } = await _client
         .from('profiles')
         .select('*')
@@ -277,11 +287,12 @@ if (error) {
 
     if (profileErr) return;
 
-    // 2. 獲取每個成員的最新體重並計算減重差值
+    // 2. 獲取數據並計算「減重百分比」
+    let reportCount = 0; // 今日報數人數
     const memberResults = await Promise.all(members.map(async (member) => {
         const { data: weightData } = await _client
             .from('weight_logs')
-            .select('weight')
+            .select('weight, created_at')
             .eq('user_id', member.id)
             .order('created_at', { ascending: false })
             .limit(1);
@@ -289,63 +300,78 @@ if (error) {
         const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
         const initialWeight = member.initial_weight;
         
-        // 計算減重差值 (例如：70 - 72 = -2，代表瘦了 2 公斤)
-        const diff = (latestWeight && initialWeight) ? (latestWeight - initialWeight) : 0;
+        // 判斷今天是否已報數 (簡單判斷：是否有最新體重且為最新一筆)
+        // 進階可判斷 created_at 是否為今日，這裡先以「有紀錄」為準
+        if (latestWeight) reportCount++;
+
+        // 計算減重百分比：% = (目前 - 初始) / 初始 * 100
+        const percent = (latestWeight && initialWeight) 
+            ? ((latestWeight - initialWeight) / initialWeight * 100) 
+            : 0;
+
+        const diffKg = (latestWeight && initialWeight) ? (latestWeight - initialWeight) : 0;
 
         return {
             ...member,
             latestWeight,
-            diff: parseFloat(diff.toFixed(1))
+            diffKg: parseFloat(diffKg.toFixed(1)),
+            percent: parseFloat(percent.toFixed(2)) // 存入百分比
         };
     }));
 
-    // 3. 【核心邏輯】按照減重幅度排序 (負值越大的排越前面，例如 -3kg > -1kg > 0kg)
-    memberResults.sort((a, b) => a.diff - b.diff);
+    // 3. 更新全隊進度條
+    const totalMembers = members.length;
+    const progressPercent = (reportCount / totalMembers) * 100;
+    document.getElementById('progressBar').style.width = progressPercent + '%';
+    document.getElementById('progressText').innerText = `${reportCount} / ${totalMembers}`;
+    
+    if (reportCount === totalMembers && totalMembers > 0) {
+        document.getElementById('progressMotto').innerText = "🎊 太棒了！今日全隊達成 100% 報數！";
+        document.getElementById('progressMotto').classList.add('text-orange-500', 'font-bold');
+    }
 
-    // 4. 開始渲染
+    // 4. 【排序】按照減重百分比排序 (負值越大的排前面)
+    memberResults.sort((a, b) => a.percent - b.percent);
+
+    // 5. 渲染九宮格
     gridContainer.innerHTML = ''; 
-
-    for (let i = 0; i < 9; i++) {
-        const member = memberResults[i];
+    memberResults.forEach((member, i) => {
         const card = document.createElement('div');
-        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 transition-all duration-500";
+        card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all";
         
-        if (member) {
-            const diff = member.diff;
-            let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
-            let crownHtml = ''; // 冠軍皇冠
+        const isMe = member.id === userId;
+        const diff = member.diffKg;
+        const percent = member.percent;
 
-            // 第一名加個小皇冠標誌
-            if (i === 0 && diff < 0) {
-                crownHtml = '<div class="absolute -top-1 -right-1 text-lg">👑</div>';
-                card.classList.add('relative');
-            }
+        let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
+        let crownHtml = (i === 0 && percent < 0) ? '<div class="absolute -top-1 -right-1 text-lg z-10">👑</div>' : '';
 
-            if (member.latestWeight !== null) {
-                const color = diff < 0 ? 'text-green-500 font-bold' : (diff > 0 ? 'text-red-400' : 'text-gray-400');
-                const icon = diff < 0 ? '↓' : (diff > 0 ? '↑' : '-');
-                diffHtml = `<div class="text-[11px] ${color}">${icon} ${Math.abs(diff)}kg</div>`;
-            }
-
-            const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
-            card.innerHTML = `
-                ${crownHtml}
-                <img src="${avatar}" class="w-8 h-8 rounded-full mb-1 shadow-inner">
-                <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
-                <div class="text-sm font-black text-blue-600">${member.latestWeight || '--'}</div>
-                ${diffHtml}
-            `;
-            
-            if (member.id === userId) {
-                card.classList.add('border-blue-400', 'bg-blue-50', 'z-10');
-            } else {
-                card.classList.add('border-transparent');
-            }
-        } else {
-            card.innerHTML = `<div class="text-gray-200 text-[20px]">+</div>`;
-            card.classList.add('border-transparent', 'bg-gray-50/50');
+        if (member.latestWeight !== null) {
+            const color = percent < 0 ? 'text-green-500 font-bold' : (percent > 0 ? 'text-red-400' : 'text-gray-400');
+            const icon = percent < 0 ? '↓' : (percent > 0 ? '↑' : '-');
+            // 這裡顯示百分比，更專業！
+            diffHtml = `<div class="text-[11px] ${color}">${icon} ${Math.abs(percent)}%</div>`;
         }
+
+        const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
+        card.innerHTML = `
+            ${crownHtml}
+            <img src="${avatar}" class="w-8 h-8 rounded-full mb-1">
+            <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
+            <div class="text-sm font-black text-blue-600">${member.latestWeight || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
+            ${diffHtml}
+        `;
+        
+        card.classList.add(isMe ? 'border-blue-400 bg-blue-50' : 'border-transparent');
         gridContainer.appendChild(card);
+    });
+
+    // 補齊 9 格
+    for (let i = memberResults.length; i < 9; i++) {
+        const emptyCard = document.createElement('div');
+        emptyCard.className = "bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl border-2 border-transparent text-gray-200 text-xl";
+        emptyCard.innerText = "+";
+        gridContainer.appendChild(emptyCard);
     }
 }
     </script>
