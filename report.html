@@ -177,7 +177,11 @@
                 const adviceList = document.getElementById('adviceList');
                 adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
                 document.getElementById('adviceBox').classList.remove('hidden');
-                
+                document.getElementById('statusMsg').innerHTML = `
+    <span class='text-green-500 font-bold'>✅ 報數成功！</span>
+    <br>
+    <a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看管理師專業方案</a>
+`;
                 document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 報數成功！建議已更新</span>";
                 document.getElementById('currentWeight').value = '';
                 await refreshGrid();
