@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每日報數 - 馬拉松挑戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-4">
+
+    <div class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
+            <a href="index.html" class="text-xs bg-gray-200 px-3 py-1 rounded-full text-gray-600">返回登記</a>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border-t-4 border-blue-500">
+            <div id="userInfo" class="mb-4 text-center">
+                <p class="text-gray-500 text-sm">歡迎回來</p>
+                <h2 id="displayUsername" class="text-xl font-bold text-gray-800">載入中...</h2>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-center text-sm font-medium text-gray-500 mb-2">今日體重 (kg)</label>
+                    <input type="number" id="currentWeight" step="0.1" 
+                        class="block w-full text-center text-3xl font-black border-2 border-blue-100 rounded-xl p-4 focus:border-blue-500 focus:outline-none" 
+                        placeholder="00.0">
+                </div>
+                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">
+                    送出今日數據
+                </button>
+            </div>
+            <div id="statusMsg" class="mt-4 text-center text-sm"></div>
+        </div>
+
+        <div class="mb-4 flex justify-between items-end">
+            <h3 class="text-lg font-bold text-gray-800">🏆 小組即時戰報</h3>
+            <span id="groupLabel" class="text-xs text-blue-500 font-bold"></span>
+        </div>
+        <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner">
+            </div>
+    </div>
+
+    <script>
+        // --- 請填入你的 Supabase 資訊 ---
+        const MY_SUPABASE_URL = '你的_SUPABASE_URL';
+        const MY_SUPABASE_KEY = '你的_SUPABASE_ANON_KEY';
+
+        const { createClient } = supabase;
+        const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
+
+        const userId = localStorage.getItem('my_user_id');
+        const groupCode = localStorage.getItem('my_group_code');
+
+        // 初始化檢查
+        window.onload = async () => {
+            if (!userId) {
+                alert("找不到登記資料，請先去登記頁面！");
+                window.location.href = "index.html";
+                return;
+            }
+            
+            // 讀取名字
+            const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
+            if (data) {
+                document.getElementById('displayUsername').innerText = data.username;
+                document.getElementById('groupLabel').innerText = "小組：" + groupCode;
+            }
+            refreshGrid();
+        };
+
+        // 提交體重
+        async function submitWeight() {
+            const weight = document.getElementById('currentWeight').value;
+            const btn = document.getElementById('btnSubmit');
+
+            if (!weight) return alert("請輸入數字");
+
+            btn.disabled = true;
+            btn.innerText = "傳送中...";
+
+            const { error } = await _client
+                .from('weight_logs')
+                .insert([{ user_id: userId, weight: parseFloat(weight) }]);
+
+            if (error) {
+                alert("錯誤：" + error.message);
+            } else {
+                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 成功！數據已同步至九宮格</span>";
+                document.getElementById('currentWeight').value = '';
+                refreshGrid(); // 立即刷新下方九宮格
+            }
+            btn.disabled = false;
+            btn.innerText = "送出今日數據";
+        }
+
+        // 渲染九宮格 (延用之前的優化邏輯)
+        async function refreshGrid() {
+            const gridContainer = document.getElementById('gridContainer');
+            const { data: members } = await _client
+                .from('profiles')
+                .select('*')
+                .eq('group_code', groupCode)
+                .order('created_at', { ascending: true })
+                .limit(9);
+
+            gridContainer.innerHTML = ''; 
+
+            for (let i = 0; i < 9; i++) {
+                const member = members && members[i];
+                const card = document.createElement('div');
+                card.className = "bg-white aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2";
+                
+                if (member) {
+                    const { data: weightData } = await _client
+                        .from('weight_logs')
+                        .select('weight')
+                        .eq('user_id', member.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1);
+
+                    const latestWeight = (weightData && weightData.length > 0) ? weightData[0].weight : null;
+                    const diff = (latestWeight && member.initial_weight) ? (latestWeight - member.initial_weight).toFixed(1) : null;
+                    
+                    let diffHtml = '<div class="text-[10px] text-gray-300">等待中</div>';
+                    if (diff !== null) {
+                        const color = diff < 0 ? 'text-green-500' : (diff > 0 ? 'text-red-400' : 'text-gray-400');
+                        const icon = diff < 0 ? '↓' : (diff > 0 ? '↑' : '-');
+                        diffHtml = `<div class="text-[11px] font-bold ${color}">${icon} ${Math.abs(diff)}kg</div>`;
+                    }
+
+                    const avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}`;
+                    card.innerHTML = `
+                        <img src="${avatar}" class="w-8 h-8 rounded-full mb-1">
+                        <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${member.username}</div>
+                        <div class="text-sm font-black text-blue-600">${latestWeight || '--'}</div>
+                        ${diffHtml}
+                    `;
+                    if (member.id === userId) card.classList.add('border-blue-400', 'bg-blue-50');
+                    else card.classList.add('border-transparent');
+                } else {
+                    card.innerHTML = `<div class="text-gray-200 text-[20px]">+</div>`;
+                    card.classList.add('border-transparent', 'bg-gray-50/50');
+                }
+                gridContainer.appendChild(card);
+            }
+        }
+    </script>
+</body>
+</html>
