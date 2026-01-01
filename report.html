@@ -157,81 +157,84 @@
         }
 
         async function submitWeight() {
-            const weightVal = document.getElementById('currentWeight').value;
-            if (!weightVal) return alert("請輸入數字");
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.innerText = "傳送中...";
+    const weightVal = document.getElementById('currentWeight').value;
+    if (!weightVal) return alert("請輸入數字");
+    
+    const btn = document.getElementById('btnSubmit');
+    const statusMsg = document.getElementById('statusMsg');
+    
+    btn.disabled = true;
+    btn.innerText = "傳送中...";
 
-            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            
-            if (error) {
-                alert("錯誤：" + error.message);
-            } else {
-                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
-                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
-                playSound(diff < 0 ? 'win' : 'fail');
-                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
-                async function submitWeight() {
-            // ... 前面的代碼 (取得重量、禁用按鈕等) ...
+    // 送出數據到 Supabase
+    const { error } = await _client.from('weight_logs').insert([{ 
+        user_id: userId, 
+        weight: parseFloat(weightVal) 
+    }]);
+    
+    if (error) {
+        alert("錯誤：" + error.message);
+        btn.disabled = false;
+        btn.innerText = "送出今日數據";
+    } else {
+        // --- 成功後的處理邏輯 ---
+        
+        // 1. 抓取最新個人資料來計算差異
+        const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
+        
+        // 2. 播放音效與彈幕
+        const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
+        playSound(diff < 0 ? 'win' : 'fail');
+        createDanmu(`🔥 賀！${profile.username} 報數成功！`);
 
-            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            
-            if (error) {
-                alert("錯誤：" + error.message);
-            } else {
-                // --- 成功後的處理 ---
-                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
-                
-                // 1. 播放音效與彈幕
-                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
-                playSound(diff < 0 ? 'win' : 'fail');
-                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
+        // 3. 更新 UI 狀態
+        statusMsg.innerHTML = `
+            <div class="animate-pulse text-green-600 font-bold">
+                ✅ 報數成功！正在為您準備今日健康處方...
+            </div>
+        `;
+        document.getElementById('currentWeight').value = '';
 
-                // 2. 更新 UI 文字
-                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 報數成功！正在準備您的每日資訊...</span>";
-                document.getElementById('currentWeight').value = '';
+        // 4. 更新下方的專屬建議區塊 (原本的 adviceBox)
+        const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
+        const adviceList = document.getElementById('adviceList');
+        adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
+        document.getElementById('adviceBox').classList.remove('hidden');
 
-                // 3. ✨ 重要：延遲 1.5 秒後彈出每日資訊頁面
-                setTimeout(() => {
-                    openHealthModal();
-                }, 1500);
+        // 5. 刷新小組戰報
+        await refreshGrid();
 
-                await refreshGrid();
-            }
-            btn.disabled = false;
-            btn.innerText = "送出今日數據";
-        }
+        // 6. ✨ 重要：1.5秒後自動彈出每日資訊視窗
+        setTimeout(() => {
+            openHealthModal();
+            // 彈窗關閉後， statusMsg 改為查看專業方案的按鈕
+            statusMsg.innerHTML = `
+                <span class='text-green-500 font-bold'>✅ 今日報數已完成</span><br>
+                <a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full shadow-md">查看管理師專業方案</a>
+            `;
+        }, 1500);
+    }
+    
+    btn.disabled = false;
+    btn.innerText = "送出今日數據";
+}
 
-        // 控制彈窗的函數
-        function openHealthModal() {
-            document.getElementById('healthModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // 禁止底層捲動
-        }
+// 控制彈窗的函數
+function openHealthModal() {
+    const modal = document.getElementById('healthModal');
+    if(modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // 禁止底層捲動
+    }
+}
 
-        function closeHealthModal() {
-            document.getElementById('healthModal').classList.add('hidden');
-            document.body.style.overflow = 'auto'; // 恢復捲動
-        }
-                
-                const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
-                const adviceList = document.getElementById('adviceList');
-                adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
-                document.getElementById('adviceBox').classList.remove('hidden');
-                document.getElementById('statusMsg').innerHTML = `
-    <span class='text-green-500 font-bold'>✅ 報數成功！</span>
-    <br>
-    <a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看管理師專業方案</a>
-`;
-                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 報數成功！建議已更新</span>";
-                document.getElementById('currentWeight').value = '';
-                await refreshGrid();
-            }
-            btn.disabled = false;
-            btn.innerText = "送出今日數據";
-
-            
-        }
+function closeHealthModal() {
+    const modal = document.getElementById('healthModal');
+    if(modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto'; // 恢復捲動
+    }
+}
 
        async function refreshGrid() {
             const theme = getActiveTheme();
@@ -305,7 +308,12 @@
                     ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` 
                     : `📢 隊員 ${username} 完成今日報數！`;
                     
-                setTimeout(() => createDanmu(msg), index * 2000);
+                setTimeout(() => {
+    const iframe = document.querySelector('#healthModal iframe');
+    // 將體重數據透過 URL 傳給 iframe
+    iframe.src = `health-info.html?weight=${weightVal}&userId=${userId}`; 
+    openHealthModal();
+}, 1500);
             });
         }
     </script>
