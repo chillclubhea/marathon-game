@@ -74,7 +74,7 @@
                 <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
             </div>
             <div class="flex-1 overflow-y-auto">
-                <iframe src="health-info.html" id="healthIframe" class="w-full h-[60vh] border-none"></iframe>
+                <iframe id="healthIframe" src="about:blank" class="w-full h-[60vh] border-none"></iframe>
             </div>
             <div class="p-4 bg-white">
                 <button onclick="closeHealthModal()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg">我已閱讀，繼續加油！</button>
@@ -91,11 +91,28 @@
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
-        const MARATHON_START_DATE = '2026-01-01'; // 設定馬拉松起始日
+        const MARATHON_START_DATE = '2026-01-01'; // 唯一的起始日期定義
+
+        // 1. 統一計算天數的函數
+        function calculateCurrentDay() {
+            const startDate = new Date(MARATHON_START_DATE);
+            const today = new Date();
+            
+            // 消除時分秒影響，精準計算日期差
+            const startTimestamp = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
+            const todayTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+            
+            const diffDays = Math.floor((todayTimestamp - startTimestamp) / (1000 * 60 * 60 * 24));
+            let day = diffDays + 1; // 1/1 是第 1 天
+            
+            if (day < 1) return 1;
+            if (day > 30) return 30;
+            return day;
+        }
 
         const THEMES = {
             christmas: { match: (d) => d.getMonth() === 11 && d.getDate() >= 20, border: 'border-red-500', bg: 'bg-green-50', icon: '🎄', motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！' },
-            cny: { match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！脂肪拿走，好運進來！' },
+            cny: { match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！' },
             default: { border: 'border-blue-400', bg: 'bg-blue-50', icon: '👑', motto: '「一個人走得快，一群人走得遠」' }
         };
 
@@ -106,20 +123,17 @@
             return THEMES.default;
         }
 
-        // 音效控制
         function playSound(type) {
             const audio = new Audio(type === 'win' ? "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3");
             audio.play().catch(() => {});
         }
 
-        // 敲碗功能
         async function knockBowl(targetName, targetId) {
             if (targetId === userId) return;
             await _client.channel(`user_${targetId}`).send({ type: 'broadcast', event: 'knock', payload: { from: document.getElementById('displayUsername').innerText } });
             alert(`已向 ${targetName} 敲碗催促！🍜`);
         }
 
-        // 截止倒數
         function updateCountdown() {
             const now = new Date();
             const deadline = new Date();
@@ -133,7 +147,6 @@
         }
         setInterval(updateCountdown, 1000);
 
-        // 彈幕生成
         function createDanmu(text) {
             const layer = document.getElementById('danmu-layer');
             const danmu = document.createElement('div');
@@ -144,11 +157,8 @@
             danmu.addEventListener('animationend', () => danmu.remove());
         }
 
-        // 初始化
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
-            
-            // 訂閱敲碗訊息
             _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
@@ -163,22 +173,13 @@
             playbackRecentDanmu();
         };
 
-        // 建議邏輯
         function generatePersonalAdvice(currentWeight, profile) {
             let advices = [];
-            const now = new Date();
-            if (profile.gender === 'female' && profile.last_period_date) {
-                const lastPeriod = new Date(profile.last_period_date);
-                const daysDiff = Math.floor((now - lastPeriod) / (1000 * 60 * 60 * 24)) % 28;
-                if (daysDiff >= 21 || daysDiff <= 3) advices.push("🌸 生理期水腫提示：目前處於易水腫期，體重微升是正常的，放鬆心情！");
-            }
             advices.push(`🥩 蛋白質建議：你今日需攝取約 ${Math.round(currentWeight * 1.2)}g 蛋白質。`);
-            if (now.getHours() >= 22 || now.getHours() <= 4) advices.push("🌙 睡眠提醒：報數較晚，快去睡覺讓瘦體素幫你燃脂！");
-            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘效果更佳。");
+            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘，減脂效果更佳。");
             return advices;
         }
 
-        // 提交體重
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
             if (!weightVal) return alert("請輸入數字");
@@ -201,7 +202,7 @@
                 playSound(diff < 0 ? 'win' : 'fail');
                 createDanmu(`🔥 賀！${profile.username} 報數成功！`);
 
-                statusMsg.innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！準備今日處方...</div>`;
+                statusMsg.innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！</div>`;
                 document.getElementById('currentWeight').value = '';
 
                 const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
@@ -210,31 +211,22 @@
 
                 await refreshGrid();
 
+                // 報數成功後彈出
                 setTimeout(() => {
                     openHealthModal();
-                    statusMsg.innerHTML = `<span class='text-green-500 font-bold'>✅ 今日報數完成</span><br><a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看專業方案</a>`;
+                    statusMsg.innerHTML = `<span class='text-green-500 font-bold'>✅ 今日報數已完成</span><br><a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看專業方案</a>`;
                 }, 1500);
             }
             btn.disabled = false;
             btn.innerText = "送出今日數據";
         }
 
-        // 彈窗控制
         function openHealthModal() {
-            const startDate = new Date(MARATHON_START_DATE); 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            startDate.setHours(0, 0, 0, 0);
-
-            // 計算天數 (天數差 + 1)
-            let dayNum = Math.round((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            if (dayNum < 1) dayNum = 1;
-            if (dayNum > 30) dayNum = 30;
-
+            const day = calculateCurrentDay();
             const modal = document.getElementById('healthModal');
             const iframe = document.getElementById('healthIframe');
-            iframe.src = `health-info.html?day=${dayNum}`; 
-
+            
+            iframe.src = `health-info.html?day=${day}`; 
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }
@@ -244,7 +236,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        // 刷新戰報網格
         async function refreshGrid() {
             const theme = getActiveTheme();
             document.getElementById('progressMotto').innerText = theme.motto;
@@ -288,14 +279,8 @@
                     ${diffHtml}`;
                 gridContainer.appendChild(card);
             });
-
-            // 填補空格到至少 9 格
-            for (let i = memberResults.length; i < 9; i++) {
-                gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl text-gray-200 text-xl font-light">+</div>`;
-            }
         }
 
-        // 播放近期彈幕戰報
         async function playbackRecentDanmu() {
             const { data: logs, error } = await _client
                 .from('weight_logs')
@@ -310,7 +295,7 @@
                 const username = log.profiles?.username || '隊員';
                 const initialWeight = log.profiles?.initial_weight || 0;
                 const diff = (log.weight - initialWeight).toFixed(1);
-                const msg = diff < 0 ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${username} 完成今日報數！`;
+                const msg = diff < 0 ? `🔥 戰報：${username} 又瘦了 ${Math.abs(diff)}kg！` : `📢 ${username} 完成報數！`;
                 setTimeout(() => createDanmu(msg), index * 1200);
             });
         }
