@@ -30,11 +30,31 @@
 
     <script>
         const DAILY_CONTENT = {
-            1: { title: "建立「三杯水」節奏", content: "第一天我們練習：清、調、補。早上蘆薈汁清理、全天草本茶代謝、早晚奶昔補充營養。", tips: "今天請確保喝水量達到體重 x 45cc。" },
-            2: { title: "蛋白質是燃脂引擎", content: "沒有蛋白質就沒有肌肉，沒有肌肉代謝就會下降。這就是為什麼 PPP 蛋白質粉這麼重要。", tips: "試著在早上的奶昔多加 1 匙蛋白質粉。" },
-            3: { title: "對抗偽食慾", content: "有時候想吃東西不是餓，是渴！喝杯草本茶，等 10 分鐘，你會發現食慾消失了。", tips: "下午 3 點是誘惑最大的時候，喝杯大杯草本茶吧。" },
-            // ...以此類推
-        };
+    1: { 
+        title: "🌱 第一天：啟動細胞營養", 
+        content: "歡迎來到挑戰！減重 80% 靠營養，今天起我們用「三杯水」開啟代謝：蘆薈汁清、草本茶調、奶昔補。", 
+        tips: "早起先喝 3 瓶蓋蘆薈汁兌水，喚醒腸道吸收力！",
+        images: ["https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608943728_122113845339083581_1013822433400309860_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=cZOczSUjK-4Q7kNvwGbSDo1&_nc_oc=Adk5cjRKkt8Qbpa1p5XIBLc8rZ35NuZXwH7lGmrcIshwYhELTQ-o0WOmQRob5OCjies&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=fPFROfdF1x0Ufa26Tam5sg&oh=00_AfpQpmii5umhnECfZ3xzPG-Rr56gcKZltPn--R2adgXfvA&oe=695C8476"]
+    },
+    2: { 
+        title: "🌙 第二天：睡眠竟然也能瘦？", 
+        content: "明明無食宵夜，只係追劇夜咗，起身反而重咗？因為熬夜會分泌「皮質醇」（壓力荷爾蒙），它最鍾意叫身體囤積脂肪，特別係腹部贅肉！相反，乖乖睡覺會分泌「瘦體素」，像勤力的清潔員在睡眠中幫你燒脂。", 
+        tips: "今日行動：今晚 11 點前「強制登出」手機，睡滿 7 小時，啟動自動燃脂模式！",
+        images: [
+            "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/610874102_122113845219083581_5961567971867320995_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=JKyIHmyjIzgQ7kNvwEVK1b3&_nc_oc=Adn9DHSsNxpGpfRHEHaZAKekZXwK1lwj5Jr8eLipmNxfPRk87eKJwDsn4dFVuPb9z0w&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=_Lv4RtBVjOJW-uy25BgfzA&oh=00_AfrjYGCyVcLhLJbcYtZS1UYp_HXu-scnrb6ArAvdZJsxGw&oe=695C864D",
+            "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/609028759_122113845231083581_6456089853283612139_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=bjRSgJggMQgQ7kNvwFGZxiM&_nc_oc=AdnKIGpOx5pU0n46vaAfh7v3Dv9RqY6CQHZNXTPt03awRMiV6nQitXW2uxsIsUKjTho&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=UIHGt8x9Q61EeJg_eD2vQw&oh=00_AfoWjfSu33c0Kh2JAYbFoemuuMMDnclo18MJppDFguXWFQ&oe=695C6D04",
+            "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608907118_122113845225083581_7194711875913961950_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=W9ag39goMdUQ7kNvwFv76xh&_nc_oc=AdlhHniWMWFXC3qtb8IVC0btzHb7P-bTPhwwWMQmCTg2aorU9_9avgKuCjkQptIaT2Q&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=733IQDt6KxqcU2gUO70cXg&oh=00_Afog825Qm2mYDCkUcCIEu_0IERck7932BDsRC8NaHnrW8g&oe=695C94B9"
+        ]
+    }
+            3: { title: "💧 第三天：水是脂肪的搬運工", content: "沒有水，脂肪就排不出去。草本茶能幫助提升代謝率，相當於跑步的燃脂效果。", tips: "今天目標：喝足 3000cc 水分（體重 x 45-50ml）。" },
+    4: { title: "🍎 第四天：認識「偽食慾」", content: "大腦有時分不清楚「渴」與「餓」。當你想吃甜點時，其實你是缺水或缺營養了。", tips: "想吃零食前，先喝 200ml 草本茶，等 10 分鐘看看！" },
+    5: { title: "💩 第五天：腸道排毒日", content: "如果排便不順，體重會卡關。活動纖維粉是腸道的掃把，能幫你帶走垃圾。", tips: "今天可以在奶昔中加入一匙活動纖維粉，增加纖維攝取。" },
+    6: { title: "💤 第六天：睡眠與皮質醇", content: "熬夜會讓皮質醇上升，這是一種會抓取腹部脂肪的荷爾蒙。睡得好，瘦得快。", tips: "今晚嘗試 11 點前關燈，睡前 1 小時不要看手機。" },
+    7: { title: "📊 第七天：第一週小結", content: "恭喜堅持一週！體重計數字可能波動，但請觀察衣服有沒有變鬆？那才是真的脂肪減少。", tips: "今天給自己一個讚美，紀錄下這週體力變好的時刻。" },
+    8: { title: "🍳 第八天：正餐怎麼吃？", content: "午餐建議採用「拳頭原則」：一拳頭蛋白質、一拳頭澱粉、兩拳頭蔬菜。", tips: "避免勾芡與油炸，原型食物是你的好朋友。" },
+    9: { title: "🌙 第九天：夜間代謝力", content: "睡覺時也能燃脂？夜寧新含有精胺酸，能維持血管健康並在夜間持續優化循環。", tips: "睡前喝一杯夜寧新，給心血管最好的保護。" },
+    10: { title: "🔥 第十天：突破平台期", content: "身體會適應熱量，如果體重不動了，試著增加 10 分鐘的高強度運動或增加飲水量。", tips: "今天加強草本茶的濃度，幫代謝推一把！" }
+};
 
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -46,7 +66,11 @@
             document.getElementById('infoTitle').innerText = data.title;
             document.getElementById('infoText').innerText = data.content;
             document.getElementById('infoTips').innerText = data.tips;
-
+// 渲染多張圖片
+    const imgContainer = document.getElementById('infoImage');
+    imgContainer.innerHTML = data.images.map(url => 
+        `<img src="${url}" class="w-full rounded-xl mb-3 shadow-sm border border-gray-100">`
+    ).join('');
             // 根據天數動態插入圖片
             if(day == 1) {
                 document.getElementById('infoImage').innerHTML = '';
