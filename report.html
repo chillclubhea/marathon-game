@@ -172,6 +172,47 @@
                 const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
                 playSound(diff < 0 ? 'win' : 'fail');
                 createDanmu(`🔥 賀！${profile.username} 報數成功！`);
+                async function submitWeight() {
+            // ... 前面的代碼 (取得重量、禁用按鈕等) ...
+
+            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+            
+            if (error) {
+                alert("錯誤：" + error.message);
+            } else {
+                // --- 成功後的處理 ---
+                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
+                
+                // 1. 播放音效與彈幕
+                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
+                playSound(diff < 0 ? 'win' : 'fail');
+                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
+
+                // 2. 更新 UI 文字
+                document.getElementById('statusMsg').innerHTML = "<span class='text-green-500 font-bold'>✅ 報數成功！正在準備您的每日資訊...</span>";
+                document.getElementById('currentWeight').value = '';
+
+                // 3. ✨ 重要：延遲 1.5 秒後彈出每日資訊頁面
+                setTimeout(() => {
+                    openHealthModal();
+                }, 1500);
+
+                await refreshGrid();
+            }
+            btn.disabled = false;
+            btn.innerText = "送出今日數據";
+        }
+
+        // 控制彈窗的函數
+        function openHealthModal() {
+            document.getElementById('healthModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // 禁止底層捲動
+        }
+
+        function closeHealthModal() {
+            document.getElementById('healthModal').classList.add('hidden');
+            document.body.style.overflow = 'auto'; // 恢復捲動
+        }
                 
                 const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
                 const adviceList = document.getElementById('adviceList');
@@ -188,6 +229,8 @@
             }
             btn.disabled = false;
             btn.innerText = "送出今日數據";
+
+            
         }
 
        async function refreshGrid() {
@@ -266,5 +309,20 @@
             });
         }
     </script>
+
+    <div id="healthModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 class="font-bold text-gray-700">📜 每日健康小知識</h3>
+            <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+            <iframe src="health-info.html" class="w-full h-[60vh] border-none"></iframe>
+        </div>
+        <div class="p-4 bg-white">
+            <button onclick="closeHealthModal()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg">我已閱讀，繼續加油！</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
