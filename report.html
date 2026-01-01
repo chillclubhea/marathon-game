@@ -30,7 +30,6 @@
             <p id="progressMotto" class="text-[10px] text-gray-400 italic">載入中...</p>
             <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
         </div>
-
         <div id="adviceBox" class="hidden mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
             <h4 class="font-bold text-blue-800 text-sm mb-2">💡 專屬你的今日建議</h4>
             <ul id="adviceList" class="text-[11px] text-blue-700 space-y-1.5 leading-relaxed"></ul>
@@ -85,29 +84,21 @@
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
-        
         const { createClient } = supabase;
         const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
-        const MARATHON_START_DATE = '2026-01-01'; // 唯一的起始日期定義
+        const MARATHON_START_DATE = '2026-01-01';
 
-        // 1. 統一計算天數的函數
         function calculateCurrentDay() {
             const startDate = new Date(MARATHON_START_DATE);
             const today = new Date();
-            
-            // 消除時分秒影響，精準計算日期差
             const startTimestamp = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
             const todayTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-            
             const diffDays = Math.floor((todayTimestamp - startTimestamp) / (1000 * 60 * 60 * 24));
-            let day = diffDays + 1; // 1/1 是第 1 天
-            
-            if (day < 1) return 1;
-            if (day > 30) return 30;
-            return day;
+            let day = diffDays + 1;
+            return (day < 1) ? 1 : (day > 30 ? 30 : day);
         }
 
         const THEMES = {
@@ -118,116 +109,35 @@
 
         function getActiveTheme() {
             const now = new Date();
-            if (THEMES.christmas.match(now)) return THEMES.christmas;
-            if (THEMES.cny.match(now)) return THEMES.cny;
-            return THEMES.default;
+            return THEMES.christmas.match(now) ? THEMES.christmas : (THEMES.cny.match(now) ? THEMES.cny : THEMES.default);
         }
 
         function playSound(type) {
-            const audio = new Audio(type === 'win' ? "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3");
-            audio.play().catch(() => {});
-        }
-
-        async function knockBowl(targetName, targetId) {
-            if (targetId === userId) return;
-            await _client.channel(`user_${targetId}`).send({ type: 'broadcast', event: 'knock', payload: { from: document.getElementById('displayUsername').innerText } });
-            alert(`已向 ${targetName} 敲碗催促！🍜`);
-        }
-
-        function updateCountdown() {
-            const now = new Date();
-            const deadline = new Date();
-            deadline.setHours(12, 0, 0, 0);
-            if (now > deadline) deadline.setDate(deadline.getDate() + 1);
-            const diff = deadline - now;
-            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
-        }
-        setInterval(updateCountdown, 1000);
-
-        function createDanmu(text) {
-            const layer = document.getElementById('danmu-layer');
-            const danmu = document.createElement('div');
-            danmu.className = 'danmu';
-            danmu.innerText = text;
-            danmu.style.top = (Math.floor(Math.random() * 80) + 10) + '%';
-            layer.appendChild(danmu);
-            danmu.addEventListener('animationend', () => danmu.remove());
-        }
-
-        window.onload = async () => {
-            if (!userId) { window.location.href = "index.html"; return; }
-            _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-                alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
-            }).subscribe();
-
-            const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
-            if (data) {
-                document.getElementById('displayUsername').innerText = data.username;
-                document.getElementById('groupLabel').innerText = "小組：" + groupCode;
-            }
-            await refreshGrid();
-            playbackRecentDanmu();
-        };
-
-        function generatePersonalAdvice(currentWeight, profile) {
-            let advices = [];
-            advices.push(`🥩 蛋白質建議：你今日需攝取約 ${Math.round(currentWeight * 1.2)}g 蛋白質。`);
-            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘，減脂效果更佳。");
-            return advices;
+            new Audio(type === 'win' ? "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3").play().catch(()=>{});
         }
 
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
             if (!weightVal) return alert("請輸入數字");
-            
             const btn = document.getElementById('btnSubmit');
-            const statusMsg = document.getElementById('statusMsg');
-            
             btn.disabled = true;
-            btn.innerText = "傳送中...";
-
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            
             if (error) {
-                alert("錯誤：" + error.message);
-                btn.disabled = false;
-                btn.innerText = "送出今日數據";
+                alert(error.message);
             } else {
-                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
-                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
-                playSound(diff < 0 ? 'win' : 'fail');
-                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
-
-                statusMsg.innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！</div>`;
-                document.getElementById('currentWeight').value = '';
-
-                const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
-                document.getElementById('adviceList').innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
-                document.getElementById('adviceBox').classList.remove('hidden');
-
+                document.getElementById('statusMsg').innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！</div>`;
                 await refreshGrid();
-
-                // 報數成功後彈出
-                setTimeout(() => {
-                    openHealthModal();
-                    statusMsg.innerHTML = `<span class='text-green-500 font-bold'>✅ 今日報數已完成</span><br><a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看專業方案</a>`;
-                }, 1500);
+                setTimeout(() => openHealthModal(), 1200);
             }
             btn.disabled = false;
-            btn.innerText = "送出今日數據";
         }
 
         function openHealthModal() {
             const day = calculateCurrentDay();
-            const modal = document.getElementById('healthModal');
             const iframe = document.getElementById('healthIframe');
-            
-            iframe.src = `health-info.html?day=${day}`; 
-            modal.classList.remove('hidden');
+            // 加入 v= 時間戳記防止緩存
+            iframe.src = `health-info.html?day=${day}&v=${new Date().getTime()}`;
+            document.getElementById('healthModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }
 
@@ -239,66 +149,34 @@
         async function refreshGrid() {
             const theme = getActiveTheme();
             document.getElementById('progressMotto').innerText = theme.motto;
-            const gridContainer = document.getElementById('gridContainer');
-            
             const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
             if (!members) return;
-
             let reportCount = 0;
-            const memberResults = await Promise.all(members.map(async (m) => {
+            const results = await Promise.all(members.map(async (m) => {
                 const { data: w } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(1);
-                const latest = w?.[0]?.weight || null;
-                if (latest) reportCount++;
-                const percent = latest ? ((latest - m.initial_weight) / m.initial_weight * 100) : 0;
-                return { ...m, latest, percent: parseFloat(percent.toFixed(2)) };
+                if (w?.[0]?.weight) reportCount++;
+                return { ...m, latest: w?.[0]?.weight || null };
             }));
-
             document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
             document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
-
-            memberResults.sort((a, b) => a.percent - b.percent);
-            gridContainer.innerHTML = '';
-
-            memberResults.forEach((m, i) => {
-                const card = document.createElement('div');
+            const grid = document.getElementById('gridContainer');
+            grid.innerHTML = '';
+            results.forEach(m => {
                 const isMe = m.id === userId;
-                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 relative transition-all ${isMe ? theme.bg + ' ' + theme.border : 'bg-white border-transparent'}`;
-                
-                if (!m.latest) {
-                    card.onclick = () => knockBowl(m.username, m.id);
-                    card.classList.add('cursor-pointer', 'opacity-60');
-                }
-
-                const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
-                const diffHtml = m.latest ? `<div class="text-[10px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent}%</div>` : `<div class="text-[9px] text-gray-400 italic">點擊敲碗</div>`;
-
-                card.innerHTML = `${topIcon}
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
-                    <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
-                    <div class="text-sm font-black text-blue-600">${m.latest || '--'}<span class="text-[8px] text-gray-400">kg</span></div>
-                    ${diffHtml}`;
-                gridContainer.appendChild(card);
+                const card = document.createElement('div');
+                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 ${isMe ? theme.bg+' '+theme.border : 'bg-white border-transparent'}`;
+                card.innerHTML = `<img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1"><div class="text-[10px] font-bold">${m.username}</div><div class="text-sm font-black text-blue-600">${m.latest || '--'}</div>`;
+                grid.appendChild(card);
             });
         }
 
-        async function playbackRecentDanmu() {
-            const { data: logs, error } = await _client
-                .from('weight_logs')
-                .select('weight, profiles(username, initial_weight, group_code)')
-                .eq('profiles.group_code', groupCode)
-                .order('created_at', { ascending: false })
-                .limit(5);
-
-            if (error || !logs) return;
-
-            logs.filter(log => log.profiles !== null).reverse().forEach((log, index) => {
-                const username = log.profiles?.username || '隊員';
-                const initialWeight = log.profiles?.initial_weight || 0;
-                const diff = (log.weight - initialWeight).toFixed(1);
-                const msg = diff < 0 ? `🔥 戰報：${username} 又瘦了 ${Math.abs(diff)}kg！` : `📢 ${username} 完成報數！`;
-                setTimeout(() => createDanmu(msg), index * 1200);
-            });
-        }
+        window.onload = async () => {
+            if (!userId) { window.location.href = "index.html"; return; }
+            const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
+            if (data) document.getElementById('displayUsername').innerText = data.username;
+            document.getElementById('groupLabel').innerText = "小組：" + groupCode;
+            refreshGrid();
+        };
     </script>
 </body>
 </html>
