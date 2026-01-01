@@ -221,6 +221,35 @@
 
 // 控制彈窗的函數
 function openHealthModal() {
+    function openHealthModal() {
+    // 1. 設定你的馬拉松啟動日期
+    const startDate = new Date('2026-1-1'); 
+    const today = new Date();
+
+    // 2. 優化計算公式：清除時分秒，只算日期差
+    const tempToday = new Date(today);
+    tempToday.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+
+    // 計算天數 (天數差 + 1)
+    const dayNum = Math.round((tempToday - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+    // 3. 限制範圍（例如馬拉松只有 30 天）
+    let finalDay = dayNum;
+    if (dayNum < 1) finalDay = 1;      // 還沒開始也先看 Day 1
+    if (dayNum > 30) finalDay = 30;    // 超過 30 天固定看最後一天
+
+    // 4. 取得彈窗並傳遞天數給 iframe
+    const modal = document.getElementById('healthModal');
+    const iframe = modal.querySelector('iframe');
+    
+    // 修改 iframe 的 src，加上 day 參數
+    iframe.src = `health-info.html?day=${finalDay}`; 
+
+    // 顯示彈窗
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
     const modal = document.getElementById('healthModal');
     if(modal) {
         modal.classList.remove('hidden');
