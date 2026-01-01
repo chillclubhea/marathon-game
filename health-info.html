@@ -1,79 +1,59 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>馬拉松 Day 1：喚醒你的代謝引擎！</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #fdf6ef; color: #4a3728; }
-        .card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); margin-bottom: 24px; }
-        .highlight { color: #d97706; font-weight: bold; }
+        .day-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     </style>
 </head>
-<body class="p-4 md:p-8">
-
-    <div class="max-w-xl mx-auto">
-        <header class="text-center py-6">
-            <h1 class="text-3xl font-black text-[#5A4A42] mb-2">馬拉松 Day 1 🚀</h1>
-            <p class="text-lg font-medium opacity-80">妳的燃脂引擎「點火」了嗎？</p>
-        </header>
-
-        <div class="card">
-            <img src="https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608897378_122113842975083581_3240642677267201547_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=127cfc&_nc_ohc=wyqvMjCrGlwQ7kNvwFAnFXV&_nc_oc=Adk75ug6siMDuph81a3fWb6I-EMoOGaRAGZ2xF3lONK0F1VNLk1-WUpK4dQEFW9OsJQ&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=gUyprmJLe8rdN1BZ4YTqew&oh=00_Afppcq94c8TVS6fv10ChjmH6M9fwWvRaFW_4FM87FDMCWw&oe=695C823A" alt="為什麼奶昔能喚醒代謝" class="w-full">
-            <div class="p-6">
-                <h2 class="text-xl font-bold mb-4 border-b pb-2 border-orange-100">為什麼奶昔能「喚醒代謝」？</h2>
-                <ul class="space-y-4">
-                    <li class="flex items-start">
-                        <span class="mr-2">💪</span>
-                        <p><span class="highlight">蛋白質基礎：</span>維持肌肉量，提升靜息代謝率。</p>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="mr-2">🍎</span>
-                        <p><span class="highlight">114 種營養：</span>補足微量元素，讓生化反應不卡關。</p>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="mr-2">⚖️</span>
-                        <p><span class="highlight">熱量赤字：</span>不用捱餓，就能創造減重空間。</p>
-                    </li>
-                </ul>
-            </div>
+<body class="bg-white p-4">
+    <div id="contentBox" class="text-center">
+        <div class="inline-block day-badge text-white px-4 py-1 rounded-full text-xs font-bold mb-4">
+            DAY <span id="displayDay">1</span>
         </div>
-
-        <div class="card">
-            <img src="https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608817859_122113842969083581_6595758145143174964_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=TFE7ZQeAIwkQ7kNvwEOJBZ8&_nc_oc=AdmfBtPpXWK58bpr7h6gUGtGRcaJlc5ynRU6H8NUL9KDRxcN5O-q1bovZT3akqMmv-I&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=OtRy05TmgAry1ESPP-ak8w&oh=00_AfoHyYxhEp0qVExWqnj98s-5xKk0ECk5o2XpxeH-tzByVQ&oe=695C7546" alt="喚醒代謝的關鍵" class="w-full">
-            <div class="p-6 text-center">
-                <h3 class="text-lg font-bold mb-4">別讓劣質早餐拖累妳的燃脂進度！</h3>
-                <div class="flex justify-around items-center mb-6">
-                    <div class="text-center">
-                        <div class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-bold mb-2">劣質充電器</div>
-                        <p class="text-xs">油膩、高糖</p>
-                    </div>
-                    <div class="text-2xl">➡️</div>
-                    <div class="text-center">
-                        <div class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-bold mb-2">超級快充</div>
-                        <p class="text-xs">全營養奶昔</p>
-                    </div>
-                </div>
-                <p class="bg-orange-100 p-3 rounded-lg font-bold text-[#5A4A42]">馬拉松第一天，從「超級快充」開始！</p>
+        
+        <h2 id="infoTitle" class="text-xl font-black text-gray-800 mb-4">載入中...</h2>
+        
+        <div id="infoImage" class="mb-6 rounded-2xl overflow-hidden shadow-sm">
             </div>
-        </div>
 
-        <div class="card">
-            <img src="https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608902963_122113842945083581_2812350225296050880_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=127cfc&_nc_ohc=cL0l8FE0FiYQ7kNvwEiQXIJ&_nc_oc=Adkz6SAKtWtHHGRWhD4pV0xIDPk-RZtRb2pbKm6dM_q3zGY0I-CRYznpB91fzyAVFtQ&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=MJvM3dabyDYG0DIS2AT7Wg&oh=00_Afp4CXuRmj_PyqzLXdP1GRI2jMhjeX6gHRT9qkWlQ-V7tQ&oe=695C6CC6" alt="慢口喝全吸收" class="w-full">
-            <div class="p-6">
-                <h3 class="text-xl font-bold text-center mb-4">慢口喝，是為了「全吸收」！</h3>
-                <div class="bg-stone-50 p-4 rounded-xl space-y-3">
-                    <p class="font-bold">✨ 實戰指令：</p>
-                    <ul class="list-disc list-inside space-y-2 text-sm leading-relaxed">
-                        <li>不要乾杯！像品嚐紅酒一樣慢口喝。</li>
-                        <li>讓唾液澱粉酶充分混合。</li>
-                    </ul>
-                </div>
-                <p class="text-center mt-6 font-bold text-orange-600">今天，讓我們一起吃出「易瘦體質」！</p>
+        <div class="text-left bg-gray-50 p-4 rounded-2xl border border-gray-100">
+            <p id="infoText" class="text-gray-600 text-sm leading-relaxed mb-4"></p>
+            <div class="bg-blue-50 p-3 rounded-xl border-l-4 border-blue-400">
+                <p class="text-[10px] font-bold text-blue-800">💡 管理師建議：</p>
+                <p id="infoTips" class="text-xs text-blue-700 mt-1"></p>
             </div>
         </div>
     </div>
 
+    <script>
+        const DAILY_CONTENT = {
+            1: { title: "建立「三杯水」節奏", content: "第一天我們練習：清、調、補。早上蘆薈汁清理、全天草本茶代謝、早晚奶昔補充營養。", tips: "今天請確保喝水量達到體重 x 45cc。" },
+            2: { title: "蛋白質是燃脂引擎", content: "沒有蛋白質就沒有肌肉，沒有肌肉代謝就會下降。這就是為什麼 PPP 蛋白質粉這麼重要。", tips: "試著在早上的奶昔多加 1 匙蛋白質粉。" },
+            3: { title: "對抗偽食慾", content: "有時候想吃東西不是餓，是渴！喝杯草本茶，等 10 分鐘，你會發現食慾消失了。", tips: "下午 3 點是誘惑最大的時候，喝杯大杯草本茶吧。" },
+            // ...以此類推
+        };
+
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const day = urlParams.get('day') || 1; // 預設第 1 天
+            
+            const data = DAILY_CONTENT[day] || DAILY_CONTENT[1];
+            
+            document.getElementById('displayDay').innerText = day;
+            document.getElementById('infoTitle').innerText = data.title;
+            document.getElementById('infoText').innerText = data.content;
+            document.getElementById('infoTips').innerText = data.tips;
+
+            // 根據天數動態插入圖片
+            if(day == 1) {
+                document.getElementById('infoImage').innerHTML = '';
+            } else if(day == 2) {
+                document.getElementById('infoImage').innerHTML = '';
+            }
+        }
+    </script>
 </body>
 </html>
