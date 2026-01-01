@@ -6,8 +6,9 @@
     <title>每日健康資訊</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: white; }
+        body { -webkit-tap-highlight-color: transparent; background-color: white; opacity: 0; transition: opacity 0.3s; }
         .day-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .ready { opacity: 1; }
     </style>
 </head>
 <body class="p-4">
@@ -16,7 +17,7 @@
             DAY <span id="displayDay">--</span>
         </div>
         
-        <h2 id="infoTitle" class="text-xl font-black text-gray-800 mb-4">正在獲取資訊...</h2>
+        <h2 id="infoTitle" class="text-xl font-black text-gray-800 mb-4">載入中...</h2>
         
         <div id="infoImage" class="mb-6 space-y-3"></div>
 
@@ -31,7 +32,6 @@
     </div>
 
     <script>
-        // 確保每一天的資料都是獨立完整的物件
         const DAILY_CONTENT = {
             1: { 
                 title: "🌱 第一天：啟動細胞營養", 
@@ -54,7 +54,6 @@
                 tips: "今天目標：喝足 3000cc 水分（建議體重 x 45ml）。",
                 images: [] 
             },
-            // ... 後續天數可以照此格式增加
             4: { 
                 title: "🍎 第四天：認識「偽食慾」", 
                 content: "大腦有時分不清楚「渴」與「餓」。當你想吃甜點時，其實你是缺水或缺營養了。", 
@@ -93,48 +92,59 @@
             },
             10: { 
                 title: "🔥 第十天：突破平台期", 
-                content: "身體會適應熱量，如果體動不動了，試著增加 10 分鐘的高強度運動或增加飲水量。", 
+                content: "身體會適應熱量，如果體重不動了，試著增加 10 分鐘的高強度運動或增加飲水量。", 
                 tips: "今天加強草本茶的濃度，幫代謝推一把！",
                 images: []
             }
         };
 
         function renderContent() {
-            const urlParams = new URLSearchParams(window.location.search);
-            // 關鍵修正：確保 day 是數字
-            const day = parseInt(urlParams.get('day')) || 1;
-            
-            const data = DAILY_CONTENT[day];
-            
-            if (!data) {
-                console.error("找不到第 " + day + " 天的資料");
-                return;
-            }
-            
-            // 1. 更新天數數字
-            document.getElementById('displayDay').innerText = day;
-            
-            // 2. 更新標題與內容
-            document.getElementById('infoTitle').innerText = data.title;
-            document.getElementById('infoText').innerText = data.content;
-            document.getElementById('infoTips').innerText = data.tips;
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const dayParam = urlParams.get('day');
+                const day = parseInt(dayParam) || 1;
+                
+                // 強制清空舊內容，避免殘留
+                document.getElementById('displayDay').innerText = "";
+                document.getElementById('infoTitle').innerText = "";
+                document.getElementById('infoText').innerText = "";
+                document.getElementById('infoTips').innerText = "";
+                document.getElementById('infoImage').innerHTML = "";
 
-            // 3. 渲染圖片 (完全根據 data.images)
-            const imgContainer = document.getElementById('infoImage');
-            imgContainer.innerHTML = ""; // 先清空
-            
-            if (data.images && data.images.length > 0) {
-                data.images.forEach(url => {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.className = "w-full rounded-2xl shadow-md border border-gray-100";
-                    img.onerror = () => img.style.display = 'none'; // 預防破圖
-                    imgContainer.appendChild(img);
-                });
+                const data = DAILY_CONTENT[day];
+                
+                if (!data) throw new Error("Day not found");
+
+                // 填入新內容
+                document.getElementById('displayDay').innerText = day;
+                document.getElementById('infoTitle').innerText = data.title;
+                document.getElementById('infoText').innerText = data.content;
+                document.getElementById('infoTips').innerText = data.tips;
+
+                if (data.images && data.images.length > 0) {
+                    const fragment = document.createDocumentFragment();
+                    data.images.forEach(url => {
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.className = "w-full rounded-2xl shadow-md border border-gray-100";
+                        img.onerror = () => img.remove();
+                        fragment.appendChild(img);
+                    });
+                    document.getElementById('infoImage').appendChild(fragment);
+                }
+
+                // 顯示頁面
+                document.body.classList.add('ready');
+
+            } catch (e) {
+                console.error("渲染錯誤:", e);
+                document.getElementById('infoTitle').innerText = "資訊暫未更新";
+                document.body.classList.add('ready');
             }
         }
 
-        window.onload = renderContent;
+        // 使用 DOMContentLoaded 確保 HTML 結構已就緒
+        document.addEventListener('DOMContentLoaded', renderContent);
     </script>
 </body>
 </html>
