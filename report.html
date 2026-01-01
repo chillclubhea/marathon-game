@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
         #danmu-layer { position: fixed; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 100; overflow: hidden; }
         .danmu { position: absolute; white-space: nowrap; font-weight: bold; font-size: 1.25rem; color: #f97316; text-shadow: 1px 1px 2px white, -1px -1px 2px white; animation: danmu-run 5s linear forwards; }
@@ -17,6 +17,7 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
+
     <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
         <div class="flex justify-between items-center mb-2">
             <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
@@ -66,13 +67,35 @@
         <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner min-h-[300px]"></div>
     </div>
 
+    <div id="healthModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-700">📜 每日健康小知識</h3>
+                <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <iframe src="health-info.html" id="healthIframe" class="w-full h-[60vh] border-none"></iframe>
+            </div>
+            <div class="p-4 bg-white">
+                <button onclick="closeHealthModal()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg">我已閱讀，繼續加油！</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         
+        const { createClient } = supabase;
+        const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
+
+        const userId = localStorage.getItem('my_user_id');
+        const groupCode = localStorage.getItem('my_group_code');
+        const MARATHON_START_DATE = '2026-01-01'; // 設定馬拉松起始日
+
         const THEMES = {
-            christmas: { name: '聖誕節', match: (d) => d.getMonth() === 11 && d.getDate() >= 20, border: 'border-red-500', bg: 'bg-green-50', icon: '🎄', motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！' },
-            cny: { name: '農曆新年', match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！' },
+            christmas: { match: (d) => d.getMonth() === 11 && d.getDate() >= 20, border: 'border-red-500', bg: 'bg-green-50', icon: '🎄', motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！' },
+            cny: { match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！脂肪拿走，好運進來！' },
             default: { border: 'border-blue-400', bg: 'bg-blue-50', icon: '👑', motto: '「一個人走得快，一群人走得遠」' }
         };
 
@@ -83,22 +106,20 @@
             return THEMES.default;
         }
 
-        const { createClient } = supabase;
-        const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
-        const userId = localStorage.getItem('my_user_id');
-        const groupCode = localStorage.getItem('my_group_code');
-
+        // 音效控制
         function playSound(type) {
             const audio = new Audio(type === 'win' ? "https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" : "https://assets.mixkit.co/active_storage/sfx/133/133-preview.mp3");
             audio.play().catch(() => {});
         }
 
+        // 敲碗功能
         async function knockBowl(targetName, targetId) {
             if (targetId === userId) return;
             await _client.channel(`user_${targetId}`).send({ type: 'broadcast', event: 'knock', payload: { from: document.getElementById('displayUsername').innerText } });
             alert(`已向 ${targetName} 敲碗催促！🍜`);
         }
 
+        // 截止倒數
         function updateCountdown() {
             const now = new Date();
             const deadline = new Date();
@@ -112,6 +133,7 @@
         }
         setInterval(updateCountdown, 1000);
 
+        // 彈幕生成
         function createDanmu(text) {
             const layer = document.getElementById('danmu-layer');
             const danmu = document.createElement('div');
@@ -122,8 +144,11 @@
             danmu.addEventListener('animationend', () => danmu.remove());
         }
 
+        // 初始化
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
+            
+            // 訂閱敲碗訊息
             _client.channel(`user_${userId}`).on('broadcast', { event: 'knock' }, (payload) => {
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 alert(`📢 ${payload.payload.from} 正在瘋狂敲碗叫你報數！`);
@@ -138,6 +163,7 @@
             playbackRecentDanmu();
         };
 
+        // 建議邏輯
         function generatePersonalAdvice(currentWeight, profile) {
             let advices = [];
             const now = new Date();
@@ -147,125 +173,79 @@
                 if (daysDiff >= 21 || daysDiff <= 3) advices.push("🌸 生理期水腫提示：目前處於易水腫期，體重微升是正常的，放鬆心情！");
             }
             advices.push(`🥩 蛋白質建議：你今日需攝取約 ${Math.round(currentWeight * 1.2)}g 蛋白質。`);
-            if (profile.target_weight) {
-                if ((currentWeight - profile.target_weight) > 10) advices.push("🎯 目標建議：大目標路長，先以「瘦 2kg」為本週小目標。");
-                advices.push("🔥 熱量建議：建議今日攝取 1600-1800 卡，創造健康缺口。");
-            }
-            if (now.getHours() >= 22 || now.getHours() <= 4) advices.push("🌙 睡眠提醒：報數較晚，睡眠不足會提升皮質醇影響代謝，快去睡吧！");
-            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘，減脂效果更佳。");
+            if (now.getHours() >= 22 || now.getHours() <= 4) advices.push("🌙 睡眠提醒：報數較晚，快去睡覺讓瘦體素幫你燃脂！");
+            advices.push("👟 動力建議：報數完成！餐後散步 15 分鐘效果更佳。");
             return advices;
         }
 
+        // 提交體重
         async function submitWeight() {
-    const weightVal = document.getElementById('currentWeight').value;
-    if (!weightVal) return alert("請輸入數字");
-    
-    const btn = document.getElementById('btnSubmit');
-    const statusMsg = document.getElementById('statusMsg');
-    
-    btn.disabled = true;
-    btn.innerText = "傳送中...";
+            const weightVal = document.getElementById('currentWeight').value;
+            if (!weightVal) return alert("請輸入數字");
+            
+            const btn = document.getElementById('btnSubmit');
+            const statusMsg = document.getElementById('statusMsg');
+            
+            btn.disabled = true;
+            btn.innerText = "傳送中...";
 
-    // 送出數據到 Supabase
-    const { error } = await _client.from('weight_logs').insert([{ 
-        user_id: userId, 
-        weight: parseFloat(weightVal) 
-    }]);
-    
-    if (error) {
-        alert("錯誤：" + error.message);
-        btn.disabled = false;
-        btn.innerText = "送出今日數據";
-    } else {
-        // --- 成功後的處理邏輯 ---
-        
-        // 1. 抓取最新個人資料來計算差異
-        const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
-        
-        // 2. 播放音效與彈幕
-        const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
-        playSound(diff < 0 ? 'win' : 'fail');
-        createDanmu(`🔥 賀！${profile.username} 報數成功！`);
+            const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+            
+            if (error) {
+                alert("錯誤：" + error.message);
+                btn.disabled = false;
+                btn.innerText = "送出今日數據";
+            } else {
+                const { data: profile } = await _client.from('profiles').select('*').eq('id', userId).single();
+                const diff = parseFloat(weightVal) - (profile.initial_weight || 0);
+                playSound(diff < 0 ? 'win' : 'fail');
+                createDanmu(`🔥 賀！${profile.username} 報數成功！`);
 
-        // 3. 更新 UI 狀態
-        statusMsg.innerHTML = `
-            <div class="animate-pulse text-green-600 font-bold">
-                ✅ 報數成功！正在為您準備今日健康處方...
-            </div>
-        `;
-        document.getElementById('currentWeight').value = '';
+                statusMsg.innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！準備今日處方...</div>`;
+                document.getElementById('currentWeight').value = '';
 
-        // 4. 更新下方的專屬建議區塊 (原本的 adviceBox)
-        const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
-        const adviceList = document.getElementById('adviceList');
-        adviceList.innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
-        document.getElementById('adviceBox').classList.remove('hidden');
+                const advices = generatePersonalAdvice(parseFloat(weightVal), profile);
+                document.getElementById('adviceList').innerHTML = advices.map(a => `<li>• ${a}</li>`).join('');
+                document.getElementById('adviceBox').classList.remove('hidden');
 
-        // 5. 刷新小組戰報
-        await refreshGrid();
+                await refreshGrid();
 
-        // 6. ✨ 重要：1.5秒後自動彈出每日資訊視窗
-        setTimeout(() => {
-            openHealthModal();
-            // 彈窗關閉後， statusMsg 改為查看專業方案的按鈕
-            statusMsg.innerHTML = `
-                <span class='text-green-500 font-bold'>✅ 今日報數已完成</span><br>
-                <a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full shadow-md">查看管理師專業方案</a>
-            `;
-        }, 1500);
-    }
-    
-    btn.disabled = false;
-    btn.innerText = "送出今日數據";
-}
+                setTimeout(() => {
+                    openHealthModal();
+                    statusMsg.innerHTML = `<span class='text-green-500 font-bold'>✅ 今日報數完成</span><br><a href="consultant.html" class="mt-2 inline-block text-xs bg-green-500 text-white px-4 py-2 rounded-full">查看專業方案</a>`;
+                }, 1500);
+            }
+            btn.disabled = false;
+            btn.innerText = "送出今日數據";
+        }
 
-// 控制彈窗的函數
-function openHealthModal() {
-    function openHealthModal() {
-    // 1. 設定你的馬拉松啟動日期
-    const startDate = new Date('2026-1-1'); 
-    const today = new Date();
+        // 彈窗控制
+        function openHealthModal() {
+            const startDate = new Date(MARATHON_START_DATE); 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            startDate.setHours(0, 0, 0, 0);
 
-    // 2. 優化計算公式：清除時分秒，只算日期差
-    const tempToday = new Date(today);
-    tempToday.setHours(0, 0, 0, 0);
-    startDate.setHours(0, 0, 0, 0);
+            // 計算天數 (天數差 + 1)
+            let dayNum = Math.round((today - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            if (dayNum < 1) dayNum = 1;
+            if (dayNum > 30) dayNum = 30;
 
-    // 計算天數 (天數差 + 1)
-    const dayNum = Math.round((tempToday - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const modal = document.getElementById('healthModal');
+            const iframe = document.getElementById('healthIframe');
+            iframe.src = `health-info.html?day=${dayNum}`; 
 
-    // 3. 限制範圍（例如馬拉松只有 30 天）
-    let finalDay = dayNum;
-    if (dayNum < 1) finalDay = 1;      // 還沒開始也先看 Day 1
-    if (dayNum > 30) finalDay = 30;    // 超過 30 天固定看最後一天
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-    // 4. 取得彈窗並傳遞天數給 iframe
-    const modal = document.getElementById('healthModal');
-    const iframe = modal.querySelector('iframe');
-    
-    // 修改 iframe 的 src，加上 day 參數
-    iframe.src = `health-info.html?day=${finalDay}`; 
+        function closeHealthModal() {
+            document.getElementById('healthModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
-    // 顯示彈窗
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-    const modal = document.getElementById('healthModal');
-    if(modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden'; // 禁止底層捲動
-    }
-}
-
-function closeHealthModal() {
-    const modal = document.getElementById('healthModal');
-    if(modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; // 恢復捲動
-    }
-}
-
-       async function refreshGrid() {
+        // 刷新戰報網格
+        async function refreshGrid() {
             const theme = getActiveTheme();
             document.getElementById('progressMotto').innerText = theme.motto;
             const gridContainer = document.getElementById('gridContainer');
@@ -301,7 +281,6 @@ function closeHealthModal() {
                 const topIcon = (i === 0 && m.percent < 0) ? `<div class="absolute -top-1 -right-1 text-lg">${theme.icon}</div>` : '';
                 const diffHtml = m.latest ? `<div class="text-[10px] ${m.percent < 0 ? 'text-green-500 font-bold' : 'text-gray-400'}">${m.percent}%</div>` : `<div class="text-[9px] text-gray-400 italic">點擊敲碗</div>`;
 
-                // 移除原有的 <br> 讓佈局更緊湊
                 card.innerHTML = `${topIcon}
                     <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
                     <div class="text-[10px] font-bold text-gray-700 truncate w-full text-center">${m.username}</div>
@@ -310,12 +289,13 @@ function closeHealthModal() {
                 gridContainer.appendChild(card);
             });
 
+            // 填補空格到至少 9 格
             for (let i = memberResults.length; i < 9; i++) {
                 gridContainer.innerHTML += `<div class="bg-gray-50/50 aspect-square flex items-center justify-center rounded-xl text-gray-200 text-xl font-light">+</div>`;
             }
         }
-        
-        // 修正：aasync 改為 async
+
+        // 播放近期彈幕戰報
         async function playbackRecentDanmu() {
             const { data: logs, error } = await _client
                 .from('weight_logs')
@@ -326,46 +306,14 @@ function closeHealthModal() {
 
             if (error || !logs) return;
 
-            const validLogs = logs.filter(log => log.profiles !== null);
-
-            validLogs.reverse().forEach((log, index) => {
-                const username = log.profiles?.username || '某位隊員';
+            logs.filter(log => log.profiles !== null).reverse().forEach((log, index) => {
+                const username = log.profiles?.username || '隊員';
                 const initialWeight = log.profiles?.initial_weight || 0;
                 const diff = (log.weight - initialWeight).toFixed(1);
-                
-                const msg = diff < 0 
-                    ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` 
-                    : `📢 隊員 ${username} 完成今日報數！`;
-                    
-                setTimeout(() => {
-                    const startDate = new Date('2025-12-01'); // 假設馬拉松 12/1 開始
-const today = new Date();
-const dayNum = Math.ceil((today - startDate) / (1000 * 60 * 60 * 24));
-
-const iframe = document.querySelector('#healthModal iframe');
-iframe.src = `health-info.html?day=${dayNum}`;
-    const iframe = document.querySelector('#healthModal iframe');
-    // 將體重數據透過 URL 傳給 iframe
-    iframe.src = `health-info.html?weight=${weightVal}&userId=${userId}`; 
-    openHealthModal();
-}, 1500);
+                const msg = diff < 0 ? `🔥 戰報：${username} 剛才又瘦了 ${Math.abs(diff)}kg！` : `📢 隊員 ${username} 完成今日報數！`;
+                setTimeout(() => createDanmu(msg), index * 1200);
             });
         }
     </script>
-
-    <div id="healthModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-            <h3 class="font-bold text-gray-700">📜 每日健康小知識</h3>
-            <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
-        </div>
-        <div class="flex-1 overflow-y-auto">
-            <iframe src="health-info.html" class="w-full h-[60vh] border-none"></iframe>
-        </div>
-        <div class="p-4 bg-white">
-            <button onclick="closeHealthModal()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg">我已閱讀，繼續加油！</button>
-        </div>
-    </div>
-</div>
 </body>
 </html>
