@@ -95,16 +95,27 @@
 
         // --- 倒數計時 ---
         function updateCountdown() {
-            const now = new Date();
-            const deadline = new Date();
-            deadline.setHours(12, 0, 0, 0); 
-            if (now > deadline) deadline.setDate(deadline.getDate() + 1);
-            const diff = deadline - now;
-            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
-        }
+    const now = new Date();
+    const deadline = new Date();
+    
+    // 設定為今天的 23:59:59 (即午夜截止)
+    deadline.setHours(23, 59, 59, 999); 
+
+    const diff = deadline - now;
+    
+    // 如果現在已經過了午夜（雖然在這個邏輯下很難發生），就顯示 0
+    if (diff <= 0) {
+        document.getElementById('countdownText').innerText = `今日報數已截止`;
+        return;
+    }
+
+    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+    
+    document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
+}
+        
         setInterval(updateCountdown, 1000);
 
         function calculateCurrentDay() {
