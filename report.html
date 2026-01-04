@@ -169,6 +169,13 @@
                 grid.appendChild(card);
             });
         }
+        const urlParams = new URLSearchParams(window.location.search);
+const setId = urlParams.get('set_id');
+if (setId) {
+    localStorage.setItem('my_user_id', setId);
+    // 清除網址上的參數，保持乾淨
+    window.history.replaceState({}, document.title, window.location.pathname);
+}
 
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
