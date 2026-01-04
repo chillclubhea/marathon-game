@@ -11,7 +11,6 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
-        /* 敲碗按鈕的動畫 */
         @keyframes ring { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } 100% { transform: rotate(0deg); } }
         .bell-icon:active { animation: ring 0.3s ease-in-out; }
     </style>
@@ -27,12 +26,17 @@
             <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
         </div>
         <div class="flex justify-between items-center mb-2">
-            <p id="progressMotto" class="text-[10px] text-gray-400 italic">載入中...</p>
+            <p id="progressMotto" class="text-[10px] text-gray-400 italic">「一個人走得快，一群人走得遠」</p>
             <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
         </div>
     </div>
 
     <div class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
+            <a href="index.html" class="text-xs bg-gray-200 px-3 py-1 rounded-full text-gray-600">返回登記</a>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border-t-4 border-blue-500">
             <div id="userInfo" class="mb-4 text-center">
                 <p class="text-gray-500 text-sm">歡迎回來</p>
@@ -55,34 +59,7 @@
         <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner min-h-[300px]"></div>
     </div>
 
-    <div id="healthModal" class="fixed inset-0 z-[200] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-700">📜 每日健康小知識</h3>
-                <button onclick="closeHealthModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">&times;</button>
-            </div>
-            <div class="flex-1 overflow-y-auto">
-                <iframe id="healthIframe" src="about:blank" class="w-full h-[60vh] border-none"></iframe>
-            </div>
-            <div class="p-4 bg-white">
-                <button onclick="closeHealthModal()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg">我已閱讀，繼續加油！</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // --- 自動修復腳本 ---
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const forceId = urlParams.get('force_id') || urlParams.get('set_id');
-            if (forceId && forceId.length > 30) {
-                localStorage.setItem('my_user_id', forceId);
-                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-                window.history.replaceState({path: newUrl}, '', newUrl);
-                window.location.reload(); 
-            }
-        })();
-
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         const { createClient } = supabase;
@@ -90,42 +67,30 @@
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
-        const MARATHON_START_DATE = '2026-01-01';
         let myUsername = "我";
 
-        // --- 倒數計時 ---
-        function updateCountdown() {
-    const now = new Date();
-    const deadline = new Date();
-    
-    // 設定為今天的 23:59:59 (即午夜截止)
-    deadline.setHours(23, 59, 59, 999); 
-
-    const diff = deadline - now;
-    
-    // 如果現在已經過了午夜（雖然在這個邏輯下很難發生），就顯示 0
-    if (diff <= 0) {
-        document.getElementById('countdownText').innerText = `今日報數已截止`;
-        return;
-    }
-
-    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-    
-    document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
-}
-        
-        setInterval(updateCountdown, 1000);
-
-        function calculateCurrentDay() {
-            const startDate = new Date(MARATHON_START_DATE);
-            const today = new Date();
-            startDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
-            const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
-            let day = diffDays + 1;
-            return (day < 1) ? 1 : (day > 30 ? 30 : day);
+        // 取得今日日期字串 (YYYY-MM-DD)
+        function getTodayString() {
+            const now = new Date();
+            return now.toLocaleDateString('en-CA'); // 格式化為 YYYY-MM-DD
         }
+
+        // 倒數計時：午夜 24:00 截止
+        function updateCountdown() {
+            const now = new Date();
+            const deadline = new Date();
+            deadline.setHours(23, 59, 59, 999);
+            const diff = deadline - now;
+            if (diff <= 0) {
+                document.getElementById('countdownText').innerText = "今日報數截止";
+                return;
+            }
+            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
+        }
+        setInterval(updateCountdown, 1000);
 
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
@@ -133,93 +98,77 @@
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            if (error) {
-                alert(error.message);
-            } else {
-                document.getElementById('statusMsg').innerHTML = `<div class="animate-pulse text-green-600 font-bold">✅ 報數成功！</div>`;
-                await refreshGrid();
-                setTimeout(() => openHealthModal(), 1200);
+            if (error) alert(error.message);
+            else {
+                document.getElementById('statusMsg').innerHTML = `<div class="text-green-600 font-bold">✅ 報數成功！</div>`;
+                refreshGrid();
             }
             btn.disabled = false;
         }
 
-        // --- 核心功能：發送提醒 (敲碗) ---
         async function sendReminder(targetId, targetName) {
-            if(!confirm(`確定要提醒 ${targetName} 報數嗎？`)) return;
-            
-            // 寫入提醒到資料庫
-            const { error } = await _client.from('reminders').insert([
-                { from_name: myUsername, to_user_id: targetId }
-            ]);
-
-            if(error) {
-                alert("發送失敗，請稍後再試");
-            } else {
-                alert(`📢 已發送提醒給 ${targetName}！`);
-            }
+            if(!confirm(`要提醒 ${targetName} 報數嗎？`)) return;
+            const { error } = await _client.from('reminders').insert([{ from_name: myUsername, to_user_id: targetId }]);
+            if(error) alert("發送失敗");
+            else alert(`📢 已提醒 ${targetName}！`);
         }
 
-        // --- 核心功能：檢查有沒有被提醒 ---
         async function checkReminders() {
-            // 檢查有沒有人敲我 (且未讀)
-            const { data: reminders, error } = await _client
-                .from('reminders')
-                .select('id, from_name')
-                .eq('to_user_id', userId)
-                .eq('is_read', false);
-
-            if (reminders && reminders.length > 0) {
-                // 1. 手機震動 (如果是手機版)
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
-                
-                // 2. 顯示提醒
-                const names = [...new Set(reminders.map(r => r.from_name))].join('、');
-                alert(`🔔 叮咚！${names} 正在敲碗提醒你趕快報數喔！🏃‍♂️`);
-
-                // 3. 標記為已讀
-                const ids = reminders.map(r => r.id);
-                await _client.from('reminders').update({ is_read: true }).in('id', ids);
+            const { data, error } = await _client.from('reminders').select('id, from_name').eq('to_user_id', userId).eq('is_read', false);
+            if (data && data.length > 0) {
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                const names = [...new Set(data.map(r => r.from_name))].join('、');
+                alert(`🔔 隊友 [${names}] 正在敲碗提醒你報數喔！🏃‍♂️`);
+                await _client.from('reminders').update({ is_read: true }).in('id', data.map(r => r.id));
             }
         }
 
         async function refreshGrid() {
+            const todayStr = getTodayString();
             const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
             if (!members) return;
 
             let reportCount = 0;
             const grid = document.getElementById('gridContainer');
-            grid.innerHTML = ''; 
-
+            
             const results = await Promise.all(members.map(async (m) => {
-                const { data: logs } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(2);
-                const latest = logs?.[0]?.weight || null;
-                const previous = logs?.[1]?.weight || null;
-                if (latest) reportCount++;
-                return { ...m, latest, previous };
+                const { data: logs } = await _client.from('weight_logs')
+                    .select('weight, created_at')
+                    .eq('user_id', m.id)
+                    .order('created_at', { ascending: false })
+                    .limit(2);
+
+                const latestLog = logs?.[0];
+                const previousLog = logs?.[1];
+
+                // 核心修正：判斷最新的一筆紀錄日期是否為今天
+                const hasReportedToday = latestLog && new Date(latestLog.created_at).toLocaleDateString('en-CA') === todayStr;
+                
+                if (hasReportedToday) reportCount++;
+
+                return { ...m, latest: latestLog?.weight, previous: previousLog?.weight, hasReportedToday };
             }));
 
+            // 更新進度條與文字
             document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
             document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
 
+            grid.innerHTML = '';
             results.forEach(m => {
                 const isMe = m.id === userId;
                 let diffHtml = '';
                 
-                if (m.latest) {
-                    // 已報數：顯示數據變化
+                if (m.hasReportedToday) {
+                    // 今天報了，顯示變化
                     if (m.previous) {
                         const diff = (m.latest - m.previous).toFixed(1);
                         diffHtml = diff < 0 ? `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>` : (diff > 0 ? `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>` : `<span class="text-gray-400 text-[10px]">-</span>`);
                     } else {
-                        diffHtml = `<span class="text-gray-400 text-[10px]">新紀錄</span>`;
+                        diffHtml = `<span class="text-blue-400 text-[10px]">首日</span>`;
                     }
                 } else {
-                    // 未報數：顯示敲碗按鈕
-                    if (!isMe) {
-                        diffHtml = `<button onclick="sendReminder('${m.id}', '${m.username}')" class="bell-icon mt-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full border border-yellow-300 shadow-sm transition-transform active:scale-90">🔔 敲碗</button>`;
-                    } else {
-                        diffHtml = `<span class="text-[10px] text-gray-400 italic">等待報數...</span>`;
-                    }
+                    // 今天沒報，非本人則顯示敲碗按鈕
+                    diffHtml = !isMe ? `<button onclick="sendReminder('${m.id}', '${m.username}')" class="bell-icon mt-1 bg-orange-100 text-orange-600 text-[10px] px-2 py-1 rounded-full border border-orange-200 shadow-sm active:scale-90">🔔 敲碗</button>` : `<span class="text-[10px] text-gray-400">待報數</span>`;
                 }
 
                 const card = document.createElement('div');
@@ -227,24 +176,13 @@
                 card.innerHTML = `
                     <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
                     <div class="text-[10px] font-bold truncate w-full text-center">${m.username}</div>
-                    <div class="text-sm font-black text-blue-600 leading-tight">${m.latest || '--'}</div>
+                    <div class="text-sm font-black ${m.hasReportedToday ? 'text-blue-600' : 'text-gray-300'} leading-tight">
+                        ${m.hasReportedToday ? m.latest : '--'}
+                    </div>
                     ${diffHtml}
                 `;
                 grid.appendChild(card);
             });
-        }
-
-        function openHealthModal() {
-            const day = calculateCurrentDay();
-            const iframe = document.getElementById('healthIframe');
-            iframe.src = `health-info.html?day=${day}&v=${new Date().getTime()}`;
-            document.getElementById('healthModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeHealthModal() {
-            document.getElementById('healthModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
         }
 
         window.onload = async () => {
@@ -252,12 +190,12 @@
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
             if (data) {
                 document.getElementById('displayUsername').innerText = data.username;
-                myUsername = data.username; // 存起來發送提醒時用
+                myUsername = data.username;
             }
             document.getElementById('groupLabel').innerText = "小組：" + groupCode;
             updateCountdown(); 
             refreshGrid();
-            checkReminders(); // 進網頁時自動檢查有沒有人提醒我
+            checkReminders();
         };
     </script>
 </body>
