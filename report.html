@@ -11,9 +11,9 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
-        #danmu-layer { position: fixed; top: 0; left: 0; width: 100%; height: 50%; pointer-events: none; z-index: 100; overflow: hidden; }
-        .danmu { position: absolute; white-space: nowrap; font-weight: bold; font-size: 1.25rem; color: #f97316; text-shadow: 1px 1px 2px white, -1px -1px 2px white; animation: danmu-run 5s linear forwards; }
-        @keyframes danmu-run { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+        /* 敲碗按鈕的動畫 */
+        @keyframes ring { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } 100% { transform: rotate(0deg); } }
+        .bell-icon:active { animation: ring 0.3s ease-in-out; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
@@ -30,20 +30,9 @@
             <p id="progressMotto" class="text-[10px] text-gray-400 italic">載入中...</p>
             <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
         </div>
-        <div id="adviceBox" class="hidden mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
-            <h4 class="font-bold text-blue-800 text-sm mb-2">💡 專屬你的今日建議</h4>
-            <ul id="adviceList" class="text-[11px] text-blue-700 space-y-1.5 leading-relaxed"></ul>
-        </div>
     </div>
 
-    <div id="danmu-layer"></div>
-
     <div class="max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
-            <a href="index.html" class="text-xs bg-gray-200 px-3 py-1 rounded-full text-gray-600">返回登記</a>
-        </div>
-
         <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border-t-4 border-blue-500">
             <div id="userInfo" class="mb-4 text-center">
                 <p class="text-gray-500 text-sm">歡迎回來</p>
@@ -82,14 +71,12 @@
     </div>
 
     <script>
-        // --- 1. 自動修復腳本 ---
+        // --- 自動修復腳本 ---
         (function() {
             const urlParams = new URLSearchParams(window.location.search);
-            // 同時檢查 force_id 和 set_id
             const forceId = urlParams.get('force_id') || urlParams.get('set_id');
             if (forceId && forceId.length > 30) {
                 localStorage.setItem('my_user_id', forceId);
-                console.log("🛠️ 身份修復成功");
                 const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({path: newUrl}, '', newUrl);
                 window.location.reload(); 
@@ -103,48 +90,30 @@
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
-        const MARATHON_START_DATE = '2026-01-01'; // 請確認這個日期是否正確
+        const MARATHON_START_DATE = '2026-01-01';
+        let myUsername = "我";
 
-        // --- 2. 截止倒數邏輯 (新增) ---
+        // --- 倒數計時 ---
         function updateCountdown() {
             const now = new Date();
             const deadline = new Date();
-            deadline.setHours(12, 0, 0, 0); // 設定中午 12 點截止
-
-            if (now > deadline) {
-                // 如果已經過了中午 12 點，目標改成明天中午 12 點
-                deadline.setDate(deadline.getDate() + 1);
-            }
-
+            deadline.setHours(12, 0, 0, 0); 
+            if (now > deadline) deadline.setDate(deadline.getDate() + 1);
             const diff = deadline - now;
-            const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
-            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-            const s = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
-
+            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
             document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
         }
-        // 每秒執行一次
         setInterval(updateCountdown, 1000);
 
         function calculateCurrentDay() {
             const startDate = new Date(MARATHON_START_DATE);
             const today = new Date();
-            const startTimestamp = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()).getTime();
-            const todayTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-            const diffDays = Math.floor((todayTimestamp - startTimestamp) / (1000 * 60 * 60 * 24));
+            startDate.setHours(0,0,0,0); today.setHours(0,0,0,0);
+            const diffDays = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
             let day = diffDays + 1;
             return (day < 1) ? 1 : (day > 30 ? 30 : day);
-        }
-
-        const THEMES = {
-            christmas: { match: (d) => d.getMonth() === 11 && d.getDate() >= 20, border: 'border-red-500', bg: 'bg-green-50', icon: '🎄', motto: '🎅 聖誕快樂！燃燒熱量就是最好的禮物！' },
-            cny: { match: (d) => (d.getMonth() === 0 && d.getDate() >= 25) || (d.getMonth() === 1 && d.getDate() <= 5), border: 'border-yellow-500', bg: 'bg-red-50', icon: '🧧', motto: '🧨 恭喜發財！紅包拿來，脂肪拿走！' },
-            default: { border: 'border-blue-400', bg: 'bg-blue-50', icon: '👑', motto: '「一個人走得快，一群人走得遠」' }
-        };
-
-        function getActiveTheme() {
-            const now = new Date();
-            return THEMES.christmas.match(now) ? THEMES.christmas : (THEMES.cny.match(now) ? THEMES.cny : THEMES.default);
         }
 
         async function submitWeight() {
@@ -163,6 +132,97 @@
             btn.disabled = false;
         }
 
+        // --- 核心功能：發送提醒 (敲碗) ---
+        async function sendReminder(targetId, targetName) {
+            if(!confirm(`確定要提醒 ${targetName} 報數嗎？`)) return;
+            
+            // 寫入提醒到資料庫
+            const { error } = await _client.from('reminders').insert([
+                { from_name: myUsername, to_user_id: targetId }
+            ]);
+
+            if(error) {
+                alert("發送失敗，請稍後再試");
+            } else {
+                alert(`📢 已發送提醒給 ${targetName}！`);
+            }
+        }
+
+        // --- 核心功能：檢查有沒有被提醒 ---
+        async function checkReminders() {
+            // 檢查有沒有人敲我 (且未讀)
+            const { data: reminders, error } = await _client
+                .from('reminders')
+                .select('id, from_name')
+                .eq('to_user_id', userId)
+                .eq('is_read', false);
+
+            if (reminders && reminders.length > 0) {
+                // 1. 手機震動 (如果是手機版)
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+                
+                // 2. 顯示提醒
+                const names = [...new Set(reminders.map(r => r.from_name))].join('、');
+                alert(`🔔 叮咚！${names} 正在敲碗提醒你趕快報數喔！🏃‍♂️`);
+
+                // 3. 標記為已讀
+                const ids = reminders.map(r => r.id);
+                await _client.from('reminders').update({ is_read: true }).in('id', ids);
+            }
+        }
+
+        async function refreshGrid() {
+            const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
+            if (!members) return;
+
+            let reportCount = 0;
+            const grid = document.getElementById('gridContainer');
+            grid.innerHTML = ''; 
+
+            const results = await Promise.all(members.map(async (m) => {
+                const { data: logs } = await _client.from('weight_logs').select('weight').eq('user_id', m.id).order('created_at', { ascending: false }).limit(2);
+                const latest = logs?.[0]?.weight || null;
+                const previous = logs?.[1]?.weight || null;
+                if (latest) reportCount++;
+                return { ...m, latest, previous };
+            }));
+
+            document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
+            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
+
+            results.forEach(m => {
+                const isMe = m.id === userId;
+                let diffHtml = '';
+                
+                if (m.latest) {
+                    // 已報數：顯示數據變化
+                    if (m.previous) {
+                        const diff = (m.latest - m.previous).toFixed(1);
+                        diffHtml = diff < 0 ? `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>` : (diff > 0 ? `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>` : `<span class="text-gray-400 text-[10px]">-</span>`);
+                    } else {
+                        diffHtml = `<span class="text-gray-400 text-[10px]">新紀錄</span>`;
+                    }
+                } else {
+                    // 未報數：顯示敲碗按鈕
+                    if (!isMe) {
+                        diffHtml = `<button onclick="sendReminder('${m.id}', '${m.username}')" class="bell-icon mt-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 text-[10px] px-2 py-0.5 rounded-full border border-yellow-300 shadow-sm transition-transform active:scale-90">🔔 敲碗</button>`;
+                    } else {
+                        diffHtml = `<span class="text-[10px] text-gray-400 italic">等待報數...</span>`;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 ${isMe ? 'bg-blue-50 border-blue-400' : 'bg-white border-transparent'}`;
+                card.innerHTML = `
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
+                    <div class="text-[10px] font-bold truncate w-full text-center">${m.username}</div>
+                    <div class="text-sm font-black text-blue-600 leading-tight">${m.latest || '--'}</div>
+                    ${diffHtml}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
         function openHealthModal() {
             const day = calculateCurrentDay();
             const iframe = document.getElementById('healthIframe');
@@ -176,80 +236,17 @@
             document.body.style.overflow = 'auto';
         }
 
-        // --- 3. 修復：小組戰報數據變化 ---
-        async function refreshGrid() {
-            const theme = getActiveTheme();
-            document.getElementById('progressMotto').innerText = theme.motto;
-            
-            const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
-            if (!members) return;
-
-            let reportCount = 0;
-            const grid = document.getElementById('gridContainer');
-            grid.innerHTML = ''; // 先清空
-
-            // 使用 Promise.all 等待所有資料抓取完畢
-            const results = await Promise.all(members.map(async (m) => {
-                // 修改：抓取最近的「2筆」資料，以便計算變化
-                const { data: logs } = await _client
-                    .from('weight_logs')
-                    .select('weight')
-                    .eq('user_id', m.id)
-                    .order('created_at', { ascending: false })
-                    .limit(2);
-
-                const latest = logs?.[0]?.weight || null;
-                const previous = logs?.[1]?.weight || null;
-                
-                if (latest) reportCount++;
-
-                return { ...m, latest, previous };
-            }));
-
-            // 更新進度條
-            document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
-            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
-
-            // 渲染卡片
-            results.forEach(m => {
-                const isMe = m.id === userId;
-                
-                // 計算變化
-                let diffHtml = '';
-                if (m.latest && m.previous) {
-                    const diff = (m.latest - m.previous).toFixed(1);
-                    if (diff < 0) {
-                        diffHtml = `<span class="text-[10px] text-green-500 font-bold">⬇️${Math.abs(diff)}</span>`;
-                    } else if (diff > 0) {
-                        diffHtml = `<span class="text-[10px] text-red-400 font-bold">⬆️${diff}</span>`;
-                    } else {
-                        diffHtml = `<span class="text-[10px] text-gray-400">-</span>`;
-                    }
-                } else if (m.latest) {
-                    diffHtml = `<span class="text-[10px] text-gray-400">新紀錄</span>`;
-                }
-
-                const card = document.createElement('div');
-                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 ${isMe ? theme.bg+' '+theme.border : 'bg-white border-transparent'}`;
-                
-                card.innerHTML = `
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
-                    <div class="text-[10px] font-bold truncate w-full text-center">${m.username}</div>
-                    <div class="text-sm font-black text-blue-600 leading-tight">${m.latest || '--'}</div>
-                    ${diffHtml}
-                `;
-                grid.appendChild(card);
-            });
-        }
-
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
-            if (data) document.getElementById('displayUsername').innerText = data.username;
+            if (data) {
+                document.getElementById('displayUsername').innerText = data.username;
+                myUsername = data.username; // 存起來發送提醒時用
+            }
             document.getElementById('groupLabel').innerText = "小組：" + groupCode;
-            
-            updateCountdown(); // 頁面載入時先執行一次倒數
+            updateCountdown(); 
             refreshGrid();
+            checkReminders(); // 進網頁時自動檢查有沒有人提醒我
         };
     </script>
 </body>
