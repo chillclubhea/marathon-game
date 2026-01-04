@@ -11,8 +11,14 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
-        @keyframes ring { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } 100% { transform: rotate(0deg); } }
-        .bell-icon:active { animation: ring 0.3s ease-in-out; }
+        /* 敲碗按鈕震動動畫 */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px) rotate(-5deg); }
+            50% { transform: translateX(2px) rotate(5deg); }
+            100% { transform: translateX(0); }
+        }
+        .bell-active { animation: shake 0.3s ease-in-out; background-color: #fef3c7 !important; color: #d97706 !important; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
@@ -69,13 +75,10 @@
         const groupCode = localStorage.getItem('my_group_code');
         let myUsername = "我";
 
-        // 取得今日日期字串 (YYYY-MM-DD)
         function getTodayString() {
-            const now = new Date();
-            return now.toLocaleDateString('en-CA'); // 格式化為 YYYY-MM-DD
+            return new Date().toLocaleDateString('en-CA');
         }
 
-        // 倒數計時：午夜 24:00 截止
         function updateCountdown() {
             const now = new Date();
             const deadline = new Date();
@@ -94,31 +97,43 @@
 
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
-            if (!weightVal) return alert("請輸入數字");
+            if (!weightVal) return;
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
-            if (error) alert(error.message);
-            else {
+            if (!error) {
                 document.getElementById('statusMsg').innerHTML = `<div class="text-green-600 font-bold">✅ 報數成功！</div>`;
                 refreshGrid();
             }
             btn.disabled = false;
         }
 
-        async function sendReminder(targetId, targetName) {
-            if(!confirm(`要提醒 ${targetName} 報數嗎？`)) return;
+        // --- 修正後的直接提醒功能 ---
+        async function sendReminder(targetId, btnElement) {
+            // 立即顯示按鈕反饋
+            btnElement.classList.add('bell-active');
+            btnElement.innerText = "⌛ 送出中";
+            
             const { error } = await _client.from('reminders').insert([{ from_name: myUsername, to_user_id: targetId }]);
-            if(error) alert("發送失敗");
-            else alert(`📢 已提醒 ${targetName}！`);
+            
+            if(!error) {
+                btnElement.innerText = "✅ 已提醒";
+                // 1.5秒後恢復原狀或保持已提醒狀態
+                setTimeout(() => {
+                    btnElement.classList.remove('bell-active');
+                    btnElement.innerText = "🔔 再次提醒";
+                }, 1500);
+            } else {
+                btnElement.innerText = "❌ 失敗";
+            }
         }
 
         async function checkReminders() {
-            const { data, error } = await _client.from('reminders').select('id, from_name').eq('to_user_id', userId).eq('is_read', false);
+            const { data } = await _client.from('reminders').select('id, from_name').eq('to_user_id', userId).eq('is_read', false);
             if (data && data.length > 0) {
                 if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 const names = [...new Set(data.map(r => r.from_name))].join('、');
-                alert(`🔔 隊友 [${names}] 正在敲碗提醒你報數喔！🏃‍♂️`);
+                alert(`🔔 隊友 [${names}] 正在提醒你報數喔！🏃‍♂️`);
                 await _client.from('reminders').update({ is_read: true }).in('id', data.map(r => r.id));
             }
         }
@@ -140,16 +155,12 @@
 
                 const latestLog = logs?.[0];
                 const previousLog = logs?.[1];
-
-                // 核心修正：判斷最新的一筆紀錄日期是否為今天
                 const hasReportedToday = latestLog && new Date(latestLog.created_at).toLocaleDateString('en-CA') === todayStr;
                 
                 if (hasReportedToday) reportCount++;
-
                 return { ...m, latest: latestLog?.weight, previous: previousLog?.weight, hasReportedToday };
             }));
 
-            // 更新進度條與文字
             document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
             document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
 
@@ -159,7 +170,6 @@
                 let diffHtml = '';
                 
                 if (m.hasReportedToday) {
-                    // 今天報了，顯示變化
                     if (m.previous) {
                         const diff = (m.latest - m.previous).toFixed(1);
                         diffHtml = diff < 0 ? `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>` : (diff > 0 ? `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>` : `<span class="text-gray-400 text-[10px]">-</span>`);
@@ -167,8 +177,8 @@
                         diffHtml = `<span class="text-blue-400 text-[10px]">首日</span>`;
                     }
                 } else {
-                    // 今天沒報，非本人則顯示敲碗按鈕
-                    diffHtml = !isMe ? `<button onclick="sendReminder('${m.id}', '${m.username}')" class="bell-icon mt-1 bg-orange-100 text-orange-600 text-[10px] px-2 py-1 rounded-full border border-orange-200 shadow-sm active:scale-90">🔔 敲碗</button>` : `<span class="text-[10px] text-gray-400">待報數</span>`;
+                    // 將 this 傳入 sendReminder 以利操作按鈕外觀
+                    diffHtml = !isMe ? `<button onclick="sendReminder('${m.id}', this)" class="mt-1 bg-orange-100 text-orange-600 text-[10px] px-2 py-1 rounded-full border border-orange-200 shadow-sm active:scale-90 transition-all">🔔 提醒他報磅</button>` : `<span class="text-[10px] text-gray-400">待報數</span>`;
                 }
 
                 const card = document.createElement('div');
