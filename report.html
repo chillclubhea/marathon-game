@@ -82,6 +82,21 @@
     </div>
 
     <script>
+        // --- 自動修復腳本：處理 UUID 跑掉的問題 ---
+(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceId = urlParams.get('force_id'); // 取得網址中的修復 ID
+
+    if (forceId && forceId.length > 30) { // 確保 ID 格式大致正確
+        localStorage.setItem('my_user_id', forceId);
+        console.log("🛠️ 身份修復成功，已將 ID 更新為:", forceId);
+        
+        // 移除網址參數並重新整理，讓頁面乾淨載入
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({path: newUrl}, '', newUrl);
+        window.location.reload(); 
+    }
+})();
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         const { createClient } = supabase;
