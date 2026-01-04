@@ -11,7 +11,8 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
-        /* 敲碗按鈕震動動畫 */
+        
+        /* 敲碗震動動畫 */
         @keyframes shake {
             0% { transform: translateX(0); }
             25% { transform: translateX(-2px) rotate(-5deg); }
@@ -19,50 +20,59 @@
             100% { transform: translateX(0); }
         }
         .bell-active { animation: shake 0.3s ease-in-out; background-color: #fef3c7 !important; color: #d97706 !important; }
+
+        /* 頭像呼吸燈動畫 (未報數時) */
+        @keyframes breath {
+            0% { box-shadow: 0 0 0px rgba(239, 68, 68, 0); }
+            50% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+            100% { box-shadow: 0 0 0px rgba(239, 68, 68, 0); }
+        }
+        .status-pulse { animation: breath 2s infinite; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
 
-    <div class="max-w-md mx-auto mb-6 bg-white rounded-2xl p-4 shadow-sm border border-blue-50">
-        <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-bold text-gray-600">💪 全隊今日報數進度</span>
-            <span id="countdownText" class="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded-md font-mono">截止倒數 --:--:--</span>
+    <div class="max-w-md mx-auto mb-6 bg-white rounded-3xl p-5 shadow-sm border border-blue-50">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-sm font-bold text-gray-600 flex items-center gap-1">
+                <span class="w-2 h-2 bg-blue-500 rounded-full"></span> 全隊今日進度
+            </span>
+            <span id="countdownText" class="text-[10px] bg-red-50 text-red-500 px-2 py-1 rounded-lg font-mono font-bold border border-red-100">倒數 --:--:--</span>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden mb-2">
-            <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+        <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden mb-2">
+            <div id="progressBar" class="bg-gradient-to-r from-blue-400 to-indigo-600 h-full transition-all duration-1000 shadow-inner" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between items-center mb-2">
-            <p id="progressMotto" class="text-[10px] text-gray-400 italic">「一個人走得快，一群人走得遠」</p>
-            <span id="progressText" class="text-sm font-black text-blue-600">0 / 0</span>
+        <div class="flex justify-between items-center">
+            <p id="progressMotto" class="text-[10px] text-gray-400 font-medium">✨ 堅持，是為了看見更好的自己</p>
+            <span id="progressText" class="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">0 / 0</span>
         </div>
     </div>
 
     <div class="max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-black text-blue-600">📊 每日報數</h1>
-            <a href="index.html" class="text-xs bg-gray-200 px-3 py-1 rounded-full text-gray-600">返回登記</a>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border-t-4 border-blue-500">
-            <div id="userInfo" class="mb-4 text-center">
-                <p class="text-gray-500 text-sm">歡迎回來</p>
-                <h2 id="displayUsername" class="text-xl font-bold text-gray-800">載入中...</h2>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-center text-sm font-medium text-gray-500 mb-2">今日體重 (kg)</label>
-                    <input type="number" id="currentWeight" step="0.1" class="block w-full text-center text-3xl font-black border-2 border-blue-100 rounded-xl p-4 focus:border-blue-500 focus:outline-none" placeholder="00.0">
+        <div class="bg-white rounded-3xl shadow-xl p-6 mb-8 border-b-8 border-blue-500/10">
+            <div id="userInfo" class="mb-5 text-center">
+                <div class="relative inline-block mb-2">
+                    <img id="myAvatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=me" class="w-16 h-16 rounded-2xl bg-gray-100 p-1 border-2 border-white shadow-md">
+                    <div class="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white"></div>
                 </div>
-                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-blue-600 text-white text-lg font-bold py-4 rounded-xl shadow-lg active:scale-95 transition">送出今日數據</button>
+                <h2 id="displayUsername" class="text-xl font-black text-gray-800 tracking-tight">載入中...</h2>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="number" id="currentWeight" step="0.1" class="block w-full text-center text-4xl font-black border-2 border-gray-100 rounded-2xl py-5 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none transition-all placeholder:text-gray-200" placeholder="00.0">
+                    <span class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">kg</span>
+                </div>
+                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-all">送出數據</button>
             </div>
             <div id="statusMsg" class="mt-4 text-center text-sm"></div>
         </div>
 
-        <div class="mb-4 flex justify-between items-end">
-            <h3 class="text-lg font-bold text-gray-800">🏆 小組即時戰報</h3>
-            <span id="groupLabel" class="text-xs text-blue-500 font-bold"></span>
+        <div class="mb-4 flex justify-between items-center px-1">
+            <h3 class="text-lg font-black text-gray-800 tracking-tight">🏆 小組戰報</h3>
+            <span id="groupLabel" class="text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded-lg font-bold"></span>
         </div>
-        <div id="gridContainer" class="grid grid-cols-3 gap-2 bg-gray-200 p-2 rounded-2xl shadow-inner min-h-[300px]"></div>
+        <div id="gridContainer" class="grid grid-cols-3 gap-3 bg-gray-100 p-3 rounded-3xl shadow-inner min-h-[300px]"></div>
     </div>
 
     <script>
@@ -102,29 +112,22 @@
             btn.disabled = true;
             const { error } = await _client.from('weight_logs').insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
             if (!error) {
-                document.getElementById('statusMsg').innerHTML = `<div class="text-green-600 font-bold">✅ 報數成功！</div>`;
+                document.getElementById('statusMsg').innerHTML = `<div class="text-green-600 font-bold animate-bounce">✅ 報數成功！</div>`;
                 refreshGrid();
             }
             btn.disabled = false;
         }
 
-        // --- 修正後的直接提醒功能 ---
         async function sendReminder(targetId, btnElement) {
-            // 立即顯示按鈕反饋
             btnElement.classList.add('bell-active');
-            btnElement.innerText = "⌛ 送出中";
-            
+            btnElement.innerText = "⌛...";
             const { error } = await _client.from('reminders').insert([{ from_name: myUsername, to_user_id: targetId }]);
-            
             if(!error) {
                 btnElement.innerText = "✅ 已提醒";
-                // 1.5秒後恢復原狀或保持已提醒狀態
                 setTimeout(() => {
                     btnElement.classList.remove('bell-active');
-                    btnElement.innerText = "🔔 再次提醒";
+                    btnElement.innerText = "🔔 催一下";
                 }, 1500);
-            } else {
-                btnElement.innerText = "❌ 失敗";
             }
         }
 
@@ -169,27 +172,34 @@
                 const isMe = m.id === userId;
                 let diffHtml = '';
                 
+                // 設定狀態顏色
+                const statusColor = m.hasReportedToday ? 'bg-green-500' : 'bg-red-500 status-pulse';
+                const avatarBorder = m.hasReportedToday ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70';
+
                 if (m.hasReportedToday) {
                     if (m.previous) {
                         const diff = (m.latest - m.previous).toFixed(1);
                         diffHtml = diff < 0 ? `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>` : (diff > 0 ? `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>` : `<span class="text-gray-400 text-[10px]">-</span>`);
                     } else {
-                        diffHtml = `<span class="text-blue-400 text-[10px]">首日</span>`;
+                        diffHtml = `<span class="text-blue-400 text-[10px] font-bold">START</span>`;
                     }
                 } else {
-                    // 將 this 傳入 sendReminder 以利操作按鈕外觀
-                    diffHtml = !isMe ? `<button onclick="sendReminder('${m.id}', this)" class="mt-1 bg-orange-100 text-orange-600 text-[10px] px-2 py-1 rounded-full border border-orange-200 shadow-sm active:scale-90 transition-all">🔔 提醒他報磅</button>` : `<span class="text-[10px] text-gray-400">待報數</span>`;
+                    diffHtml = !isMe ? `<button onclick="sendReminder('${m.id}', this)" class="mt-1 bg-white text-gray-600 text-[10px] px-2 py-1 rounded-lg border border-gray-200 shadow-sm font-bold active:scale-90 transition-all">🔔 催一下</button>` : `<span class="text-[10px] text-gray-400 font-bold">WAITING</span>`;
                 }
 
                 const card = document.createElement('div');
-                card.className = `aspect-square flex flex-col items-center justify-center p-1 rounded-xl shadow-sm border-2 ${isMe ? 'bg-blue-50 border-blue-400' : 'bg-white border-transparent'}`;
+                card.className = `relative flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${isMe ? 'bg-white shadow-md ring-2 ring-blue-400' : 'bg-white/60'}`;
                 card.innerHTML = `
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" class="w-8 h-8 rounded-full mb-1">
-                    <div class="text-[10px] font-bold truncate w-full text-center">${m.username}</div>
-                    <div class="text-sm font-black ${m.hasReportedToday ? 'text-blue-600' : 'text-gray-300'} leading-tight">
+                    <div class="relative mb-2">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(m.username)}" 
+                             class="w-10 h-10 rounded-xl bg-gray-50 border-2 ${avatarBorder} shadow-sm">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 ${statusColor} rounded-full border-2 border-white shadow-sm"></div>
+                    </div>
+                    <div class="text-[10px] font-black text-gray-700 truncate w-full text-center mb-0.5">${m.username}${isMe ? ' (我)' : ''}</div>
+                    <div class="text-xs font-black ${m.hasReportedToday ? 'text-blue-600' : 'text-gray-300'}">
                         ${m.hasReportedToday ? m.latest : '--'}
                     </div>
-                    ${diffHtml}
+                    <div class="mt-1">${diffHtml}</div>
                 `;
                 grid.appendChild(card);
             });
@@ -200,9 +210,10 @@
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
             if (data) {
                 document.getElementById('displayUsername').innerText = data.username;
+                document.getElementById('myAvatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(data.username)}`;
                 myUsername = data.username;
             }
-            document.getElementById('groupLabel').innerText = "小組：" + groupCode;
+            document.getElementById('groupLabel').innerText = "GROUP: " + groupCode;
             updateCountdown(); 
             refreshGrid();
             checkReminders();
