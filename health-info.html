@@ -3,147 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>每日健康資訊</title>
+    <title>每日健康知識庫</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { -webkit-tap-highlight-color: transparent; background-color: white; opacity: 0; transition: opacity 0.3s; }
-        .day-badge { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            background: #f8fafc; 
+            opacity: 0; 
+            transition: opacity 0.5s ease; 
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
         .ready { opacity: 1; }
+        
+        /* 質感卡片陰影 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 漸層標籤 */
+        .day-badge { 
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        /* 圖片容器優化 */
+        .img-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .img-container img:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="p-4">
-    <div id="contentBox" class="text-center">
-        <div class="inline-block day-badge text-white px-4 py-1 rounded-full text-xs font-bold mb-4 shadow-sm">
-            DAY <span id="displayDay">--</span>
+<body class="p-5 pb-20 min-h-screen flex flex-col items-center">
+
+    <div class="w-full max-w-md flex justify-between items-center mb-6">
+        <a href="javascript:history.back()" class="text-gray-400 hover:text-gray-600 text-sm font-bold flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+            返回
+        </a>
+        <div class="text-xs text-gray-300 font-mono">HEALTH TIPS</div>
+    </div>
+
+    <div id="contentBox" class="w-full max-w-md text-center">
+        
+        <div class="inline-flex items-center day-badge text-white px-5 py-2 rounded-full mb-6">
+            <span class="text-[10px] font-black tracking-widest mr-2 opacity-80 border-r border-white/30 pr-2">CHALLENGE</span>
+            <span class="text-lg font-black tracking-tighter">DAY <span id="displayDay">--</span></span>
         </div>
         
-        <h2 id="infoTitle" class="text-xl font-black text-gray-800 mb-4">載入中...</h2>
+        <h2 id="infoTitle" class="text-2xl font-black text-gray-800 mb-6 leading-tight tracking-tight"></h2>
         
-        <div id="infoImage" class="mb-6 space-y-3"></div>
+        <div id="infoImage" class="img-container mb-8 space-y-4"></div>
 
-        <div class="text-left bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-inner">
-            <p id="infoText" class="text-gray-600 text-sm leading-relaxed mb-4"></p>
+        <div class="glass-card text-left p-6 rounded-[2rem] border border-white">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="w-1.5 h-4 bg-blue-500 rounded-full"></span>
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Knowledge</span>
+            </div>
             
-            <div class="bg-blue-50 p-4 rounded-xl border-l-4 border-blue-400">
-                <p class="text-[10px] font-bold text-blue-800 uppercase tracking-wider">💡 管理師建議</p>
-                <p id="infoTips" class="text-xs text-blue-700 mt-1 font-medium leading-normal"></p>
+            <p id="infoText" class="text-gray-600 text-[15px] leading-relaxed mb-8 font-medium text-justify"></p>
+            
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-200 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+                
+                <p class="text-[11px] font-black text-blue-600 uppercase tracking-wider mb-2 flex items-center gap-1">
+                    💡 COACH TIPS
+                </p>
+                <p id="infoTips" class="text-sm text-blue-800 font-bold leading-normal relative z-10"></p>
             </div>
         </div>
+
+        <p class="mt-8 text-xs text-gray-300" id="currentDateDisplay"></p>
     </div>
 
     <script>
+        // 設定挑戰開始日期 (格式：YYYY-MM-DD)
+        const CHALLENGE_START_DATE = '2026-01-01';
+
         const DAILY_CONTENT = {
             1: { 
-                title: "🌱 第一天：啟動細胞營養", 
+                title: "🌱 Day 1：啟動細胞營養", 
                 content: "歡迎來到挑戰！減重 80% 靠營養，今天起我們用「三杯水」開啟代謝：蘆薈汁清、草本茶調、奶昔補。透過細胞營養，讓身體回到最健康的吸收狀態。", 
                 tips: "早起先喝 3 瓶蓋蘆薈汁兌水，喚醒腸道吸收力！",
                 images: ["https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/608943728_122113845339083581_1013822433400309860_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=cZOczSUjK-4Q7kNvwGbSDo1&_nc_oc=Adk5cjRKkt8Qbpa1p5XIBLc8rZ35NuZXwH7lGmrcIshwYhELTQ-o0WOmQRob5OCjies&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=fPFROfdF1x0Ufa26Tam5sg&oh=00_AfpQpmii5umhnECfZ3xzPG-Rr56gcKZltPn--R2adgXfvA&oe=695C8476"]
             },
             2: { 
-                title: "🌙 第二天：睡眠竟然也能瘦？", 
-                content: "熬夜會分泌「皮質醇」（壓力荷爾蒙），它最鍾意叫身體囤積脂肪，特別係腹部贅肉！相反，乖乖睡覺會分泌「瘦體素」，像勤力的清潔員在睡眠中幫你燒脂。", 
-                tips: "今日行動：今晚 11 點前「強制登出」手機，睡滿 7 小時，啟動自動燃脂模式！",
-                images: [
-                    "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/610874102_122113845219083581_5961567971867320995_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=JKyIHmyjIzgQ7kNvwEVK1b3&_nc_oc=Adn9DHSsNxpGpfRHEHaZAKekZXwK1lwj5Jr8eLipmNxfPRk87eKJwDsn4dFVuPb9z0w&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=_Lv4RtBVjOJW-uy25BgfzA&oh=00_AfrjYGCyVcLhLJbcYtZS1UYp_HXu-scnrb6ArAvdZJsxGw&oe=695C864D",
-                    "https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/609028759_122113845231083581_6456089853283612139_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=bjRSgJggMQgQ7kNvwFGZxiM&_nc_oc=AdnKIGpOx5pU0n46vaAfh7v3Dv9RqY6CQHZNXTPt03awRMiV6nQitXW2uxsIsUKjTho&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=UIHGt8x9Q61EeJg_eD2vQw&oh=00_AfoWjfSu33c0Kh2JAYbFoemuuMMDnclo18MJppDFguXWFQ&oe=695C6D04"
-                ]
+                title: "🌙 Day 2：睡眠竟然也能瘦？", 
+                content: "熬夜會分泌「皮質醇」（壓力荷爾蒙），它最喜歡叫身體囤積脂肪，特別是腹部贅肉！相反，乖乖睡覺會分泌「瘦體素」，就像勤勞的清潔員在睡眠中幫你燒脂。", 
+                tips: "今晚 11 點前「強制登出」手機，睡滿 7 小時，啟動自動燃脂模式！",
+                images: ["https://scontent-den2-1.xx.fbcdn.net/v/t39.30808-6/610874102_122113845219083581_5961567971867320995_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=127cfc&_nc_ohc=JKyIHmyjIzgQ7kNvwEVK1b3&_nc_oc=Adn9DHSsNxpGpfRHEHaZAKekZXwK1lwj5Jr8eLipmNxfPRk87eKJwDsn4dFVuPb9z0w&_nc_zt=23&_nc_ht=scontent-den2-1.xx&_nc_gid=_Lv4RtBVjOJW-uy25BgfzA&oh=00_AfrjYGCyVcLhLJbcYtZS1UYp_HXu-scnrb6ArAvdZJsxGw&oe=695C864D"]
             },
             3: { 
-                title: "💧 第三天：水是脂肪的搬運工", 
+                title: "💧 Day 3：水是脂肪的搬運工", 
                 content: "沒有水，脂肪就排不出去。草本茶能幫助提升代謝率，相當於跑步的燃脂效果。水分充足時，大腦才會下令啟動能量代謝。", 
-                tips: "今天目標：喝足 3000cc 水分（建議體重 x 45ml）。",
-                images: [] 
+                tips: "今天目標：喝足 3000cc 水分（建議體重 x 45ml）。"
             },
             4: { 
-                title: "🍎 第四天：認識「偽食慾」", 
-                content: "大腦有時分不清楚「渴」與「餓」。當你想吃甜點時，其實你是缺水或缺營養了。", 
-                tips: "想吃零食前，先喝 200ml 草本茶，等 10 分鐘看看！",
-                images: []
+                title: "🍎 Day 4：認識「偽食慾」", 
+                content: "大腦有時分不清楚「渴」與「餓」。當你想吃甜點時，其實你是缺水或缺營養了。這就是所謂的『假性飢餓』。", 
+                tips: "想吃零食前，先喝 200ml 草本茶或水，等 10 分鐘，飢餓感通常會消失！",
+                images: [] // 這裡可以補上相關圖片
             },
-            5: { 
-                title: "💩 第五天：腸道排毒日", 
-                content: "如果排便不順，體重會卡關。活動纖維粉是腸道的掃把，能幫你帶走垃圾。", 
-                tips: "今天可以在奶昔中加入一匙活動纖維粉，增加纖維攝取。",
-                images: []
-            },
-            6: { 
-                title: "💤 第六天：睡眠與皮質醇", 
-                content: "熬夜會讓皮質醇上升，這是一種會抓取腹部脂肪的荷爾蒙。睡得好，瘦得快。", 
-                tips: "今晚嘗試 11 點前關燈，睡前 1 小時不要看手機。",
-                images: []
-            },
-            7: { 
-                title: "📊 第七天：第一週小結", 
-                content: "恭喜堅持一週！體重計數字可能波動，但請觀察衣服有沒有變鬆？那才是真的脂肪減少。", 
-                tips: "今天給自己一個讚美，紀錄下這週體力變好的時刻。",
-                images: []
-            },
-            8: { 
-                title: "🍳 第八天：正餐怎麼吃？", 
-                content: "午餐建議採用「拳頭原則」：一拳頭蛋白質、一拳頭澱粉、兩拳頭蔬菜。", 
-                tips: "避免勾芡與油炸，原型食物是你的好朋友。",
-                images: []
-            },
-            9: { 
-                title: "🌙 第九天：夜間代謝力", 
-                content: "睡覺時也能燃脂？夜寧新含有精胺酸，能維持血管健康並在夜間持續優化循環。", 
-                tips: "睡前喝一杯夜寧新，給心血管最好的保護。",
-                images: []
-            },
-            10: { 
-                title: "🔥 第十天：突破平台期", 
-                content: "身體會適應熱量，如果體重不動了，試著增加 10 分鐘的高強度運動或增加飲水量。", 
-                tips: "今天加強草本茶的濃度，幫代謝推一把！",
-                images: []
-            }
+            5: { title: "💩 Day 5：腸道排毒日", content: "如果排便不順，體重會卡關。活動纖維粉是腸道的掃把，能幫你帶走垃圾。", tips: "今天可以在奶昔中加入一匙活動纖維粉。" },
+            6: { title: "💤 Day 6：對抗壓力肥", content: "壓力大時想吃甜食是正常的生理反應，但這會導致血糖震盪。", tips: "感到壓力時，做三次深呼吸，或喝一杯熱草本茶。" },
+            7: { title: "📊 Day 7：第一週小結", content: "恭喜堅持一週！觀察衣服有沒有變鬆？那才是真的脂肪減少。", tips: "給自己一個讚美，紀錄下這週體力變好的時刻。" }
         };
+
+        function getCalculatedDay() {
+            const start = new Date(CHALLENGE_START_DATE);
+            const now = new Date();
+            // 修正時區差異，單純計算日期間隔
+            const diffTime = now.setHours(0,0,0,0) - start.setHours(0,0,0,0);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+            return diffDays > 0 ? diffDays : 1;
+        }
 
         function renderContent() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
-                const dayParam = urlParams.get('day');
-                const day = parseInt(dayParam) || 1;
+                let dayParam = urlParams.get('day');
                 
-                // 強制清空舊內容，避免殘留
-                document.getElementById('displayDay').innerText = "";
-                document.getElementById('infoTitle').innerText = "";
-                document.getElementById('infoText').innerText = "";
-                document.getElementById('infoTips').innerText = "";
-                document.getElementById('infoImage').innerHTML = "";
-
-                const data = DAILY_CONTENT[day];
+                // 核心邏輯：如果網址沒有 ?day=x，就自動計算今天是第幾天
+                if (!dayParam) {
+                    dayParam = getCalculatedDay();
+                }
                 
-                if (!data) throw new Error("Day not found");
+                const day = parseInt(dayParam);
+                const data = DAILY_CONTENT[day] || {
+                    title: "敬請期待",
+                    content: "未來的旅程更精彩，請專注於當下的挑戰！",
+                    tips: "保持耐心，每一天都在進步。",
+                    images: []
+                };
 
-                // 填入新內容
                 document.getElementById('displayDay').innerText = day;
                 document.getElementById('infoTitle').innerText = data.title;
                 document.getElementById('infoText').innerText = data.content;
                 document.getElementById('infoTips').innerText = data.tips;
+                
+                // 顯示今天日期
+                const today = new Date();
+                document.getElementById('currentDateDisplay').innerText = today.toLocaleDateString('zh-TW');
+
+                const imgContainer = document.getElementById('infoImage');
+                imgContainer.innerHTML = ""; // 清空舊圖
 
                 if (data.images && data.images.length > 0) {
-                    const fragment = document.createDocumentFragment();
                     data.images.forEach(url => {
                         const img = document.createElement('img');
                         img.src = url;
-                        img.className = "w-full rounded-2xl shadow-md border border-gray-100";
-                        img.onerror = () => img.remove();
-                        fragment.appendChild(img);
+                        // 圖片載入失敗時自動隱藏，避免破圖
+                        img.onerror = function() { this.style.display = 'none'; };
+                        imgContainer.appendChild(img);
                     });
-                    document.getElementById('infoImage').appendChild(fragment);
                 }
 
-                // 顯示頁面
                 document.body.classList.add('ready');
 
             } catch (e) {
-                console.error("渲染錯誤:", e);
-                document.getElementById('infoTitle').innerText = "資訊暫未更新";
+                console.error(e);
                 document.body.classList.add('ready');
             }
         }
 
-        // 使用 DOMContentLoaded 確保 HTML 結構已就緒
         document.addEventListener('DOMContentLoaded', renderContent);
     </script>
 </body>
