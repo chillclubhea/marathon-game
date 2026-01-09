@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呼吸與核心覺察筆記</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4a7c59;
+        }
+        
+        h1 {
+            color: #2c5530;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #4a7c59;
+            margin: 30px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        h3 {
+            color: #5d8a66;
+            margin: 20px 0 10px;
+        }
+        
+        .intro {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #555;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #4a7c59;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        
+        tr:hover {
+            background-color: #e8f4ea;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .practice-box {
+            background-color: #f0f7f1;
+            border-left: 4px solid #4a7c59;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .practice-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .practice-icon {
+            background-color: #4a7c59;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .steps {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .steps li {
+            margin-bottom: 8px;
+        }
+        
+        .checklist {
+            margin: 20px 0;
+        }
+        
+        .checklist li {
+            margin-bottom: 10px;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .checklist li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4a7c59;
+            font-weight: bold;
+        }
+        
+        .warning {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffb300;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .record-table {
+            margin: 30px 0;
+        }
+        
+        .signature {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .signature-box {
+            display: inline-block;
+            text-align: left;
+            margin: 20px auto;
+        }
+        
+        .reminder {
+            background-color: #e8f4ea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            th, td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>呼吸與核心覺察筆記</h1>
+        <p>身心平衡的內在連結指南</p>
+    </header>
+    
+    <main>
+        <div class="section">
+            <p class="intro">呼吸不僅是生命的基礎，更是連結身心的重要橋樑。通過有意識的呼吸練習，我們可以建立更好的身體覺察、改善姿勢並促進整體健康。本筆記將引導您了解呼吸與核心系統的關係，並提供實用的日常練習方法。</p>
+        </div>
+        
+        <div class="section">
+            <h2>內在連結的四大基石</h2>
+            <p>以下框架幫助我們理解身體不同區域在呼吸與穩定中的作用：</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>概念</th>
+                        <th>對應身體區域</th>
+                        <th>常見不適感</th>
+                        <th>核心要義</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>上層穩定</strong></td>
+                        <td>胸廓與呼吸肌</td>
+                        <td>肩頸緊繃、思慮過多</td>
+                        <td>氣息通暢，心神安寧</td>
+                    </tr>
+                    <tr>
+                        <td><strong>中層核心</strong></td>
+                        <td>腹腔與腹壁</td>
+                        <td>容易疲憊、消化遲緩</td>
+                        <td>核心有力，支撐穩定</td>
+                    </tr>
+                    <tr>
+                        <td><strong>底層承托</strong></td>
+                        <td>骨盆與盆底</td>
+                        <td>腰腹無力、姿勢鬆散</td>
+                        <td>地基穩固，行動自信</td>
+                    </tr>
+                    <tr>
+                        <td><strong>根基連結</strong></td>
+                        <td>雙腿與足部</td>
+                        <td>呼吸短淺、步伐沉重</td>
+                        <td>腳踏實地，氣息深長</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="reminder">
+                <p><strong>整體平衡狀態</strong>：當上層過度緊繃而下層缺乏支撐時，容易感到身心失衡。</p>
+                <p><strong>經典智慧啟示</strong>：深長的呼吸始於穩定的根基，當足部穩固時，身體才能放鬆地進行完整呼吸。</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>日常練習指南</h2>
+            
+            <div class="practice-box">
+                <div class="practice-title">
+                    <div class="practice-icon">一</div>
+                    <h3>釋放上背緊張</h3>
+                </div>
+                <p><em>適用：久坐後肩背僵硬、呼吸短促</em></p>
+                <ol class="steps">
+                    <li>將毛巾捲置於中上背部下方</li>
+                    <li>仰臥，讓頭臀略低於背部，形成自然曲線</li>
+                    <li>吸氣時專注於擴展背部接觸毛巾的區域</li>
+                    <li>呼氣時完全放鬆，重複5-10次</li>
+                </ol>
+            </div>
+            
+            <div class="practice-box">
+                <div class="practice-title">
+                    <div class="practice-icon">二</div>
+                    <h3>建立核心協調</h3>
+                </div>
+                <p><em>適用：改善姿勢、增強內在穩定</em></p>
+                <ol class="steps">
+                    <li>仰臥屈膝，雙手輕放肋骨兩側</li>
+                    <li>吸氣時感受肋骨向兩側溫和擴展</li>
+                    <li>呼氣時感受肋骨自然內收，腹部輕柔參與</li>
+                    <li>保持呼吸平順，重複5-10次</li>
+                </ol>
+            </div>
+            
+            <div class="practice-box">
+                <div class="practice-title">
+                    <div class="practice-icon">三</div>
+                    <h3>生活微習慣</h3>
+                </div>
+                <ol class="steps">
+                    <li><strong>改變姿勢前</strong>：先輕柔呼氣，再緩慢移動</li>
+                    <li><strong>長時間工作時</strong>：每小時進行3次深長呼吸</li>
+                    <li><strong>行走時</strong>：留意腳步與呼吸的自然節奏</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>個人練習計劃</h2>
+            
+            <h3>請根據需求選擇重點：</h3>
+            <ul class="checklist">
+                <li><strong>緩解上半身緊張</strong>：每日練習【練習一】3-5分鐘</li>
+                <li><strong>增強核心穩定</strong>：每日練習【練習二】5-8分鐘</li>
+                <li><strong>改善整體協調</strong>：結合【練習三】於日常生活中</li>
+            </ul>
+            
+            <div class="warning">
+                <h3>常見注意事項：</h3>
+                <ul>
+                    <li>避免為追求外觀而使用過緊的腰部束縛</li>
+                    <li>伸展時應溫和漸進，避免突然的彈震動作</li>
+                    <li>進行力量活動時保持呼吸流暢，避免長時間憋氣</li>
+                    <li>所有練習應以舒適為前提，如有不適請停止</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>練習記錄與反思</h2>
+            
+            <table class="record-table">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>練習項目</th>
+                        <th>持續時間</th>
+                        <th>當日感受</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>_____</td>
+                        <td>__________</td>
+                        <td>_______</td>
+                        <td>__________</td>
+                    </tr>
+                    <tr>
+                        <td>_____</td>
+                        <td>__________</td>
+                        <td>_______</td>
+                        <td>__________</td>
+                    </tr>
+                    <tr>
+                        <td>_____</td>
+                        <td>__________</td>
+                        <td>_______</td>
+                        <td>__________</td>
+                    </tr>
+                    <tr>
+                        <td>_____</td>
+                        <td>__________</td>
+                        <td>_______</td>
+                        <td>__________</td>
+                    </tr>
+                    <tr>
+                        <td>_____</td>
+                        <td>__________</td>
+                        <td>_______</td>
+                        <td>__________</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="reminder">
+                <h3>自我提醒：</h3>
+                <ul>
+                    <li>練習品質重於時間長短</li>
+                    <li>專注於身體感受而非外在表現</li>
+                    <li>將覺察融入日常生活</li>
+                </ul>
+            </div>
+            
+            <div class="signature">
+                <div class="signature-box">
+                    <p><strong>學員簽名</strong>：________________</p>
+                    <p><strong>日期</strong>：________________</p>
+                </div>
+                
+                <p style="margin-top: 30px; font-style: italic;">願您通過持續的溫和練習，培養更深的身心覺察與內在平衡。</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>呼吸與核心覺察筆記 © 2023 | 僅供個人學習與參考使用</p>
+        <p>健康提示：如有任何健康疑慮，請諮詢專業醫療人員</p>
+    </footer>
+</body>
+</html>
