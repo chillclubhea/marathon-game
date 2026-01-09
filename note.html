@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>呼吸與核心覺察筆記</title>
+    <title>呼吸智慧筆記：內在連結與行動指南</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #2c5530;
+            --secondary-color: #4a7c59;
+            --accent-color: #8fb996;
+            --light-color: #f0f7f1;
+            --text-color: #333;
+            --light-text: #666;
+            --border-radius: 10px;
+            --shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -13,44 +25,119 @@
         
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            line-height: 1.6;
-            color: #333;
+            line-height: 1.7;
+            color: var(--text-color);
             background-color: #f9f9f9;
             padding: 20px;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
         
         header {
             text-align: center;
             margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #4a7c59;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
         }
         
         h1 {
-            color: #2c5530;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             margin-bottom: 10px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            font-weight: 300;
         }
         
         h2 {
-            color: #4a7c59;
-            margin: 30px 0 15px;
+            color: var(--primary-color);
+            margin: 40px 0 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 2px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 i {
+            margin-right: 15px;
+            background-color: var(--accent-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         h3 {
-            color: #5d8a66;
-            margin: 20px 0 10px;
+            color: var(--secondary-color);
+            margin: 25px 0 15px;
+            padding-left: 10px;
+            border-left: 4px solid var(--accent-color);
         }
         
-        .intro {
-            font-size: 1.1rem;
-            line-height: 1.8;
+        .section {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 30px;
             margin-bottom: 30px;
-            color: #555;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+        }
+        
+        .mantra-box {
+            background: linear-gradient(to right, var(--light-color), #e8f4ea);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+            border-left: 5px solid var(--secondary-color);
+        }
+        
+        .mantra {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .signal-list, .trap-list, .system-list {
+            margin: 20px 0 25px 25px;
+        }
+        
+        .signal-list li, .trap-list li, .system-list li {
+            margin-bottom: 12px;
+            padding-left: 10px;
+            position: relative;
+        }
+        
+        .signal-list li:before {
+            content: "🔍";
+            position: absolute;
+            left: -25px;
+        }
+        
+        .trap-list li:before {
+            content: "⚠️";
+            position: absolute;
+            left: -25px;
+        }
+        
+        .system-list li:before {
+            content: "⚙️";
+            position: absolute;
+            left: -25px;
         }
         
         table {
@@ -58,129 +145,187 @@
             border-collapse: collapse;
             margin: 25px 0;
             box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
         }
         
         th, td {
-            padding: 15px;
+            padding: 18px 15px;
             text-align: left;
-            border: 1px solid #ddd;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         th {
-            background-color: #4a7c59;
+            background-color: var(--primary-color);
             color: white;
             font-weight: 600;
+            font-size: 1.1rem;
         }
         
         tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: var(--light-color);
         }
         
         tr:hover {
             background-color: #e8f4ea;
         }
         
-        .section {
-            background-color: white;
-            border-radius: 8px;
+        .practice-box {
+            background-color: #f9fdfa;
+            border-radius: var(--border-radius);
             padding: 25px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            position: relative;
+            overflow: hidden;
         }
         
-        .practice-box {
-            background-color: #f0f7f1;
-            border-left: 4px solid #4a7c59;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 0 8px 8px 0;
+        .practice-box:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--secondary-color);
         }
         
         .practice-title {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         
-        .practice-icon {
-            background-color: #4a7c59;
+        .practice-number {
+            background-color: var(--secondary-color);
             color: white;
-            width: 36px;
-            height: 36px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
+            font-size: 1.5rem;
             font-weight: bold;
+            margin-right: 20px;
+            flex-shrink: 0;
         }
         
         .steps {
-            margin-left: 20px;
+            margin-left: 70px;
             margin-bottom: 15px;
         }
         
         .steps li {
-            margin-bottom: 8px;
+            margin-bottom: 12px;
+            padding-left: 5px;
         }
         
-        .checklist {
-            margin: 20px 0;
+        .action-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
         }
         
-        .checklist li {
-            margin-bottom: 10px;
-            padding-left: 30px;
-            position: relative;
+        .action-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--accent-color);
         }
         
-        .checklist li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #4a7c59;
-            font-weight: bold;
+        .action-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
         }
         
-        .warning {
+        .action-card h4 i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+        
+        .warning-box {
             background-color: #fff8e1;
-            border-left: 4px solid #ffb300;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .record-table {
+            border-radius: var(--border-radius);
+            padding: 25px;
             margin: 30px 0;
+            border-left: 5px solid #ffb300;
         }
         
-        .signature {
+        .principle-box {
+            background-color: #e8f4ea;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .principle-box ul, .warning-box ul {
+            margin-left: 20px;
+        }
+        
+        .principle-box li, .warning-box li {
+            margin-bottom: 10px;
+        }
+        
+        .quote-section {
+            background: linear-gradient(135deg, #2c5530, #3a6545);
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 40px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        
+        .quote {
+            font-size: 1.8rem;
+            font-style: italic;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .signature-area {
             text-align: center;
             margin-top: 50px;
             padding-top: 30px;
-            border-top: 1px solid #ddd;
+            border-top: 2px dashed var(--accent-color);
         }
         
-        .signature-box {
+        .signature-line {
             display: inline-block;
             text-align: left;
             margin: 20px auto;
-        }
-        
-        .reminder {
-            background-color: #e8f4ea;
             padding: 20px;
-            border-radius: 8px;
-            margin-top: 30px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
         }
         
         footer {
             text-align: center;
             margin-top: 50px;
             padding-top: 20px;
-            color: #666;
+            color: var(--light-text);
             font-size: 0.9rem;
             border-top: 1px solid #ddd;
+        }
+        
+        @media print {
+            .section {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .action-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .practice-box:before {
+                display: none;
+            }
         }
         
         @media (max-width: 768px) {
@@ -189,11 +334,19 @@
             }
             
             h1 {
-                font-size: 2rem;
+                font-size: 2.2rem;
             }
             
             .section {
-                padding: 15px;
+                padding: 20px;
+            }
+            
+            .steps {
+                margin-left: 20px;
+            }
+            
+            .action-list {
+                grid-template-columns: 1fr;
             }
             
             table {
@@ -201,204 +354,318 @@
                 overflow-x: auto;
             }
             
-            th, td {
-                padding: 10px;
+            .practice-title {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .practice-number {
+                margin-bottom: 15px;
             }
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>呼吸與核心覺察筆記</h1>
-        <p>身心平衡的內在連結指南</p>
+        <h1>呼吸的智慧：從腳跟到頭頂的內在連結</h1>
+        <p class="subtitle">學員紀念筆記與行動指南</p>
     </header>
     
     <main>
-        <div class="section">
-            <p class="intro">呼吸不僅是生命的基礎，更是連結身心的重要橋樑。通過有意識的呼吸練習，我們可以建立更好的身體覺察、改善姿勢並促進整體健康。本筆記將引導您了解呼吸與核心系統的關係，並提供實用的日常練習方法。</p>
-        </div>
+        <section class="section">
+            <div class="mantra-box">
+                <div class="mantra">「腳跟穩，骨盆定，氣息深，全身通。」</div>
+                <p>一句話記住所有原理</p>
+            </div>
+            <p style="text-align: center; font-size: 1.1rem;">你的身體是一個智慧的整體，呼吸是串連所有的金線。</p>
+        </section>
         
-        <div class="section">
-            <h2>內在連結的四大基石</h2>
-            <p>以下框架幫助我們理解身體不同區域在呼吸與穩定中的作用：</p>
+        <section class="section">
+            <h2><i class="fas fa-exclamation-triangle"></i>第一章：重新發現身體的「失聯」信號</h2>
+            <p>你以為的不相關，其實是身體的同一份「求救信號」：</p>
+            <ul class="signal-list">
+                <li><strong>肩頸僵硬、頭痛</strong> → 可能是胸椎卡住，呼吸只能向上代償</li>
+                <li><strong>腰酸、小腹突出</strong> → 可能是盆底失能，核心「氣缸」漏氣</li>
+                <li><strong>容易疲勞、手腳冰涼</strong> → 可能是呼吸短淺，氧氣無法送至末梢</li>
+                <li><strong>情緒煩躁、失眠</strong> → 可能是呼吸模式鎖在「戰鬥狀態」（交感神經主導）</li>
+            </ul>
+            
+            <h3>現代生活的三大「隱形陷阱」：</h3>
+            <ul class="trap-list">
+                <li><strong>靜態陷阱</strong>：久坐 = 長期壓垮你的「盆底吊床」。</li>
+                <li><strong>運動陷阱</strong>：
+                    <ul style="margin-left: 25px; margin-top: 10px;">
+                        <li>束腰/束腹帶：窒息你的呼吸，內臟受壓。</li>
+                        <li>過度拉伸（如壓腿、青蛙趴）：拉鬆盆底，破壞穩定。</li>
+                        <li>只練「六塊肌」：製造局部高壓，破壞整體協同。</li>
+                    </ul>
+                </li>
+                <li><strong>呼吸陷阱</strong>：只會用喉嚨「喘氣」，不會用身體「呼吸」。</li>
+            </ul>
+        </section>
+        
+        <section class="section">
+            <h2><i class="fas fa-cogs"></i>第二章：解密你的「內在氣缸」</h2>
+            <p><strong>核心不是肌肉，而是一個「動力系統」</strong></p>
+            <ul class="system-list">
+                <li><strong>頂蓋</strong>：膈肌（呼吸的引擎）</li>
+                <li><strong>缸壁</strong>：腹橫肌（天然的腰帶）</li>
+                <li><strong>底座</strong>：盆底肌（承托的吊床）</li>
+            </ul>
+            
+            <div class="principle-box">
+                <p><strong>理想狀態</strong>：吸氣時，膈肌下沉，盆底肌輕柔舒展；呼氣時，盆底與腹肌輕柔回彈。像一個有彈性的氣球，富有節律地起伏。</p>
+            </div>
+            
+            <h3>關於盆底肌，你必須知道的：</h3>
+            <ul class="signal-list">
+                <li><strong>男女有別</strong>：女性盆底有「三個孔」（尿道、陰道、肛門），結構上更需穩定支持。</li>
+                <li><strong>深淺有別</strong>：
+                    <ul style="margin-left: 25px; margin-top: 10px;">
+                        <li><strong>淺層</strong>（可意識控制）：如緊急關閉尿道。</li>
+                        <li><strong>深層</strong>（自動運作）：默默託舉內臟，你不能也不該感覺到它用力。</li>
+                    </ul>
+                </li>
+                <li><strong>重要提醒</strong>：暴力練習凱格爾（拼命夾緊），可能只練到淺層，反而讓深層更無力。</li>
+            </ul>
+        </section>
+        
+        <section class="section">
+            <h2><i class="fas fa-brain"></i>第三章：古人的智慧，現代科學的印證</h2>
+            <p><strong>「上氣、中氣、下氣、地氣」身體使用說明書</strong></p>
+            <p>將古老智慧轉化為現代語言，讀懂身體的「氣象報告」：</p>
             
             <table>
                 <thead>
                     <tr>
-                        <th>概念</th>
-                        <th>對應身體區域</th>
-                        <th>常見不適感</th>
-                        <th>核心要義</th>
+                        <th>傳統概念</th>
+                        <th>對應現代部位</th>
+                        <th>失衡時的「身體信號」</th>
+                        <th>一句話理解</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>上層穩定</strong></td>
-                        <td>胸廓與呼吸肌</td>
-                        <td>肩頸緊繃、思慮過多</td>
-                        <td>氣息通暢，心神安寧</td>
+                        <td><strong>上氣</strong></td>
+                        <td>膈肌、胸廓</td>
+                        <td>肩頸緊、易上火、長痘、失眠</td>
+                        <td>「氣堵在上頭」</td>
                     </tr>
                     <tr>
-                        <td><strong>中層核心</strong></td>
-                        <td>腹腔與腹壁</td>
-                        <td>容易疲憊、消化遲緩</td>
-                        <td>核心有力，支撐穩定</td>
+                        <td><strong>中氣</strong></td>
+                        <td>腹腔、腹肌</td>
+                        <td>聲音弱、消化差、容易累</td>
+                        <td>「核心沒力量」</td>
                     </tr>
                     <tr>
-                        <td><strong>底層承托</strong></td>
-                        <td>骨盆與盆底</td>
-                        <td>腰腹無力、姿勢鬆散</td>
-                        <td>地基穩固，行動自信</td>
+                        <td><strong>下氣</strong></td>
+                        <td>盆底、骨盆</td>
+                        <td>不自信、腰腹鬆垮、漏尿</td>
+                        <td>「地基不穩固」</td>
                     </tr>
                     <tr>
-                        <td><strong>根基連結</strong></td>
-                        <td>雙腿與足部</td>
-                        <td>呼吸短淺、步伐沉重</td>
-                        <td>腳踏實地，氣息深長</td>
+                        <td><strong>地氣</strong></td>
+                        <td>腳跟、雙腿</td>
+                        <td>呼吸短促、腳步虛浮、易累</td>
+                        <td>「樹根沒扎穩」</td>
                     </tr>
                 </tbody>
             </table>
             
-            <div class="reminder">
-                <p><strong>整體平衡狀態</strong>：當上層過度緊繃而下層缺乏支撐時，容易感到身心失衡。</p>
-                <p><strong>經典智慧啟示</strong>：深長的呼吸始於穩定的根基，當足部穩固時，身體才能放鬆地進行完整呼吸。</p>
+            <div class="principle-box">
+                <p><strong>「上熱下寒」</strong>：就是上氣（胸）過度使用，下氣（盆底）和地氣（腳）失聯的典型狀態。</p>
+                <p><strong>「真人之息以踵」（莊子）</strong>：真正深長的呼吸，始於腳跟的穩定。腳下不穩，核心就會忙於維持平衡，無暇顧及深長呼吸。</p>
             </div>
-        </div>
+        </section>
         
-        <div class="section">
-            <h2>日常練習指南</h2>
+        <section class="section">
+            <h2><i class="fas fa-hands-helping"></i>第四章：實操指南 —— 安全喚醒你的系統</h2>
             
             <div class="practice-box">
                 <div class="practice-title">
-                    <div class="practice-icon">一</div>
-                    <h3>釋放上背緊張</h3>
+                    <div class="practice-number">1</div>
+                    <div>
+                        <h3>【練習一】呼吸喚醒：打開卡住的胸廓</h3>
+                        <p><em>適用於：肩頸緊、胸悶、駝背體態</em></p>
+                    </div>
                 </div>
-                <p><em>適用：久坐後肩背僵硬、呼吸短促</em></p>
                 <ol class="steps">
-                    <li>將毛巾捲置於中上背部下方</li>
-                    <li>仰臥，讓頭臀略低於背部，形成自然曲線</li>
-                    <li>吸氣時專注於擴展背部接觸毛巾的區域</li>
-                    <li>呼氣時完全放鬆，重複5-10次</li>
+                    <li>將抱枕或捲起的毛巾，墊在胸椎中段（文胸帶位置）下方。</li>
+                    <li>仰臥，讓頭和臀部低於胸椎，形成一個「C」型弧線。</li>
+                    <li>關閉前側注意力，吸氣時，刻意將氣息引向背後抱枕處，感受胸椎被氣流輕柔推開。</li>
+                    <li>呼氣，自然放鬆。重複5-10次。</li>
                 </ol>
-            </div>
-            
-            <div class="practice-box">
-                <div class="practice-title">
-                    <div class="practice-icon">二</div>
-                    <h3>建立核心協調</h3>
-                </div>
-                <p><em>適用：改善姿勢、增強內在穩定</em></p>
-                <ol class="steps">
-                    <li>仰臥屈膝，雙手輕放肋骨兩側</li>
-                    <li>吸氣時感受肋骨向兩側溫和擴展</li>
-                    <li>呼氣時感受肋骨自然內收，腹部輕柔參與</li>
-                    <li>保持呼吸平順，重複5-10次</li>
-                </ol>
+                <p><strong>要領</strong>：尋找「用呼吸推開後背」的輕柔感。</p>
             </div>
             
             <div class="practice-box">
                 <div class="practice-title">
-                    <div class="practice-icon">三</div>
-                    <h3>生活微習慣</h3>
+                    <div class="practice-number">2</div>
+                    <div>
+                        <h3>【練習二】核心協同：橫向呼吸法</h3>
+                        <p><em>適用於：腰酸、小腹突出、核心失聯</em></p>
+                    </div>
                 </div>
                 <ol class="steps">
-                    <li><strong>改變姿勢前</strong>：先輕柔呼氣，再緩慢移動</li>
-                    <li><strong>長時間工作時</strong>：每小時進行3次深長呼吸</li>
-                    <li><strong>行走時</strong>：留意腳步與呼吸的自然節奏</li>
+                    <li>仰臥，屈膝，腳掌平放。想像骨盆是一個「盛滿溫水的碗」。</li>
+                    <li>手放在肋骨下緣。用鼻子輕柔吸氣，感受氣息將肋骨向兩側推開（碗口橫向變寬），盆底有輕微舒展感。</li>
+                    <li>用嘴巴緩緩呼氣，感受肋骨輕柔內收，盆底與下腹有一種自然上浮的張力（碗口平穩復原）。</li>
+                    <li>重複5-10次，全程放鬆喉嚨、下巴、臀部。</li>
+                </ol>
+                <p><strong>要領</strong>：追求「擴張感」與「張力感」，而非「收緊力」。</p>
+            </div>
+            
+            <div class="practice-box">
+                <div class="practice-title">
+                    <div class="practice-number">3</div>
+                    <div>
+                        <h3>【練習三】生活整合：三個微習慣</h3>
+                        <p><em>適用於：日常動作優化</em></p>
+                    </div>
+                </div>
+                <ol class="steps">
+                    <li><strong>從坐到站</strong>：起身前，先「呼一口氣」，同時輕微啟動下腹（像輕繫腰帶），再平穩站起。</li>
+                    <li><strong>預備咳嗽/打噴嚏</strong>：感覺要來時，快速「呼氣並輕提盆底」，形成內部緩衝墊。</li>
+                    <li><strong>做俯臥撐（或推重物）前</strong>：先吸氣充滿上背部，穩定肩胛骨，再發力完成動作。</li>
                 </ol>
             </div>
-        </div>
+        </section>
         
-        <div class="section">
-            <h2>個人練習計劃</h2>
+        <section class="section">
+            <h2><i class="fas fa-tasks"></i>第五章：你的個性化行動清單</h2>
+            <p>請勾選你最想改善的方面，專注練習：</p>
             
-            <h3>請根據需求選擇重點：</h3>
-            <ul class="checklist">
-                <li><strong>緩解上半身緊張</strong>：每日練習【練習一】3-5分鐘</li>
-                <li><strong>增強核心穩定</strong>：每日練習【練習二】5-8分鐘</li>
-                <li><strong>改善整體協調</strong>：結合【練習三】於日常生活中</li>
-            </ul>
-            
-            <div class="warning">
-                <h3>常見注意事項：</h3>
-                <ul>
-                    <li>避免為追求外觀而使用過緊的腰部束縛</li>
-                    <li>伸展時應溫和漸進，避免突然的彈震動作</li>
-                    <li>進行力量活動時保持呼吸流暢，避免長時間憋氣</li>
-                    <li>所有練習應以舒適為前提，如有不適請停止</li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h2>練習記錄與反思</h2>
-            
-            <table class="record-table">
-                <thead>
-                    <tr>
-                        <th>日期</th>
-                        <th>練習項目</th>
-                        <th>持續時間</th>
-                        <th>當日感受</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>_____</td>
-                        <td>__________</td>
-                        <td>_______</td>
-                        <td>__________</td>
-                    </tr>
-                    <tr>
-                        <td>_____</td>
-                        <td>__________</td>
-                        <td>_______</td>
-                        <td>__________</td>
-                    </tr>
-                    <tr>
-                        <td>_____</td>
-                        <td>__________</td>
-                        <td>_______</td>
-                        <td>__________</td>
-                    </tr>
-                    <tr>
-                        <td>_____</td>
-                        <td>__________</td>
-                        <td>_______</td>
-                        <td>__________</td>
-                    </tr>
-                    <tr>
-                        <td>_____</td>
-                        <td>__________</td>
-                        <td>_______</td>
-                        <td>__________</td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div class="reminder">
-                <h3>自我提醒：</h3>
-                <ul>
-                    <li>練習品質重於時間長短</li>
-                    <li>專注於身體感受而非外在表現</li>
-                    <li>將覺察融入日常生活</li>
-                </ul>
-            </div>
-            
-            <div class="signature">
-                <div class="signature-box">
-                    <p><strong>學員簽名</strong>：________________</p>
-                    <p><strong>日期</strong>：________________</p>
+            <div class="action-list">
+                <div class="action-card">
+                    <h4><i class="fas fa-user-check"></i> 肩頸問題改善方案</h4>
+                    <p>如果你主要受肩頸問題困擾 →</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>每日練習【練習一】5分鐘</li>
+                        <li>檢查電腦辦公姿勢</li>
+                    </ul>
                 </div>
                 
-                <p style="margin-top: 30px; font-style: italic;">願您通過持續的溫和練習，培養更深的身心覺察與內在平衡。</p>
+                <div class="action-card">
+                    <h4><i class="fas fa-dumbbell"></i> 腰腹核心改善方案</h4>
+                    <p>如果你主要想改善腰腹核心 →</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>每日練習【練習二】5-10分鐘</li>
+                        <li>在走路時關注呼吸</li>
+                    </ul>
+                </div>
+                
+                <div class="action-card">
+                    <h4><i class="fas fa-wind"></i> 疲憊氣短改善方案</h4>
+                    <p>如果你總感覺疲憊、氣短 →</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>重點關注【練習三】的生活整合</li>
+                        <li>多進行赤腳或穿平底鞋行走</li>
+                    </ul>
+                </div>
+                
+                <div class="action-card">
+                    <h4><i class="fas fa-star"></i> 全面提升方案</h4>
+                    <p>如果你想全面提升 →</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>早晨做【練習一】</li>
+                        <li>晚上做【練習二】</li>
+                        <li>全天實踐【練習三】</li>
+                    </ul>
+                </div>
             </div>
+            
+            <h3>請立即避免的常見誤區：</h3>
+            <div class="warning-box">
+                <ul>
+                    <li>為了瘦腰而長期使用束腰。</li>
+                    <li>在公園進行劇烈的、彈震式壓腿。</li>
+                    <li>跟風做長時間的「青蛙趴」拉伸。</li>
+                    <li>做力量訓練時（如深蹲、臥推）全程拼命憋氣。</li>
+                    <li>只練習快速的、暴力的「凱格爾收緊」。</li>
+                </ul>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2><i class="fas fa-info-circle"></i>溫馨提示與重要邊界</h2>
+            
+            <div class="principle-box">
+                <h4><i class="fas fa-check-circle"></i> 智慧練習的原則：</h4>
+                <ul>
+                    <li>所有練習應在舒適、不憋氣、不疼痛的前提下進行。</li>
+                    <li>注重「覺察」與「連接」，而非追求力量和幅度。</li>
+                    <li>持之以恆的每日5分鐘，遠勝過每週一次1小時。</li>
+                </ul>
+            </div>
+            
+            <div class="warning-box">
+                <h4><i class="fas fa-exclamation-triangle"></i> 何時應停止自我練習並尋求專業幫助：</h4>
+                <p>如果您存在以下情況，請務必優先諮詢醫生（婦產科、泌尿科、康復科）或物理治療師：</p>
+                <ul>
+                    <li>中重度漏尿（如跳繩、跑步時無法控制）</li>
+                    <li>感覺到盆腔有下墜感、脫出感或看到突出物</li>
+                    <li>持續性的骨盆區域疼痛或不適</li>
+                </ul>
+            </div>
+            
+            <div style="margin-top: 25px; padding: 20px; background-color: #f9f9f9; border-radius: var(--border-radius);">
+                <p><strong>記住</strong>：本工作坊與本筆記的內容旨在提供健康教育與自我覺察工具，不能替代專業的醫療診斷與治療。</p>
+            </div>
+        </section>
+        
+        <section class="quote-section">
+            <div class="quote">「呼吸，是身體寫給你的每日情書，讀懂它，你就讀懂了自己。」</div>
+            <div class="quote">「真正的力量，不是對抗，而是恢復內在的彈性與流動。」</div>
+            <div class="quote">「從腳跟的穩定，到頭頂的清明，是一條由呼吸鋪就的道路。」</div>
+        </section>
+        
+        <div class="signature-area">
+            <div class="signature-line">
+                <p><strong>學員簽名</strong>： ________________________</p>
+                <p><strong>日期</strong>： ________________________</p>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 1.2rem; font-style: italic; color: var(--primary-color);">
+                願你從此，腳踏實地，呼吸深長，身心自在。
+            </p>
         </div>
     </main>
     
     <footer>
-        <p>呼吸與核心覺察筆記 © 2023 | 僅供個人學習與參考使用</p>
-        <p>健康提示：如有任何健康疑慮，請諮詢專業醫療人員</p>
+        <p>呼吸智慧筆記 © 2023 | 身心平衡內在連結指南</p>
+        <p style="margin-top: 10px; font-size: 0.8rem;">健康提示：本內容為教育參考，如有健康問題請諮詢專業醫療人員</p>
     </footer>
+
+    <script>
+        // 簡單的交互效果：點擊練習框可以展開/收縮詳細步驟
+        document.querySelectorAll('.practice-box').forEach(box => {
+            const steps = box.querySelector('.steps');
+            if (steps) {
+                steps.style.display = 'block'; // 預設展開
+                box.style.cursor = 'pointer';
+                
+                box.addEventListener('click', function(e) {
+                    // 防止點擊標題或數字時觸發
+                    if (!e.target.classList.contains('practice-number') && 
+                        !e.target.classList.contains('practice-title') &&
+                        e.target.tagName !== 'H3') {
+                        if (steps.style.display === 'none') {
+                            steps.style.display = 'block';
+                        } else {
+                            steps.style.display = 'none';
+                        }
+                    }
+                });
+            }
+        });
+        
+        // 打印友好提示
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.practice-box').forEach(box => {
+                const steps = box.querySelector('.steps');
+                if (steps) steps.style.display = 'block';
+            });
+        });
+    </script>
 </body>
 </html>
