@@ -34,9 +34,40 @@
             100% { box-shadow: 0 0 0px rgba(239, 68, 68, 0); }
         }
         .status-pulse { animation: breath 2s infinite; }
+
+        /* 新增加的動畫 */
+        @keyframes newSessionPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
+        .new-session-notice { animation: newSessionPulse 2s infinite; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
+
+    <!-- 挑戰天數顯示區域（新增） -->
+    <div class="max-w-md mx-auto mb-4">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-blue-100">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-black text-indigo-600">DAY</span>
+                        <span id="currentDay" class="text-2xl font-black text-gray-800">--</span>
+                    </div>
+                    <div id="dayStatusBadge" class="text-xs px-3 py-1 rounded-full font-bold">
+                        <!-- 狀態標籤會動態顯示 -->
+                    </div>
+                </div>
+                <span id="totalDays" class="text-sm text-gray-500">/ 14 天</span>
+            </div>
+            
+            <!-- 休息天或特殊提示 -->
+            <div id="dayMessage" class="text-xs text-gray-600 font-medium mt-2">
+                <!-- 動態顯示今日訊息 -->
+            </div>
+        </div>
+    </div>
 
     <div class="max-w-md mx-auto mb-6 bg-white rounded-3xl p-5 shadow-sm border border-blue-50">
         <div class="flex justify-between items-center mb-3">
@@ -118,6 +149,10 @@
         const START_DATE = '2026-01-01'; // 挑戰開始日
         let myUsername = "我";
 
+        // 新增：挑戰設定
+        const CHALLENGE_DURATION = 14; // 每屆持續14天
+        const REST_DAYS = [7, 14]; // 休息日（第7天和第14天）
+
         // --- 健康知識資料庫 ---
         const DAILY_CONTENT = {
             1: { title: "🌱 啟動細胞營養", content: "減重 80% 靠營養。今天起我們用「三杯水」開啟代謝：蘆薈汁清、草本茶調、奶昔補。", tips: "早起先喝 3 瓶蓋蘆薈汁兌水，喚醒腸道吸收力！", img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400" },
@@ -155,8 +190,97 @@
                 content: "來到第 10 天了！這是一個習慣養成的里程碑。不論數字變化如何，你的身體細胞已經變得更健康了。", 
                 tips: "回顧前 9 天你最自豪的進步，並在群組跟隊友分享！", 
                 img: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400" 
+            },
+            // 新增第11-14天內容
+            11: { 
+                title: "🍽️ 餐間小技巧", 
+                content: "在正餐之間感到飢餓時，可以喝一杯水或無糖茶，有時候飢餓感只是口渴的誤解。", 
+                tips: "隨身攜帶水壺，定時補充水分，減少不必要的進食慾望。", 
+                img: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?auto=format&fit=crop&w=400" 
+            },
+            12: { 
+                title: "🚶‍♂️ 日常活動的重要性", 
+                content: "除了運動，日常活動量（如走路、做家事）的累積燃燒熱量也不可小覷，稱為NEAT。", 
+                tips: "嘗試多站少坐，利用通勤時間多走一段路。", 
+                img: "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?auto=format&fit=crop&w=400" 
+            },
+            13: { 
+                title: "📊 數據背後的意義", 
+                content: "體重數字只是參考，體脂率和肌肉量的變化更能反映真正的進步。", 
+                tips: "除了體重，也可以關注自己的精神、睡眠和衣物寬鬆度。", 
+                img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400" 
+            },
+            14: { 
+                title: "🎉 第一屆完成！", 
+                content: "恭喜完成14天挑戰！無論結果如何，你都建立了更健康的習慣，這是無價的資產。", 
+                tips: "給自己一個小獎勵，並準備好迎接下一屆的挑戰！", 
+                img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400" 
             }
         };
+
+        // 新增：天數狀態管理函數
+        function getChallengeInfo() {
+            const today = new Date('2026-01-14'); // 今天日期
+            const startDate = new Date(START_DATE);
+            const diffTime = today - startDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1; // 從1開始計
+            
+            // 計算當前第幾屆
+            const sessionNumber = Math.ceil(diffDays / CHALLENGE_DURATION);
+            const dayInSession = diffDays % CHALLENGE_DURATION || CHALLENGE_DURATION;
+            
+            return {
+                currentDay: diffDays,
+                dayInSession: dayInSession,
+                sessionNumber: sessionNumber,
+                isRestDay: REST_DAYS.includes(dayInSession),
+                isLastDay: dayInSession === CHALLENGE_DURATION
+            };
+        }
+
+        // 新增：更新天數顯示
+        function updateDayDisplay() {
+            const challengeInfo = getChallengeInfo();
+            const dayElement = document.getElementById('currentDay');
+            const totalDaysElement = document.getElementById('totalDays');
+            const badgeElement = document.getElementById('dayStatusBadge');
+            const messageElement = document.getElementById('dayMessage');
+            
+            // 更新天數
+            dayElement.textContent = challengeInfo.dayInSession;
+            totalDaysElement.textContent = `/ ${CHALLENGE_DURATION} 天`;
+            
+            // 根據狀態更新標籤和訊息
+            if (challengeInfo.isRestDay) {
+                badgeElement.textContent = "休息日";
+                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-yellow-100 text-yellow-800";
+                messageElement.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-500">🏖️</span>
+                        <span>今天是休息日，放鬆一下，明天繼續努力！</span>
+                    </div>
+                `;
+            } else if (challengeInfo.isLastDay) {
+                badgeElement.textContent = "最後一天";
+                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-purple-100 text-purple-800 new-session-notice";
+                messageElement.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-purple-500">🎉</span>
+                        <span>恭喜完成本屆挑戰！明天將是新一屆的開始！</span>
+                    </div>
+                `;
+            } else {
+                badgeElement.textContent = `第 ${challengeInfo.sessionNumber} 屆`;
+                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-blue-100 text-blue-800";
+                messageElement.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-500">🔥</span>
+                        <span>持續努力，離目標越來越近了！</span>
+                    </div>
+                `;
+            }
+        }
+
         function getTodayString() {
             return new Date().toLocaleDateString('en-CA');
         }
@@ -211,6 +335,14 @@
 
         // 送出體重
         async function submitWeight() {
+            const challengeInfo = getChallengeInfo();
+            
+            // 檢查是否為休息日
+            if (challengeInfo.isRestDay) {
+                alert("今天是休息日，好好放鬆一下吧！明天再繼續報數。");
+                return;
+            }
+            
             const weightVal = document.getElementById('currentWeight').value;
             if (!weightVal) {
                 alert("請輸入體重數據！");
@@ -236,6 +368,12 @@
 
         // 提醒隊友
         async function sendReminder(targetId, btnElement) {
+            const challengeInfo = getChallengeInfo();
+            if (challengeInfo.isRestDay) {
+                alert("今天是休息日，讓隊友好好休息吧！");
+                return;
+            }
+            
             btnElement.classList.add('bell-active');
             btnElement.innerText = "⌛...";
             const { error } = await _client.from('reminders').insert([{ from_name: myUsername, to_user_id: targetId }]);
@@ -261,6 +399,7 @@
 
         // 刷新小組戰報
         async function refreshGrid() {
+            const challengeInfo = getChallengeInfo();
             const todayStr = getTodayString();
             const { data: members } = await _client.from('profiles').select('*').eq('group_code', groupCode);
             if (!members) return;
@@ -277,9 +416,11 @@
 
                 const latestLog = logs?.[0];
                 const previousLog = logs?.[1];
-                const hasReportedToday = latestLog && new Date(latestLog.created_at).toLocaleDateString('en-CA') === todayStr;
                 
-                if (hasReportedToday) {
+                // 如果是休息日，不需要檢查報數
+                const hasReportedToday = challengeInfo.isRestDay ? true : (latestLog && new Date(latestLog.created_at).toLocaleDateString('en-CA') === todayStr);
+                
+                if (hasReportedToday && !challengeInfo.isRestDay) {
                     reportCount++;
                     if (m.id === userId) {
                         document.getElementById('myStatusDot').className = "absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm";
@@ -288,18 +429,28 @@
                 return { ...m, latest: latestLog?.weight, previous: previousLog?.weight, hasReportedToday };
             }));
 
-            document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
-            document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
+            // 如果是休息日，進度條顯示100%
+            if (challengeInfo.isRestDay) {
+                document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressText').innerText = `休息日`;
+                document.getElementById('progressMotto').textContent = "💤 休息是為了走更長遠的路";
+            } else {
+                document.getElementById('progressBar').style.width = (reportCount / members.length * 100) + '%';
+                document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
+            }
 
             grid.innerHTML = '';
             results.forEach(m => {
                 const isMe = m.id === userId;
                 let diffHtml = '';
                 
-                const statusColor = m.hasReportedToday ? 'bg-green-500' : 'bg-red-500 status-pulse';
-                const avatarBorder = m.hasReportedToday ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70';
+                const statusColor = challengeInfo.isRestDay ? 'bg-yellow-500' : (m.hasReportedToday ? 'bg-green-500' : 'bg-red-500 status-pulse');
+                const avatarBorder = challengeInfo.isRestDay ? 'border-yellow-400 shadow-yellow-100' : (m.hasReportedToday ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70');
 
-                if (m.hasReportedToday) {
+                if (challengeInfo.isRestDay) {
+                    // 休息日顯示
+                    diffHtml = `<span class="text-[10px] text-yellow-600 font-bold">🏖️ 休息</span>`;
+                } else if (m.hasReportedToday) {
                     if (m.previous) {
                         const diff = (m.latest - m.previous).toFixed(1);
                         diffHtml = diff < 0 ? `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>` : (diff > 0 ? `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>` : `<span class="text-gray-400 text-[10px]">-</span>`);
@@ -319,8 +470,8 @@
                         <div class="absolute -bottom-1 -right-1 w-3 h-3 ${statusColor} rounded-full border-2 border-white shadow-sm"></div>
                     </div>
                     <div class="text-[10px] font-black text-gray-700 truncate w-full text-center mb-0.5">${m.username}${isMe ? ' (我)' : ''}</div>
-                    <div class="text-xs font-black ${m.hasReportedToday ? 'text-blue-600' : 'text-gray-300'}">
-                        ${m.hasReportedToday ? m.latest : '--'}
+                    <div class="text-xs font-black ${challengeInfo.isRestDay ? 'text-yellow-600' : (m.hasReportedToday ? 'text-blue-600' : 'text-gray-300')}">
+                        ${challengeInfo.isRestDay ? '--' : (m.hasReportedToday ? m.latest : '--')}
                     </div>
                     <div class="mt-1">${diffHtml}</div>
                 `;
@@ -331,6 +482,9 @@
         window.onload = async () => {
             if (!userId) { window.location.href = "index.html"; return; }
             
+            // 更新天數顯示
+            updateDayDisplay();
+            
             const { data } = await _client.from('profiles').select('username').eq('id', userId).single();
             if (data) {
                 document.getElementById('displayUsername').innerText = data.username;
@@ -339,10 +493,11 @@
             }
             document.getElementById('groupLabel').innerText = "GROUP: " + groupCode;
 
-            // 如果今天還沒看過資訊，自動彈窗提醒（也可以選擇拿掉這段，僅在報磅後彈窗）
+            // 如果今天還沒看過資訊，自動彈窗提醒
+            const challengeInfo = getChallengeInfo();
             const todayStr = getTodayString();
             const lastSeen = localStorage.getItem('last_seen_info_date');
-            if (lastSeen !== todayStr) {
+            if (lastSeen !== todayStr && !challengeInfo.isRestDay) {
                 localStorage.setItem('last_seen_info_date', todayStr);
                 setTimeout(openModal, 1500);
             }
