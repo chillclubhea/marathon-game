@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>足部健康與全身平衡：A4課程筆記</title>
+    <style>
+        /* A4紙張尺寸樣式 */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        body {
+            font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+            max-width: 210mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+        
+        .a4-container {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20mm;
+            box-sizing: border-box;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        /* 標題和章節樣式 */
+        .course-title {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .main-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #7f8c8d;
+            font-weight: 400;
+            margin-top: 0;
+        }
+        
+        .chapter {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .chapter-title {
+            color: #2c3e50;
+            background-color: #ecf0f1;
+            padding: 12px 15px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            color: #2980b9;
+            border-bottom: 2px dotted #bdc3c7;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        /* 內容樣式 */
+        .content-block {
+            margin-bottom: 15px;
+        }
+        
+        .highlight {
+            background-color: #fffacd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        .quote {
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            color: #2c3e50;
+        }
+        
+        .key-point {
+            background-color: #e8f4fc;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .key-point-title {
+            color: #2980b9;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .number-circle {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        /* 表格樣式 */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .comparison-table th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* 視覺對比區域 */
+        .visual-contrast {
+            background: linear-gradient(to right, #f8f9fa 50%, #e9ecef 50%);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .contrast-item {
+            width: 48%;
+            padding: 15px;
+        }
+        
+        .contrast-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .modern-foot {
+            border-right: 2px dashed #bdc3c7;
+        }
+        
+        /* 行動步驟 */
+        .action-steps {
+            background-color: #f1f8e9;
+            border-left: 4px solid #8bc34a;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .action-title {
+            color: #689f38;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        /* 打印優化 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .a4-container {
+                box-shadow: none;
+                padding: 15mm;
+                width: 100%;
+                min-height: 0;
+                margin: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .chapter {
+                page-break-inside: avoid;
+            }
+        }
+        
+        /* 頁眉頁腳 */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 12px;
+            border-top: 1px solid #ecf0f1;
+            padding-top: 10px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="a4-container">
+        <div class="header">
+            <div>足部健康與全身平衡課程筆記</div>
+            <div>時間：3小時 | 講師：[您的名字]</div>
+        </div>
+        
+        <div class="course-title">
+            <h1 class="main-title">足部健康與全身平衡</h1>
+            <p class="subtitle">從根基覺醒到身心自由的三樂章旅程</p>
+        </div>
+        
+        <div class="chapter">
+            <h2 class="chapter-title">第一章：根基的覺醒（0-60分鐘）</h2>
+            <p class="subtitle">從文字到生命的源頭</p>
+            
+            <div class="section">
+                <h3 class="section-title">0-15分鐘：文字的密碼 - 腳是生命的「本」</h3>
+                
+                <div class="content-block">
+                    <p>「各位，開場前請大家看這張投影片。在漢字裡，『足』字很有意思，上面一個口，代表身體；下面一個止，代表腳趾，也代表停止。這是在告訴我們：<span class="highlight">沒有穩定的『止』，就沒有安定的『身』。</span>」</p>
+                    
+                    <div class="quote">
+                        「在廣東話裡，腳是指整條腿；但在解剖學裡，我們今天要談的是這塊僅佔全身面積 2%，卻擁有全體 1/4 骨頭的精密儀器。為什麼上帝要在這麼小的地方塞進 26 塊骨頭？因為它要支撐 100% 的你，它是你生命的『腳本』。」
+                    </div>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">核心概念：足部即大腦</div>
+                        <p>腳不僅僅是支撐結構，它是身體最豐富的感覺器官之一，每只腳有超過7,000個神經末梢，不斷向大腦發送信息，影響我們的平衡、姿勢和運動控制。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">15-40分鐘：第二心臟與33.8°C的危機</h3>
+                
+                <div class="content-block">
+                    <p>「為什麼我們說腳是第二心臟？心臟把血打下去很容易，但要把血從最遠的末端抽回來，對抗地心引力，全靠腳部肌肉的『泵』。」</p>
+                    
+                    <div class="visual-contrast">
+                        <div class="contrast-item modern-foot">
+                            <div class="contrast-title">現代困境</div>
+                            <p><span class="highlight">33.8°C 是危機</span> - 腳涼，代表循環回不來；回不來，內臟就得不到滋養。</p>
+                            <p>女性的婦科問題、男性的體力衰退，真相往往不在腹部，而在你的鞋子里。</p>
+                        </div>
+                        <div class="contrast-item">
+                            <div class="contrast-title">理想狀態</div>
+                            <p><span class="highlight">36.2°C 是健康</span> - 溫暖的雙腳代表良好的血液循環和內臟功能。</p>
+                            <p>百病從寒起，寒從腳下升。調理腳，其實是在救你的五臟六腑。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">數據揭示真相</div>
+                        <ul>
+                            <li>雙腳骨骼佔全身1/4（52/206塊）</li>
+                            <li>雙腳關節佔全身一半以上</li>
+                            <li>腳部肌肉佔全身1/10</li>
+                            <li>腳有6條經絡，66個穴位</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">40-60分鐘：平地的代價 - 被馴化的野性</h3>
+                
+                <div class="content-block">
+                    <p>「人類進化了幾百萬年，是為了在沙地、礫石、樹根上奔跑。但現在，我們走的是柏油路，穿的是過度保護的皮鞋。這叫『文明的退化』。」</p>
+                    
+                    <p>「當腳不再需要探測路面，它就變笨了；腳變笨了，大腦的皮質激活就會下降。科學家預言未來人類頭會變大、四肢會萎縮。今天，我們要反其道而行，重新找回那份『野性』的支撐。」</p>
+                    
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>原始人類足部</th>
+                                <th>現代人類足部</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>適應複雜地形</td>
+                                <td>僅適應平坦路面</td>
+                            </tr>
+                            <tr>
+                                <td>肌肉發達，靈活性強</td>
+                                <td>肌肉萎縮，僵硬</td>
+                            </tr>
+                            <tr>
+                                <td>腳趾分離，抓地力強</td>
+                                <td>腳趾擠壓，功能受限</td>
+                            </tr>
+                            <tr>
+                                <td>本體感覺敏銳</td>
+                                <td>本體感覺遲鈍</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chapter">
+            <h2 class="chapter-title">第二章：力的精准解碼（60-120分鐘）</h2>
+            <p class="subtitle">50-40-10的生命比例與神經系統的秘密</p>
+            
+            <div class="section">
+                <h3 class="section-title">60-85分鐘：人體的剎車與油門系統</h3>
+                
+                <div class="content-block">
+                    <p>「請記住這三個黃金數字：<span class="highlight">50%、40%、10%</span>。」</p>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">足底壓力黃金比例</div>
+                        <p><span class="number-circle">1</span> 腳後跟承載 <span class="highlight">50%</span>，它是你的剎車系統</p>
+                        <p><span class="number-circle">2</span> 大腳球（第一跖骨）<span class="highlight">40%</span>，它是你的油門系統</p>
+                        <p><span class="number-circle">3</span> 小腳球（第五跖骨）<span class="highlight">10%</span>，它是你的穩定器</p>
+                    </div>
+                    
+                    <p>「現代人的問題是：跟骨短縮了（跟骨內翻）。這意味著你的剎車失靈了。當你站立時重心都在前掌，你的神經系統會判斷你正在『衝刺』或『逃命』。這就是為什麼你明明坐在辦公室，卻莫名焦慮、心跳加速、無法安睡。你不是心態不好，你是腳跟沒落地。」</p>
+                    
+                    <div class="quote">
+                        「跟骨內翻1度 → 距下關節壓力增加12% → 踝關節扭傷風險增加18%」
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">85-105分鐘：當軍姿遇到站樁 - 神經系統的開關</h3>
+                
+                <div class="content-block">
+                    <div class="visual-contrast">
+                        <div class="contrast-item modern-foot">
+                            <div class="contrast-title">軍姿模式（交感神經）</div>
+                            <p><span class="highlight">重心在前掌</span> - 準備戰鬥，隨時啓動</p>
+                            <p>呼吸模式：吸氣主導，胸式呼吸</p>
+                            <p>生理狀態：心跳加速，肌肉緊張，警覺性高</p>
+                            <p>適合場景：短時衝刺，應急反應</p>
+                        </div>
+                        <div class="contrast-item">
+                            <div class="contrast-title">站樁模式（副交感神經）</div>
+                            <p><span class="highlight">重心在腳跟</span> - 放鬆穩定，蓄能恢復</p>
+                            <p>呼吸模式：呼氣主導，腹式呼吸</p>
+                            <p>生理狀態：心跳平緩，肌肉放鬆，內心平靜</p>
+                            <p>適合場景：長期健康，深度修復</p>
+                        </div>
+                    </div>
+                    
+                    <p>「腳後跟站穩 = 呼氣位 = 副交感 = 放鬆。如果你發現自己總是吸氣多、呼氣少，睡眠不好，去看看你的腳底繭。如果老繭都在前掌，說明你這台車已經『空轉』太久了。你的呼吸肌不是用來呼吸的，是用來幫你平衡身體不倒下的。這多累啊！」</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">105-120分鐘：力學連鎖反應 - 上病下治</h3>
+                
+                <div class="content-block">
+                    <p>「很多人頸椎痛、肩周炎，治了一輩子都治不好。因為你的地基歪了。」</p>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">力學的多米諾骨牌效應</div>
+                        <p><span class="highlight">第1塊：</span> 跟骨內翻 → 腳踝不穩</p>
+                        <p><span class="highlight">第2塊：</span> 小腿肌肉緊張代償 → 膝關節壓力增大</p>
+                        <p><span class="highlight">第3塊：</span> 大腿旋轉 → 骨盆傾斜</p>
+                        <p><span class="highlight">第4塊：</span> 脊柱側彎/旋轉 → 肩頸不平衡</p>
+                        <p><span class="highlight">第5塊：</span> 頭部前傾 → 頸椎壓力倍增</p>
+                    </div>
+                    
+                    <p>「這就是『樹有多高，根有多深』。我們今天不治脖子，我們要從這26塊骨頭裡，把你的頸椎『救』回來。」</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chapter">
+            <h2 class="chapter-title">第三章：重塑與自由（120-180分鐘）</h2>
+            <p class="subtitle">從扎根到向上生長</p>
+            
+            <div class="section">
+                <h3 class="section-title">120-150分鐘：現場診斷 - 魔術時刻</h3>
+                
+                <div class="content-block">
+                    <p>「（邀請一位頸椎受限的學員）來，我們現場測試。你看，這位同學的跟腱是直挺挺的，沒有弧度。現在你站著轉頭，卡住了對嗎？」</p>
+                    
+                    <div class="action-steps">
+                        <div class="action-title">「遠端調遠端」操作步驟：</div>
+                        <p><span class="number-circle">1</span> 觀察：跟腱垂直，無自然弧度</p>
+                        <p><span class="number-circle">2</span> 測試：站立位頸部旋轉角度受限</p>
+                        <p><span class="number-circle">3</span> 干預：手法鬆動跟骨 + 膝蓋外旋位</p>
+                        <p><span class="number-circle">4</span> 結果：重心回到內側，頸部旋轉立即改善</p>
+                    </div>
+                    
+                    <p>「大家看，我只是調整了他的跟骨，讓他的重心回到內側。現在再請你轉頭——是不是松開了？這就是『遠端調遠端』。你的脖子沒病，是你的腳在『害』你的頸椎。」</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">150-170分鐘：實操教學 - 拿回控制權</h3>
+                
+                <div class="content-block">
+                    <p>「我們要練習三個動作，每天10分鐘，重塑你的根基：」</p>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">動作一：槓桿復位</div>
+                        <p>目的：利用膝蓋外旋把跟骨拉出來，恢復自然弧度</p>
+                        <p>方法：坐姿，用手固定跟骨外側，膝蓋上抬並外旋，感受跟骨向外移動</p>
+                        <p>頻率：每側10次，每天2-3組</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">動作二：踩磚下蹲</div>
+                        <p>目的：強迫壓力回到腳跟內側，激活「穩定模式」</p>
+                        <p>方法：腳跟內側踩在磚塊或厚書上，外側懸空，緩慢下蹲</p>
+                        <p>頻率：每次保持30秒，重復5次</p>
+                    </div>
+                    
+                    <div class="key-point">
+                        <div class="key-point-title">動作三：腳跟行走</div>
+                        <p>目的：像古人站樁一樣，強化50%的剎車片</p>
+                        <p>方法：踮起腳尖，只用腳後跟走路，手臂自然擺動</p>
+                        <p>頻率：每次走2-3分鐘，每天2次</p>
+                    </div>
+                    
+                    <div class="quote">
+                        「這不是在練體力，是在教你的大腦：『嘿，這裡有支撐，你可以放鬆了。』」
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title">170-180分鐘：昇華結語 - 站穩腳跟的底氣</h3>
+                
+                <div class="content-block">
+                    <p>「三小時很快，但這份覺醒是終身的。」</p>
+                    
+                    <div class="quote">
+                        「古語說『站穩腳跟』。這不只是一個成語，這是一個生理事實。當你的腳跟落地，你的氣才能沈到丹田，你的大腦才能真正安靜下來。在這個浮躁的時代，每個人都想衝得更快，卻忘了如何停下來。向下扎根，你才能無所畏懼地向上生長。」
+                    </div>
+                    
+                    <div class="action-steps">
+                        <div class="action-title">課程後行動承諾：</div>
+                        <p>1. 每天早晨測量腳溫，記錄變化</p>
+                        <p>2. 每天完成10分鐘足部喚醒練習（三個動作）</p>
+                        <p>3. 每周至少一次赤腳在自然地面（草地、沙灘）行走</p>
+                        <p>4. 觀察並調整站立和行走時的重心位置</p>
+                    </div>
+                    
+                    <p class="highlight" style="text-align: center; font-size: 18px; padding: 15px; background-color: #e8f4fc; border-radius: 8px; margin-top: 20px;">
+                        願我們每一步都踏實，每一息都自在。
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>「呼吸與足踝」線上課程 | 價格：$118 </p>
+            <p>© 2023 身體主權學院 | 本筆記僅供課程學員使用</p>
+            <p class="no-print">提示：按 Ctrl+P 可打印此筆記（A4格式）</p>
+        </div>
+    </div>
+    
+    <script>
+        // 添加簡單的交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 為所有關鍵點添加點擊效果
+            const keyPoints = document.querySelectorAll('.key-point');
+            keyPoints.forEach(point => {
+                point.addEventListener('click', function() {
+                    this.style.backgroundColor = this.style.backgroundColor === 'rgb(232, 244, 252)' ? '#f1f8e9' : '#e8f4fc';
+                });
+            });
+            
+            // 打印提示
+            console.log('如需打印此筆記，請使用Ctrl+P或前往文件菜單選擇打印。');
+        });
+    </script>
+</body>
+</html>
