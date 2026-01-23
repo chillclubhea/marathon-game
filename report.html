@@ -11,7 +11,6 @@
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'PingFang TC', sans-serif; }
         input { user-select: auto; }
-        
         .modal-overlay { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); transition: all 0.3s ease; }
         .modal-content { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .modal-hidden { opacity: 0; pointer-events: none; }
@@ -36,13 +35,10 @@
             0% { background-color: rgba(59, 130, 246, 0.1); }
             100% { background-color: transparent; }
         }
-        .highlight-update {
-            animation: highlight 2s ease-in-out;
-        }
+        .highlight-update { animation: highlight 2s ease-in-out; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen p-4 pb-20">
-
     <!-- 挑戰天數顯示區域 -->
     <div class="max-w-md mx-auto mb-4">
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-blue-100">
@@ -52,20 +48,14 @@
                         <span class="text-lg font-black text-indigo-600">DAY</span>
                         <span id="currentDay" class="text-2xl font-black text-gray-800">--</span>
                     </div>
-                    <div id="dayStatusBadge" class="text-xs px-3 py-1 rounded-full font-bold">
-                        <!-- 狀態標籤會動態顯示 -->
-                    </div>
+                    <div id="dayStatusBadge" class="text-xs px-3 py-1 rounded-full font-bold"></div>
                 </div>
                 <div class="flex items-center gap-1">
                     <span id="sessionBadge" class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-bold"></span>
                     <span id="totalDays" class="text-sm text-gray-500">/ 10 天</span>
                 </div>
             </div>
-            
-            <div id="dayMessage" class="text-xs text-gray-600 font-medium mt-2">
-                <!-- 動態顯示今日訊息 -->
-            </div>
-            
+            <div id="dayMessage" class="text-xs text-gray-600 font-medium mt-2"></div>
             <div class="mt-3 pt-3 border-t border-gray-100">
                 <div class="flex justify-between text-xs text-gray-500">
                     <span>本期開始：<span id="sessionStartDate" class="font-medium"></span></span>
@@ -109,22 +99,21 @@
                 </div>
                 <h2 id="displayUsername" class="text-xl font-black text-gray-800 tracking-tight">載入中...</h2>
             </div>
-            
             <div class="space-y-4">
                 <div class="relative">
                     <input type="number" id="currentWeight" step="0.1" inputmode="decimal" class="block w-full text-center text-4xl font-black border-2 border-gray-100 rounded-2xl py-5 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none transition-all placeholder:text-gray-200" placeholder="00.0">
                     <span class="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 font-bold">kg</span>
                 </div>
-                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-all">送出數據並看知識</button>
+                <button onclick="submitWeight()" id="btnSubmit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed">送出數據並看知識</button>
             </div>
-            <div id="statusMsg" class="mt-4 text-center text-sm"></div>
+            <div id="statusMsg" class="mt-4 text-center text-sm min-h-[1.5rem]"></div>
         </div>
 
         <div class="mb-4 flex justify-between items-center px-1">
             <h3 class="text-lg font-black text-gray-800 tracking-tight">🏆 小組戰報</h3>
             <div class="flex gap-2">
                 <span id="groupLabel" class="text-[10px] bg-blue-100 text-blue-600 px-2 py-1 rounded-lg font-bold"></span>
-                <button onclick="refreshGrid()" class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-1">
+                <button onclick="refreshGrid(true)" class="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition flex items-center gap-1 disabled:opacity-50" id="refreshButton">
                     <span>🔄 刷新</span>
                     <span id="lastUpdateTime" class="text-[8px]">剛剛</span>
                 </button>
@@ -138,8 +127,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- 即時更新通知 -->
         <div id="realtimeAlert" class="mt-3 hidden">
             <div class="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
                 <div class="text-green-600 text-xs font-bold flex items-center justify-center gap-2">
@@ -155,21 +142,15 @@
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl modal-content">
             <div class="relative p-8 text-center">
                 <div class="inline-flex items-center bg-blue-600 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest mb-6">
-                    第 <span id="modalSession">--</span> 期 | DAY <span id="modalDay" class="ml-1">--</span> 
+                    第 <span id="modalSession">--</span> 期 | DAY <span id="modalDay" class="ml-1">--</span>
                 </div>
-                
                 <h3 id="modalTitle" class="text-2xl font-black text-gray-800 mb-4 leading-tight"></h3>
-                
-                <div id="modalImage" class="mb-6 rounded-2xl overflow-hidden shadow-sm aspect-video bg-gray-100 flex items-center justify-center text-gray-400">
-                </div>
-
+                <div id="modalImage" class="mb-6 rounded-2xl overflow-hidden shadow-sm aspect-video bg-gray-100 flex items-center justify-center text-gray-400"></div>
                 <p id="modalText" class="text-gray-600 text-sm leading-relaxed mb-8 text-left"></p>
-                
                 <div class="bg-blue-50 p-5 rounded-2xl border-l-4 border-blue-400 mb-8 text-left">
                     <p class="text-[10px] font-black text-blue-600 uppercase tracking-wider mb-1">💡 COACH TIPS</p>
                     <p id="modalTips" class="text-xs text-blue-800 font-bold leading-normal"></p>
                 </div>
-
                 <button onclick="closeModal()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl active:scale-95 transition-all shadow-lg">
                     我知道了，繼續加油
                 </button>
@@ -178,245 +159,217 @@
     </div>
 
     <script>
+        // ==================== 配置與初始化 ====================
         const MY_SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const MY_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         const { createClient } = supabase;
-        const _client = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
+        const supabaseClient = createClient(MY_SUPABASE_URL, MY_SUPABASE_KEY);
 
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
-        
-        // 改為每期10天，第7天為休息日
         const CHALLENGE_DURATION = 10;
-        const REST_DAYS = [7];
+
         let myUsername = "我";
         let realtimeSubscription = null;
+        let appState = {
+            isRefreshing: false,
+            lastGridUpdate: 0,
+            memberCache: null,
+            challengeInfo: null
+        };
 
-        // --- 健康知識資料庫（改為10天）---
+        // 健康知識資料庫
         const DAILY_CONTENT = {
             1: { title: "🌱 啟動細胞營養", content: "減重 80% 靠營養。今天起我們用「三杯水」開啟代謝：蘆薈汁清、草本茶調、奶昔補。", tips: "早起先喝 3 瓶蓋蘆薈汁兌水，喚醒腸道吸收力！", img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400" },
             2: { title: "🌙 睡眠竟然也能瘦？", content: "熬夜會分泌皮質醇，囤積腹部脂肪。乖乖睡覺會分泌「瘦體素」，幫你自動燒脂。", tips: "晚上 11 點前請放下手機，睡滿 7 小時。", img: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=400" },
             3: { title: "💧 水是脂肪搬運工", content: "沒有水，脂肪就排不出去。水分充足時，大腦才會下令啟動能量代謝。", tips: "今天目標：喝足 3000cc 水分！", img: "https://images.unsplash.com/photo-1523362628744-4cdd05167aa2?auto=format&fit=crop&w=400" },
             4: { title: "🍎 認識「偽食慾」", content: "大腦有時分不清楚渴與餓。想吃甜點時，通常只是身體缺水或缺營養了。", tips: "想吃零食前，先喝 200ml 水並等 10 分鐘。", img: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=400" },
             5: { title: "💩 腸道排毒日", content: "排便不順體重會卡關。纖維粉是腸道的掃把，能帶走宿便與油脂。", tips: "今天可以在奶昔中多加一匙活動纖維粉。", img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=400" },
-            6: { title: "🥩 蛋白質的魔力", content: "蛋白質是肌肉的原料，更是提升「基礎代謝率」的關鍵。攝取不足會讓身體流失肌肉，導致復胖。", tips: "每餐確保有一份掌心大小的優質蛋白（如：雞蛋、豆漿、優質蛋白粉）。", img: "https://images.unsplash.com/photo-1558163351-db445733553d?auto=format&fit=crop&w=400" },
+            6: { title: "🥩 蛋白質的魔力", content: "蛋白質是肌肉的原料，更是提升「基礎代謝率」的關鍵。攝取不足會讓身體流失肌肉，導致復胖。", tips: "每餐確保有一份掌心大小的優質蛋白（如：雞蛋、豆漿、優質蛋白粉）。", img: "https://images.unsplash.com/photo-1558163351-db445733553d?auto=format&rop&w=400" },
             7: { title: "🧂 隱形的體重殺手", content: "太鹹的食物會導致「鈉滯留」，讓身體儲存過多水分，這就是為什麼有時吃完大餐隔天體重暴增的原因。", tips: "今天嘗試「清淡飲食」，減少加工醬料，多吃原型蔬菜排鈉。", img: "https://images.unsplash.com/photo-1506084868730-342b1f852e0d?auto=format&fit=crop&w=400" },
             8: { title: "🔥 間歇性的小運動", content: "不需要長時間激烈運動，每天快走 15 分鐘或爬樓梯，就能有效啟動血液循環，幫助燃脂效果加倍。", tips: "今天請給自己 15 分鐘，動動身體流點汗吧！", img: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=400" },
             9: { title: "🧘‍♀️ 壓力與脂肪的關係", content: "壓力大時會產生壓力荷爾蒙，這會傾向於將脂肪囤積在腹部。學習放鬆也是減重的一部分。", tips: "今天深呼吸 5 分鐘，或者找隊友吐苦水，保持心情愉快！", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=400" },
             10: { title: "🎉 第一期完成！", content: "恭喜完成10天挑戰！無論結果如何，你都建立了更健康的習慣，這是無價的資產。", tips: "給自己一個小獎勵，並準備好迎接下一期的挑戰！", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400" }
         };
 
-        // --- 修正的天數計算邏輯 ---
+        // ==================== 工具函數 ====================
+        function formatDate(date) {
+            return `${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+
         function getChallengeInfo() {
+            if (appState.challengeInfo) {
+                return appState.challengeInfo;
+            }
+
             const today = new Date();
             const year = today.getFullYear();
-            const month = today.getMonth() + 1; // 1-12
-            const day = today.getDate(); // 1-31
-            
-            // 計算本期開始日（每個月1號和16號）
-            let sessionStart;
-            let sessionNumber;
-            let dayInSession;
-            
-            // 判斷今天是屬於哪一期
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+
+            let result = {
+                isOffPeriod: true,
+                currentDate: today,
+                dayInSession: 0,
+                sessionNumber: 0,
+                sessionStart: null,
+                sessionEnd: null,
+                nextSessionStart: null,
+                isRestDay: false,
+                isLastDay: false,
+                message: "間隔期，無挑戰"
+            };
+
             if (day >= 1 && day <= 10) {
-                // 屬於1號開始的這一期
-                sessionStart = new Date(year, month - 1, 1);
-                dayInSession = day; // 1號是第1天
-                // 計算期數：每個月有2期，從2026年1月開始
+                result.sessionStart = new Date(year, month - 1, 1);
+                result.dayInSession = day;
                 const baseYear = 2026;
                 const baseMonth = 1;
                 const monthsSinceBase = (year - baseYear) * 12 + (month - baseMonth);
-                sessionNumber = monthsSinceBase * 2; // 每月的第一期
-            } else if (day >= 11 && day <= 15) {
-                // 這5天是間隔期，沒有挑戰
-                return {
-                    isOffPeriod: true,
-                    currentDate: today,
-                    dayInSession: 0,
-                    message: "間隔期，無挑戰"
-                };
+                result.sessionNumber = monthsSinceBase * 2;
+                result.isOffPeriod = false;
             } else if (day >= 16 && day <= 25) {
-                // 屬於16號開始的這一期
-                sessionStart = new Date(year, month - 1, 16);
-                dayInSession = day - 15; // 16號是第1天，所以17號是第2天，21號是第6天
+                result.sessionStart = new Date(year, month - 1, 16);
+                result.dayInSession = day - 15;
                 const baseYear = 2026;
                 const baseMonth = 1;
                 const monthsSinceBase = (year - baseYear) * 12 + (month - baseMonth);
-                sessionNumber = monthsSinceBase * 2 + 1; // 每月的第二期
-            } else if (day >= 26 && day <= 31) {
-                // 這幾天是間隔期，沒有挑戰
-                return {
-                    isOffPeriod: true,
-                    currentDate: today,
-                    dayInSession: 0,
-                    message: "間隔期，無挑戰"
-                };
+                result.sessionNumber = monthsSinceBase * 2 + 1;
+                result.isOffPeriod = false;
             }
-            
-            // 計算本期結束日（開始日+9天）
-            const sessionEnd = new Date(sessionStart);
-            sessionEnd.setDate(sessionStart.getDate() + 9);
-            
-            // 計算下期開始日
-            let nextSessionStart;
-            if (sessionStart.getDate() === 1) {
-                // 如果本期是1號開始，下期就是16號
-                nextSessionStart = new Date(year, month - 1, 16);
-            } else {
-                // 如果本期是16號開始，下期就是下個月1號
-                if (month === 12) {
-                    nextSessionStart = new Date(year + 1, 0, 1);
+
+            if (!result.isOffPeriod) {
+                result.sessionEnd = new Date(result.sessionStart);
+                result.sessionEnd.setDate(result.sessionStart.getDate() + 9);
+                if (result.sessionStart.getDate() === 1) {
+                    result.nextSessionStart = new Date(year, month - 1, 16);
                 } else {
-                    nextSessionStart = new Date(year, month, 1);
+                    result.nextSessionStart = new Date(month === 12 ? year + 1 : year, month === 12 ? 0 : month, 1);
                 }
+                result.isRestDay = result.dayInSession === 7;
+                result.isLastDay = result.dayInSession === 10;
+                result.message = null;
             }
-            
-            // 檢查是否為休息日（第7天）
-            const isRestDay = dayInSession === 7;
-            const isLastDay = dayInSession === 10;
-            
-            return {
-                dayInSession: dayInSession,
-                sessionNumber: sessionNumber,
-                sessionStart: sessionStart,
-                sessionEnd: sessionEnd,
-                nextSessionStart: nextSessionStart,
-                isRestDay: isRestDay,
-                isLastDay: isLastDay,
-                isOffPeriod: false,
-                currentDate: today
-            };
+
+            appState.challengeInfo = result;
+            return result;
         }
 
-        // --- 更新日期顯示 ---
-        function updateDayDisplay() {
-            const challengeInfo = getChallengeInfo();
-            const dayElement = document.getElementById('currentDay');
-            const totalDaysElement = document.getElementById('totalDays');
-            const badgeElement = document.getElementById('dayStatusBadge');
-            const messageElement = document.getElementById('dayMessage');
-            const sessionBadgeElement = document.getElementById('sessionBadge');
-            const sessionStartDateElement = document.getElementById('sessionStartDate');
-            const sessionEndDateElement = document.getElementById('sessionEndDate');
-            const nextSessionStartElement = document.getElementById('nextSessionStart');
-            
-            // 如果是間隔期，顯示特殊訊息
-            if (challengeInfo.isOffPeriod) {
-                dayElement.textContent = '--';
-                totalDaysElement.textContent = `/ ${CHALLENGE_DURATION} 天`;
-                badgeElement.textContent = "間隔期";
-                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-gray-100 text-gray-800";
-                messageElement.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-gray-500">⏸️</span>
-                        <span>當前是間隔期，好好休息，下期再戰！</span>
-                    </div>
-                `;
-                sessionBadgeElement.textContent = "間隔期";
-                sessionStartDateElement.textContent = "--";
-                sessionEndDateElement.textContent = "--";
-                nextSessionStartElement.textContent = "--";
-                
-                // 禁用輸入框和按鈕
-                document.getElementById('currentWeight').disabled = true;
-                document.getElementById('btnSubmit').disabled = true;
-                document.getElementById('btnSubmit').innerText = "間隔期";
-                return;
-            }
-            
-            // 啟用輸入框和按鈕
-            document.getElementById('currentWeight').disabled = false;
-            document.getElementById('btnSubmit').disabled = false;
-            document.getElementById('btnSubmit').innerText = "送出數據並看知識";
-            
-            // 更新天數顯示
-            dayElement.textContent = challengeInfo.dayInSession;
-            totalDaysElement.textContent = `/ ${CHALLENGE_DURATION} 天`;
-            
-            // 更新日期區間
-            const formatDate = (date) => {
-                return `${date.getMonth() + 1}月${date.getDate()}日`;
-            };
-            
-            sessionStartDateElement.textContent = formatDate(challengeInfo.sessionStart);
-            sessionEndDateElement.textContent = formatDate(challengeInfo.sessionEnd);
-            nextSessionStartElement.textContent = formatDate(challengeInfo.nextSessionStart);
-            
-            // 更新期數標籤
-            sessionBadgeElement.textContent = `第 ${challengeInfo.sessionNumber} 期`;
-            
-            // 根據狀態更新標籤和訊息
-            if (challengeInfo.isRestDay) {
-                badgeElement.textContent = "休息日";
-                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-yellow-100 text-yellow-800";
-                messageElement.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-yellow-500">🏖️</span>
-                        <span>今天是休息日，可以放鬆一下，也可以繼續記錄體重！</span>
-                    </div>
-                `;
-            } else if (challengeInfo.isLastDay) {
-                badgeElement.textContent = "最後一天";
-                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-purple-100 text-purple-800";
-                messageElement.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-purple-500">🎉</span>
-                        <span>恭喜完成本期挑戰！下期從 ${formatDate(challengeInfo.nextSessionStart)} 開始！</span>
-                    </div>
-                `;
-            } else {
-                badgeElement.textContent = "挑戰中";
-                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-green-100 text-green-800";
-                messageElement.innerHTML = `
-                    <div class="flex items-center gap-2">
-                        <span class="text-green-500">🔥</span>
-                        <span>持續努力，離目標越來越近了！</span>
-                    </div>
-                `;
-            }
-        }
-
-        // --- 更新最後更新時間 ---
         function updateLastUpdateTime() {
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-TW', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
             document.getElementById('lastUpdateTime').textContent = timeStr;
         }
 
-        // --- 彈窗控制 ---
-        function openModal() {
-            const challengeInfo = getChallengeInfo();
-            
-            // 如果是間隔期，不顯示知識彈窗
-            if (challengeInfo.isOffPeriod) {
-                return;
-            }
-            
-            const dayInSession = challengeInfo.dayInSession;
-            const data = DAILY_CONTENT[dayInSession] || { 
-                title: "持續加油！", 
-                content: "每一天的堅持都是為了更棒的體態。", 
-                tips: "保持記錄，你正走在正確的道路上。", 
-                img: "" 
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('statusMsg');
+            statusEl.innerHTML = '';
+            const colors = {
+                success: 'text-green-600',
+                error: 'text-red-600',
+                info: 'text-blue-600'
             };
-            
-            document.getElementById('modalSession').textContent = challengeInfo.sessionNumber;
-            document.getElementById('modalDay').innerText = dayInSession;
-            document.getElementById('modalTitle').innerText = data.title;
-            document.getElementById('modalText').innerText = data.content;
-            document.getElementById('modalTips').innerText = data.tips;
-            
-            const imgBox = document.getElementById('modalImage');
-            if (data.img) {
-                imgBox.innerHTML = `<img src="${data.img}" class="w-full h-full object-cover rounded-xl">`;
+            const color = colors[type] || colors.info;
+            statusEl.className = `mt-4 text-center text-sm min-h-[1.5rem] ${color}`;
+            statusEl.textContent = message;
+            if (type === 'success') {
+                setTimeout(() => { statusEl.textContent = ''; }, 3000);
+            }
+        }
+
+        function showRealtimeAlert(message) {
+            const alertElement = document.getElementById('realtimeAlert');
+            const span = alertElement.querySelector('span');
+            if (span) span.textContent = message || "小組戰報已更新！";
+            alertElement.classList.remove('hidden');
+            setTimeout(() => { alertElement.classList.add('hidden'); }, 3000);
+        }
+
+        // ==================== 日期與倒數計時 ====================
+        function updateDayDisplay() {
+            const ci = getChallengeInfo();
+            document.getElementById('currentDay').textContent = ci.isOffPeriod ? '--' : ci.dayInSession;
+            document.getElementById('totalDays').textContent = `/ ${CHALLENGE_DURATION} 天`;
+
+            const badgeElement = document.getElementById('dayStatusBadge');
+            const messageElement = document.getElementById('dayMessage');
+            const weightInput = document.getElementById('currentWeight');
+            const submitBtn = document.getElementById('btnSubmit');
+
+            if (ci.isOffPeriod) {
+                badgeElement.textContent = "間隔期";
+                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-gray-100 text-gray-800";
+                messageElement.innerHTML = `<div class="flex items-center gap-2"><span class="text-gray-500">⏸️</span><span>當前是間隔期，好好休息，下期再戰！</span></div>`;
+                weightInput.disabled = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "間隔期";
             } else {
-                imgBox.innerHTML = `<div class="text-center"><span class="text-4xl mb-2">📚</span><br><span>第 ${challengeInfo.sessionNumber} 期 第 ${dayInSession} 天</span></div>`;
+                weightInput.disabled = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = "送出數據並看知識";
+
+                if (ci.isRestDay) {
+                    badgeElement.textContent = "休息日";
+                    badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-yellow-100 text-yellow-800";
+                    messageElement.innerHTML = `<div class="flex items-center gap-2"><span class="text-yellow-500">🏖️</span><span>今天是休息日，可以放鬆一下，也可以繼續記錄體重！</span></div>`;
+                } else if (ci.isLastDay) {
+                    badgeElement.textContent = "最後一天";
+                    badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-purple-100 text-purple-800";
+                    messageElement.innerHTML = `<div class="flex items-center gap-2"><span class="text-purple-500">🎉</span><span>恭喜完成本期挑戰！下期從 ${formatDate(ci.nextSessionStart)} 開始！</span></div>`;
+                } else {
+                    badgeElement.textContent = "挑戰中";
+                    badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-green-100 text-green-800";
+                    messageElement.innerHTML = `<div class="flex items-center gap-2"><span class="text-green-500">🔥</span><span>持續努力，離目標越來越近了！</span></div>`;
+                }
             }
 
+            document.getElementById('sessionBadge').textContent = ci.isOffPeriod ? "間隔期" : `第 ${ci.sessionNumber} 期`;
+            document.getElementById('sessionStartDate').textContent = ci.sessionStart ? formatDate(ci.sessionStart) : "--";
+            document.getElementById('sessionEndDate').textContent = ci.sessionEnd ? formatDate(ci.sessionEnd) : "--";
+            document.getElementById('nextSessionStart').textContent = ci.nextSessionStart ? formatDate(ci.nextSessionStart) : "--";
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const deadline = new Date();
+            deadline.setHours(23, 59, 59, 999);
+            const diff = deadline - now;
+            const countdownElement = document.getElementById('countdownText');
+            if (diff <= 0) {
+                countdownElement.textContent = "今日報數截止";
+                return;
+            }
+            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+            countdownElement.textContent = `截止倒數 ${h}:${m}:${s}`;
+        }
+
+        // ==================== 彈窗控制 ====================
+        function openModal() {
+            const ci = getChallengeInfo();
+            if (ci.isOffPeriod) return;
+
+            const day = ci.dayInSession;
+            const data = DAILY_CONTENT[day] || {
+                title: "持續加油！",
+                content: "每一天的堅持都是為了更棒的體態。",
+                tips: "保持記錄，你正走在正確的道路上。",
+                img: ""
+            };
+
+            document.getElementById('modalSession').textContent = ci.sessionNumber;
+            document.getElementById('modalDay').textContent = day;
+            document.getElementById('modalTitle').textContent = data.title;
+            document.getElementById('modalText').textContent = data.content;
+            document.getElementById('modalTips').textContent = data.tips;
+
+            const imgBox = document.getElementById('modalImage');
+            if (data.img) {
+                imgBox.innerHTML = `<img src="${data.img}" class="w-full h-full object-cover rounded-xl" alt="${data.title}">`;
+            } else {
+                imgBox.innerHTML = `<div class="text-center"><span class="text-4xl mb-2">📚</span><br><span>第 ${ci.sessionNumber} 期 第 ${day} 天</span></div>`;
+            }
             document.getElementById('infoModal').classList.remove('modal-hidden');
         }
 
@@ -424,166 +377,352 @@
             document.getElementById('infoModal').classList.add('modal-hidden');
         }
 
-        // --- 倒數計時 ---
-        function updateCountdown() {
-            const now = new Date();
-            const deadline = new Date();
-            deadline.setHours(23, 59, 59, 999);
-            const diff = deadline - now;
-            if (diff <= 0) {
-                document.getElementById('countdownText').innerText = "今日報數截止";
-                return;
-            }
-            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            document.getElementById('countdownText').innerText = `截止倒數 ${h}:${m}:${s}`;
-        }
-        setInterval(updateCountdown, 1000);
-
-        // --- 送出體重（休息日和間隔期也可以上傳）---
+        // ==================== 核心數據操作 ====================
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
-            if (!weightVal) {
-                alert("請輸入體重數據！");
+            if (!weightVal || isNaN(parseFloat(weightVal))) {
+                showStatus("請輸入有效的體重數據！", "error");
                 return;
             }
-            
+
             const btn = document.getElementById('btnSubmit');
             btn.disabled = true;
-            btn.innerText = "上傳中...";
+            btn.textContent = "上傳中...";
+            showStatus("正在提交數據...", "info");
 
             try {
-                const { error } = await _client.from('weight_logs').insert([{ 
-                    user_id: userId, 
-                    weight: parseFloat(weightVal)
-                }]);
-                
+                const { error } = await supabaseClient
+                    .from('weight_logs')
+                    .insert([{ user_id: userId, weight: parseFloat(weightVal) }]);
+
                 if (error) throw error;
-                
-                document.getElementById('statusMsg').innerHTML = `<div class="text-green-600 font-bold animate-bounce">✅ 報數成功！</div>`;
+
+                showStatus("✅ 報數成功！", "success");
                 document.getElementById('currentWeight').value = '';
-                
-                // 立即更新自己的顯示
-                await refreshGrid();
-                
-                // 通知其他成員（透過即時訂閱會自動更新）
+                document.getElementById('myStatusDot').className = "absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm";
+
+                await refreshGrid(true);
                 showRealtimeAlert("你的體重數據已更新！");
-                
-                // 只有在挑戰期且非休息日顯示知識彈窗
-                const challengeInfo = getChallengeInfo();
-                if (!challengeInfo.isOffPeriod && !challengeInfo.isRestDay) {
+
+                const ci = getChallengeInfo();
+                if (!ci.isOffPeriod && !ci.isRestDay) {
                     setTimeout(openModal, 500);
                 }
             } catch (error) {
                 console.error("報數失敗:", error);
-                alert("報數失敗，請檢查網路連線！");
+                showStatus("❌ 報數失敗，請檢查網路或稍後重試", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "送出數據並看知識";
             }
-            
-            btn.disabled = false;
-            btn.innerText = "送出數據並看知識";
         }
 
-        // --- 顯示即時更新通知 ---
-        function showRealtimeAlert(message) {
-            const alertElement = document.getElementById('realtimeAlert');
-            alertElement.classList.remove('hidden');
-            alertElement.querySelector('span').textContent = message || "小組戰報已更新！";
-            
-            setTimeout(() => {
-                alertElement.classList.add('hidden');
-            }, 3000);
-        }
-
-        // --- 提醒隊友 ---
         async function sendReminder(targetId, btnElement) {
-            const challengeInfo = getChallengeInfo();
-            if (challengeInfo.isOffPeriod) {
+            const ci = getChallengeInfo();
+            if (ci.isOffPeriod) {
                 alert("當前是間隔期，讓隊友好好休息吧！");
                 return;
             }
-            
+
+            if (btnElement.textContent !== "🔔 催一下") return;
+
+            const originalText = btnElement.innerHTML;
             btnElement.classList.add('bell-active');
-            btnElement.innerText = "⌛...";
-            
+            btnElement.innerHTML = '⌛...';
+            btnElement.disabled = true;
+
             try {
-                const { error } = await _client.from('reminders').insert([{ 
-                    from_name: myUsername, 
-                    to_user_id: targetId
-                }]);
-                
-                if(error) throw error;
-                
-                btnElement.innerText = "✅ 已提醒";
+                const { error } = await supabaseClient
+                    .from('reminders')
+                    .insert([{ from_name: myUsername, to_user_id: targetId }]);
+
+                if (error) throw error;
+
+                btnElement.innerHTML = '✅ 已提醒';
                 setTimeout(() => {
                     btnElement.classList.remove('bell-active');
-                    btnElement.innerText = "🔔 催一下";
+                    btnElement.innerHTML = originalText;
+                    btnElement.disabled = false;
                 }, 1500);
             } catch (error) {
-                btnElement.innerText = "❌ 失敗";
+                console.error("提醒失敗:", error);
+                btnElement.innerHTML = '❌ 失敗';
                 setTimeout(() => {
                     btnElement.classList.remove('bell-active');
-                    btnElement.innerText = "🔔 催一下";
+                    btnElement.innerHTML = originalText;
+                    btnElement.disabled = false;
                 }, 1500);
             }
         }
 
-        // --- 檢查提醒 ---
+        // ==================== 小組戰報渲染 ====================
+        async function refreshGrid(force = false) {
+            const GRID_CACHE_DURATION = 10000;
+            const now = Date.now();
+
+            if (!force && appState.isRefreshing) {
+                console.log('刷新操作進行中，跳過');
+                return;
+            }
+
+            if (!force && (now - appState.lastGridUpdate < GRID_CACHE_DURATION) && appState.memberCache) {
+                console.log('使用緩存數據');
+                renderMemberGrid(appState.memberCache);
+                return;
+            }
+
+            appState.isRefreshing = true;
+            appState.lastGridUpdate = now;
+            const refreshBtn = document.getElementById('refreshButton');
+            if (refreshBtn) refreshBtn.disabled = true;
+
+            const grid = document.getElementById('gridContainer');
+            grid.innerHTML = `<div class="col-span-3 flex items-center justify-center"><div class="text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div><div class="text-gray-500 text-sm">載入中...</div></div></div>`;
+
+            try {
+                // 1. 獲取小組成員
+                const { data: members, error: membersError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('group_code', groupCode);
+
+                if (membersError) throw membersError;
+                if (!members || members.length === 0) {
+                    grid.innerHTML = `<div class="col-span-3 text-center p-8"><div class="text-gray-500">小組還沒有成員</div></div>`;
+                    appState.memberCache = null;
+                    return;
+                }
+
+                const memberIds = members.map(m => m.id);
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+                // 2. 並行查詢今日和昨日體重
+                const [
+                    { data: todayWeights, error: todayError },
+                    { data: yesterdayWeights, error: yesterdayError }
+                ] = await Promise.all([
+                    supabaseClient
+                        .from('weight_logs')
+                        .select('user_id, weight, created_at')
+                        .in('user_id', memberIds)
+                        .gte('created_at', todayStr + 'T00:00:00')
+                        .lte('created_at', todayStr + 'T23:59:59')
+                        .order('created_at', { ascending: false }),
+                    supabaseClient
+                        .from('weight_logs')
+                        .select('user_id, weight')
+                        .in('user_id', memberIds)
+                        .gte('created_at', yesterdayStr + 'T00:00:00')
+                        .lte('created_at', yesterdayStr + 'T23:59:59')
+                ]);
+
+                if (todayError) throw todayError;
+                if (yesterdayError) console.warn("獲取昨日體重失敗（可忽略）:", yesterdayError);
+
+                // 3. 建立查找表並處理數據
+                const todayMap = {};
+                const yesterdayMap = {};
+                todayWeights?.forEach(log => {
+                    if (!todayMap[log.user_id] || new Date(log.created_at) > new Date(todayMap[log.user_id].created_at)) {
+                        todayMap[log.user_id] = log;
+                    }
+                });
+                yesterdayWeights?.forEach(log => { yesterdayMap[log.user_id] = log; });
+
+                let reportCount = 0;
+                const processedMembers = members.map(member => {
+                    const todayLog = todayMap[member.id];
+                    const yesterdayLog = yesterdayMap[member.id];
+                    const hasReported = !!todayLog;
+                    const latestWeight = todayLog?.weight;
+                    const previousWeight = yesterdayLog?.weight;
+
+                    if (hasReported) {
+                        reportCount++;
+                        if (member.id === userId) {
+                            document.getElementById('myStatusDot').className = "absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm";
+                        }
+                    }
+
+                    return {
+                        ...member,
+                        hasReportedToday: hasReported,
+                        latestWeight: latestWeight,
+                        previousWeight: previousWeight,
+                        todayLog: todayLog,
+                        yesterdayLog: yesterdayLog
+                    };
+                });
+
+                // 4. 更新進度條
+                const progressPercent = members.length > 0 ? (reportCount / members.length) * 100 : 0;
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = `${progressPercent}%`;
+                document.getElementById('progressText').textContent = `${reportCount} / ${members.length}`;
+
+                const mottoElement = document.getElementById('progressMotto');
+                const ci = getChallengeInfo();
+                if (ci.isOffPeriod) {
+                    mottoElement.textContent = "⏸️ 間隔期，保持記錄習慣！";
+                } else if (ci.isRestDay) {
+                    mottoElement.textContent = "🏖️ 休息日也要記得記錄體重喔！";
+                } else if (progressPercent >= 80) {
+                    mottoElement.textContent = "🔥 團隊力量大，快完成了！";
+                } else if (progressPercent >= 50) {
+                    mottoElement.textContent = "💪 過半了，繼續保持！";
+                } else {
+                    mottoElement.textContent = "✨ 堅持，是為了看見更好的自己";
+                }
+
+                // 5. 渲染並緩存結果
+                appState.memberCache = processedMembers;
+                renderMemberGrid(processedMembers);
+                updateLastUpdateTime();
+
+            } catch (error) {
+                console.error("刷新戰報失敗:", error);
+                grid.innerHTML = `
+                    <div class="col-span-3 text-center p-8">
+                        <div class="text-red-500 mb-2">❌ 載入戰報失敗</div>
+                        <div class="text-sm text-gray-500">請檢查網路連線後重試</div>
+                        <button onclick="refreshGrid(true)" class="mt-3 text-sm text-blue-500 underline">點擊重試</button>
+                    </div>`;
+                appState.memberCache = null;
+            } finally {
+                appState.isRefreshing = false;
+                const refreshBtnFinal = document.getElementById('refreshButton');
+                if (refreshBtnFinal) {
+                    refreshBtnFinal.disabled = false;
+                    refreshBtnFinal.innerHTML = `<span>🔄 刷新</span><span id="lastUpdateTime" class="text-[8px]">${document.getElementById('lastUpdateTime').textContent}</span>`;
+                }
+            }
+        }
+
+        function renderMemberGrid(memberData) {
+            const grid = document.getElementById('gridContainer');
+            grid.innerHTML = '';
+            const ci = getChallengeInfo();
+
+            memberData.forEach((member) => {
+                const isMe = member.id === userId;
+                const hasReported = member.hasReportedToday;
+                const statusColor = hasReported ? 'bg-green-500' : 'bg-red-500 status-pulse';
+                const avatarBorder = hasReported ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70';
+
+                // 計算體重差
+                let diffHtml = '';
+                if (hasReported) {
+                    if (member.previousWeight) {
+                        const diff = (member.latestWeight - member.previousWeight).toFixed(1);
+                        if (diff < 0) {
+                            diffHtml = `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>`;
+                        } else if (diff > 0) {
+                            diffHtml = `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>`;
+                        } else {
+                            diffHtml = `<span class="text-gray-400 text-[10px]">持平</span>`;
+                        }
+                    } else {
+                        diffHtml = `<span class="text-blue-400 text-[10px] font-bold">START</span>`;
+                    }
+                } else {
+                    if (!ci.isOffPeriod && !isMe) {
+                        diffHtml = `<button onclick="sendReminder('${member.id}', this)" class="mt-1 bg-white text-gray-600 text-[10px] px-2 py-1 rounded-lg border border-gray-200 shadow-sm font-bold active:scale-90 transition-all">🔔 催一下</button>`;
+                    } else {
+                        diffHtml = `<span class="text-[10px] text-gray-400 font-bold">等待中</span>`;
+                    }
+                }
+
+                const displayWeight = hasReported ? (member.latestWeight?.toFixed(1) || '--') : '--';
+                const card = document.createElement('div');
+                card.className = `relative flex flex-col items-center justify-center p-2 rounded-2xl transition-all cursor-pointer ${isMe ? 'bg-white shadow-md ring-2 ring-blue-400' : 'bg-white/60'}`;
+                card.innerHTML = `
+                    <div class="relative mb-2">
+                        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}"
+                             class="w-10 h-10 rounded-xl bg-gray-50 border-2 ${avatarBorder} shadow-sm" alt="${member.username}">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 ${statusColor} rounded-full border-2 border-white shadow-sm"></div>
+                    </div>
+                    <div class="text-[10px] font-black text-gray-700 truncate w-full text-center mb-0.5">${member.username}${isMe ? ' (我)' : ''}</div>
+                    <div class="text-xs font-black ${hasReported ? 'text-blue-600' : 'text-gray-300'}">${displayWeight}</div>
+                    <div class="mt-1">${diffHtml}</div>
+                `;
+                card.onclick = () => {
+                    if (hasReported) {
+                        let info = `${member.username}\n`;
+                        info += `今日體重: ${member.latestWeight?.toFixed(1) || '--'}kg\n`;
+                        if (member.previousWeight) {
+                            const diff = (member.latestWeight - member.previousWeight).toFixed(1);
+                            info += `昨日體重: ${member.previousWeight?.toFixed(1) || '--'}kg\n`;
+                            info += `變化: ${diff > 0 ? '+' + diff : diff}kg`;
+                        }
+                        alert(info);
+                    }
+                };
+                grid.appendChild(card);
+            });
+
+            // 補齊空位
+            const emptyCount = 9 - memberData.length;
+            for (let i = 0; i < emptyCount; i++) {
+                const emptyCard = document.createElement('div');
+                emptyCard.className = "flex flex-col items-center justify-center p-2 rounded-2xl bg-gray-50/50 border-2 border-dashed border-gray-200";
+                emptyCard.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 mb-2 flex items-center justify-center text-gray-400 text-xl">+</div>
+                    <div class="text-[10px] text-gray-400 font-bold">等待加入</div>
+                `;
+                grid.appendChild(emptyCard);
+            }
+        }
+
+        // ==================== 提醒檢查 ====================
         async function checkReminders() {
             try {
-                const { data, error } = await _client.from('reminders')
+                const { data, error } = await supabaseClient
+                    .from('reminders')
                     .select('id, from_name')
                     .eq('to_user_id', userId)
                     .eq('is_read', false);
-                    
+
                 if (error) throw error;
-                
                 if (data && data.length > 0) {
                     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
                     const names = [...new Set(data.map(r => r.from_name))].join('、');
                     alert(`🔔 隊友 [${names}] 正在提醒你報數喔！🏃‍♂️`);
-                    await _client.from('reminders').update({ is_read: true }).in('id', data.map(r => r.id));
+                    // 標記為已讀
+                    await supabaseClient.from('reminders').update({ is_read: true }).in('id', data.map(r => r.id));
                 }
             } catch (error) {
                 console.error("檢查提醒失敗:", error);
             }
         }
 
-        // --- 即時訂閱 Supabase Realtime ---
+        // ==================== 實時訂閱 ====================
         function setupRealtimeSubscription() {
             if (realtimeSubscription) {
-                _client.removeChannel(realtimeSubscription);
+                supabaseClient.removeChannel(realtimeSubscription);
             }
-            
-            // 訂閱 weight_logs 表的 INSERT 事件
-            realtimeSubscription = _client
+
+            realtimeSubscription = supabaseClient
                 .channel('weight-log-changes')
                 .on(
                     'postgres_changes',
-                    {
-                        event: 'INSERT',
-                        schema: 'public',
-                        table: 'weight_logs'
-                    },
+                    { event: 'INSERT', schema: 'public', table: 'weight_logs' },
                     async (payload) => {
                         console.log('收到即時更新:', payload);
-                        
-                        // 檢查是否為同組成員
-                        const { data: userProfile } = await _client
+                        const { data: userProfile } = await supabaseClient
                             .from('profiles')
                             .select('group_code')
                             .eq('id', payload.new.user_id)
                             .single();
-                        
+
                         if (userProfile && userProfile.group_code === groupCode) {
-                            console.log('同組成員體重更新，立即刷新戰報');
                             showRealtimeAlert("小組成員體重更新中...");
-                            
-                            // 延遲 500ms 後刷新，確保資料庫已完全更新
                             setTimeout(async () => {
-                                await refreshGrid();
-                                updateLastUpdateTime();
-                            }, 500);
+                                await refreshGrid(true);
+                            }, 800);
                         }
                     }
                 )
@@ -595,10 +734,7 @@
                         table: 'reminders',
                         filter: `to_user_id=eq.${userId}`
                     },
-                    () => {
-                        // 當提醒被更新時，檢查是否有新提醒
-                        checkReminders();
-                    }
+                    () => { checkReminders(); }
                 )
                 .subscribe((status) => {
                     console.log('即時訂閱狀態:', status);
@@ -613,288 +749,62 @@
                 });
         }
 
-        // --- 緩存系統：避免重複查詢 ---
-        let lastGridUpdate = 0;
-        const GRID_CACHE_DURATION = 5000; // 5秒內不重複查詢
-
-        // --- 刷新小組戰報 ---
-        async function refreshGrid(force = false) {
-            const now = Date.now();
-            
-            // 避免頻繁刷新
-            if (!force && (now - lastGridUpdate < GRID_CACHE_DURATION)) {
-                console.log('避免頻繁刷新，使用快取');
+        // ==================== 頁面初始化 ====================
+        async function initializePage() {
+            if (!userId || !groupCode) {
+                window.location.href = "index.html";
                 return;
             }
-            
-            lastGridUpdate = now;
-            
-            const challengeInfo = getChallengeInfo();
-            const today = challengeInfo.currentDate;
-            const todayStr = today.toISOString().split('T')[0];
-            
-            try {
-                // 1. 獲取小組成員
-                const { data: members, error: membersError } = await _client
-                    .from('profiles')
-                    .select('*')
-                    .eq('group_code', groupCode);
-                
-                if (membersError) throw membersError;
-                if (!members || members.length === 0) {
-                    document.getElementById('gridContainer').innerHTML = `
-                        <div class="col-span-3 text-center p-8">
-                            <div class="text-gray-500">小組還沒有成員</div>
-                        </div>`;
-                    return;
-                }
 
-                let reportCount = 0;
-                const grid = document.getElementById('gridContainer');
-                
-                // 2. 一次性獲取所有成員的今日體重（優化查詢）
-                const memberIds = members.map(m => m.id);
-                
-                // 查詢今天所有成員的體重
-                const { data: todayWeights, error: weightsError } = await _client
-                    .from('weight_logs')
-                    .select('user_id, weight, created_at')
-                    .in('user_id', memberIds)
-                    .gte('created_at', todayStr + 'T00:00:00')
-                    .lte('created_at', todayStr + 'T23:59:59')
-                    .order('created_at', { ascending: false });
-                
-                if (weightsError) throw weightsError;
-                
-                // 查詢昨天所有成員的體重
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toISOString().split('T')[0];
-                
-                const { data: yesterdayWeights, error: yesterdayError } = await _client
-                    .from('weight_logs')
-                    .select('user_id, weight')
-                    .in('user_id', memberIds)
-                    .gte('created_at', yesterdayStr + 'T00:00:00')
-                    .lte('created_at', yesterdayStr + 'T23:59:59');
-                
-                if (yesterdayError) console.warn("獲取昨天體重失敗:", yesterdayError);
-                
-                // 建立快速查找表
-                const todayWeightMap = {};
-                const yesterdayWeightMap = {};
-                
-                todayWeights?.forEach(log => {
-                    if (!todayWeightMap[log.user_id] || 
-                        new Date(log.created_at) > new Date(todayWeightMap[log.user_id].created_at)) {
-                        todayWeightMap[log.user_id] = log;
-                    }
-                });
-                
-                yesterdayWeights?.forEach(log => {
-                    if (!yesterdayWeightMap[log.user_id]) {
-                        yesterdayWeightMap[log.user_id] = log;
-                    }
-                });
-
-                // 3. 處理每個成員的資料
-                const memberData = members.map(member => {
-                    const todayWeight = todayWeightMap[member.id];
-                    const yesterdayWeight = yesterdayWeightMap[member.id];
-                    
-                    // 只要有上傳就算，無論是否在挑戰期
-                    const hasReportedToday = todayWeight !== undefined;
-                    const latestWeight = hasReportedToday ? todayWeight?.weight : null;
-                    const previousWeight = yesterdayWeight?.weight || null;
-                    
-                    if (hasReportedToday) {
-                        reportCount++;
-                        if (member.id === userId) {
-                            document.getElementById('myStatusDot').className = "absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white shadow-sm";
-                        }
-                    }
-
-                    return {
-                        ...member,
-                        hasReportedToday,
-                        latestWeight,
-                        previousWeight,
-                        todayWeight,
-                        yesterdayWeight
-                    };
-                });
-
-                // 4. 更新進度條
-                const progressPercent = (reportCount / members.length * 100);
-                document.getElementById('progressBar').style.width = progressPercent + '%';
-                document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
-                
-                // 更新格言
-                if (challengeInfo.isOffPeriod) {
-                    document.getElementById('progressMotto').textContent = "⏸️ 間隔期，保持記錄習慣！";
-                } else if (challengeInfo.isRestDay) {
-                    document.getElementById('progressMotto').textContent = "🏖️ 休息日也要記得記錄體重喔！";
-                } else if (progressPercent >= 80) {
-                    document.getElementById('progressMotto').textContent = "🔥 團隊力量大，快完成了！";
-                } else if (progressPercent >= 50) {
-                    document.getElementById('progressMotto').textContent = "💪 過半了，繼續保持！";
-                } else {
-                    document.getElementById('progressMotto').textContent = "✨ 堅持，是為了看見更好的自己";
-                }
-
-                // 5. 渲染九宮格
-                grid.innerHTML = '';
-                memberData.forEach((member, index) => {
-                    const isMe = member.id === userId;
-                    let diffHtml = '';
-                    
-                    // 狀態顏色 - 只要有上傳就顯示綠色
-                    const statusColor = member.hasReportedToday ? 'bg-green-500' : 'bg-red-500 status-pulse';
-                    
-                    const avatarBorder = member.hasReportedToday ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70';
-
-                    if (member.hasReportedToday) {
-                        if (member.previousWeight) {
-                            const diff = (member.latestWeight - member.previousWeight).toFixed(1);
-                            if (diff < 0) {
-                                diffHtml = `<span class="text-green-500 font-bold text-[10px]">⬇️${Math.abs(diff)}</span>`;
-                            } else if (diff > 0) {
-                                diffHtml = `<span class="text-red-400 font-bold text-[10px]">⬆️${diff}</span>`;
-                            } else {
-                                diffHtml = `<span class="text-gray-400 text-[10px]">持平</span>`;
-                            }
-                        } else {
-                            diffHtml = `<span class="text-blue-400 text-[10px] font-bold">START</span>`;
-                        }
-                    } else {
-                        // 如果不是間隔期且不是自己，才顯示提醒按鈕
-                        if (!challengeInfo.isOffPeriod && !isMe) {
-                            diffHtml = `<button onclick="sendReminder('${member.id}', this)" class="mt-1 bg-white text-gray-600 text-[10px] px-2 py-1 rounded-lg border border-gray-200 shadow-sm font-bold active:scale-90 transition-all">🔔 催一下</button>`;
-                        } else {
-                            diffHtml = `<span class="text-[10px] text-gray-400 font-bold">等待中</span>`;
-                        }
-                    }
-
-                    // 顯示體重數值
-                    const displayWeight = member.hasReportedToday ? (member.latestWeight?.toFixed(1) || '--') : '--';
-
-                    const card = document.createElement('div');
-                    card.className = `relative flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${isMe ? 'bg-white shadow-md ring-2 ring-blue-400' : 'bg-white/60'}`;
-                    card.innerHTML = `
-                        <div class="relative mb-2">
-                            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(member.username)}" 
-                                 class="w-10 h-10 rounded-xl bg-gray-50 border-2 ${avatarBorder} shadow-sm">
-                            <div class="absolute -bottom-1 -right-1 w-3 h-3 ${statusColor} rounded-full border-2 border-white shadow-sm"></div>
-                        </div>
-                        <div class="text-[10px] font-black text-gray-700 truncate w-full text-center mb-0.5">${member.username}${isMe ? ' (我)' : ''}</div>
-                        <div class="text-xs font-black ${member.hasReportedToday ? 'text-blue-600' : 'text-gray-300'}">
-                            ${displayWeight}
-                        </div>
-                        <div class="mt-1">${diffHtml}</div>
-                    `;
-                    
-                    // 添加點擊顯示詳細資訊功能
-                    card.onclick = () => {
-                        if (member.hasReportedToday) {
-                            let info = `${member.username}\n`;
-                            info += `今日體重: ${member.latestWeight?.toFixed(1) || '--'}kg\n`;
-                            if (member.previousWeight) {
-                                const diff = (member.latestWeight - member.previousWeight).toFixed(1);
-                                info += `昨日體重: ${member.previousWeight?.toFixed(1) || '--'}kg\n`;
-                                info += `變化: ${diff > 0 ? '+' + diff : diff}kg`;
-                            }
-                            alert(info);
-                        }
-                    };
-                    
-                    grid.appendChild(card);
-                });
-
-                // 如果成員不足9個，補齊空位
-                const emptyCount = 9 - memberData.length;
-                for (let i = 0; i < emptyCount; i++) {
-                    const emptyCard = document.createElement('div');
-                    emptyCard.className = "flex flex-col items-center justify-center p-2 rounded-2xl bg-gray-50/50 border-2 border-dashed border-gray-200";
-                    emptyCard.innerHTML = `
-                        <div class="w-10 h-10 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 mb-2 flex items-center justify-center text-gray-400 text-xl">+</div>
-                        <div class="text-[10px] text-gray-400 font-bold">等待加入</div>
-                    `;
-                    grid.appendChild(emptyCard);
-                }
-
-                // 更新最後更新時間
-                updateLastUpdateTime();
-
-            } catch (error) {
-                console.error("刷新小組戰報失敗:", error);
-                document.getElementById('gridContainer').innerHTML = `
-                    <div class="col-span-3 text-center p-8">
-                        <div class="text-red-500 mb-2">❌ 載入戰報失敗</div>
-                        <div class="text-sm text-gray-500">${error.message}</div>
-                        <button onclick="refreshGrid(true)" class="mt-3 text-sm text-blue-500 underline">重試</button>
-                    </div>`;
-            }
-        }
-
-        // --- 頁面載入 ---
-        window.onload = async () => {
-            if (!userId) { 
-                window.location.href = "index.html"; 
-                return; 
-            }
-            
             updateDayDisplay();
-            updateLastUpdateTime();
-            
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+
             try {
-                const { data, error } = await _client.from('profiles')
+                const { data, error } = await supabaseClient
+                    .from('profiles')
                     .select('username')
                     .eq('id', userId)
                     .single();
-                    
+
                 if (error) throw error;
-                
                 if (data) {
-                    document.getElementById('displayUsername').innerText = data.username;
-                    document.getElementById('myAvatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(data.username)}`;
                     myUsername = data.username;
+                    document.getElementById('displayUsername').textContent = data.username;
+                    document.getElementById('myAvatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(data.username)}`;
                 }
             } catch (error) {
                 console.error("載入使用者資料失敗:", error);
+                showStatus("載入個人資料失敗", "error");
             }
-            
-            document.getElementById('groupLabel').innerText = "GROUP: " + groupCode;
 
-            // 設置即時訂閱
+            document.getElementById('groupLabel').textContent = "GROUP: " + groupCode;
             setupRealtimeSubscription();
 
-            const challengeInfo = getChallengeInfo();
+            const ci = getChallengeInfo();
             const todayStr = new Date().toISOString().split('T')[0];
             const lastSeen = localStorage.getItem('last_seen_info_date');
-            
-            // 只有在挑戰期且非休息日，且今天還沒看過知識彈窗時顯示
-            if (!challengeInfo.isOffPeriod && !challengeInfo.isRestDay && lastSeen !== todayStr) {
+            if (!ci.isOffPeriod && !ci.isRestDay && lastSeen !== todayStr) {
                 localStorage.setItem('last_seen_info_date', todayStr);
                 setTimeout(openModal, 1500);
             }
 
-            updateCountdown(); 
             await refreshGrid();
-            checkReminders();
-            
-            // 自動刷新（備用方案，如果即時訂閱失效）
+            await checkReminders();
+
             setInterval(checkReminders, 30000);
-            setInterval(() => refreshGrid(), 60000); // 每分鐘刷新一次作為備份
-            
+            setInterval(() => refreshGrid(), 120000);
+
             setTimeout(() => {
                 document.getElementById('currentWeight').focus();
-            }, 1000);
-        };
+            }, 800);
+        }
 
-        // 頁面卸載時清理訂閱
+        // 頁面事件
+        window.onload = initializePage;
         window.addEventListener('beforeunload', () => {
             if (realtimeSubscription) {
-                _client.removeChannel(realtimeSubscription);
+                supabaseClient.removeChannel(realtimeSubscription);
             }
         });
     </script>
