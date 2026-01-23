@@ -58,7 +58,7 @@
                 </div>
                 <div class="flex items-center gap-1">
                     <span id="sessionBadge" class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-bold"></span>
-                    <span id="totalDays" class="text-sm text-gray-500">/ 14 天</span>
+                    <span id="totalDays" class="text-sm text-gray-500">/ 10 天</span>
                 </div>
             </div>
             
@@ -186,12 +186,13 @@
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code');
         
-        const CHALLENGE_DURATION = 14;
-        const REST_DAYS = [7, 14];
+        // 改為每期10天，第7天為休息日
+        const CHALLENGE_DURATION = 10;
+        const REST_DAYS = [7];
         let myUsername = "我";
         let realtimeSubscription = null;
 
-        // --- 健康知識資料庫 ---
+        // --- 健康知識資料庫（改為10天）---
         const DAILY_CONTENT = {
             1: { title: "🌱 啟動細胞營養", content: "減重 80% 靠營養。今天起我們用「三杯水」開啟代謝：蘆薈汁清、草本茶調、奶昔補。", tips: "早起先喝 3 瓶蓋蘆薈汁兌水，喚醒腸道吸收力！", img: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400" },
             2: { title: "🌙 睡眠竟然也能瘦？", content: "熬夜會分泌皮質醇，囤積腹部脂肪。乖乖睡覺會分泌「瘦體素」，幫你自動燒脂。", tips: "晚上 11 點前請放下手機，睡滿 7 小時。", img: "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?auto=format&fit=crop&w=400" },
@@ -202,18 +203,7 @@
             7: { title: "🧂 隱形的體重殺手", content: "太鹹的食物會導致「鈉滯留」，讓身體儲存過多水分，這就是為什麼有時吃完大餐隔天體重暴增的原因。", tips: "今天嘗試「清淡飲食」，減少加工醬料，多吃原型蔬菜排鈉。", img: "https://images.unsplash.com/photo-1506084868730-342b1f852e0d?auto=format&fit=crop&w=400" },
             8: { title: "🔥 間歇性的小運動", content: "不需要長時間激烈運動，每天快走 15 分鐘或爬樓梯，就能有效啟動血液循環，幫助燃脂效果加倍。", tips: "今天請給自己 15 分鐘，動動身體流點汗吧！", img: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=400" },
             9: { title: "🧘‍♀️ 壓力與脂肪的關係", content: "壓力大時會產生壓力荷爾蒙，這會傾向於將脂肪囤積在腹部。學習放鬆也是減重的一部分。", tips: "今天深呼吸 5 分鐘，或者找隊友吐苦水，保持心情愉快！", img: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=400" },
-            10: { title: "🏁 第一階段的小總結", content: "來到第 10 天了！這是一個習慣養成的里程碑。不論數字變化如何，你的身體細胞已經變得更健康了。", tips: "回顧前 9 天你最自豪的進步，並在群組跟隊友分享！", img: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400" },
-            11: { title: "🍽️ 餐間小技巧", content: "在正餐之間感到飢餓時，可以喝一杯水或無糖茶，有時候飢餓感只是口渴的誤解。", tips: "隨身攜帶水壺，定時補充水分，減少不必要的進食慾望。", img: "https://images.unsplash.com/photo-1532634922-8fe0b757fb13?auto=format&fit=crop&w=400" },
-            12: { title: "🚶‍♂️ 日常活動的重要性", content: "除了運動，日常活動量（如走路、做家事）的累積燃燒熱量也不可小覷，稱為NEAT。", tips: "嘗試多站少坐，利用通勤時間多走一段路。", img: "https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?auto=format&fit=crop&w=400" },
-            13: { title: "📊 數據背後的意義", content: "體重數字只是參考，體脂率和肌肉量的變化更能反映真正的進步。", tips: "除了體重，也可以關注自己的精神、睡眠和衣物寬鬆度。", img: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=400" },
-            14: { title: "🎉 第一期完成！", content: "恭喜完成14天挑戰！無論結果如何，你都建立了更健康的習慣，這是無價的資產。", tips: "給自己一個小獎勵，並準備好迎接下一期的挑戰！", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400" },
-            15: { title: "🔄 新期新氣象", content: "第二期開始！經過休息後，身體已準備好迎接新的挑戰。今天的目標是重新設定心態。", tips: "重新測量體重，設定本期的具體目標！", img: "https://images.unsplash.com/photo-1594381898411-846e7d193883?auto=format&fit=crop&w=400" },
-            16: { title: "🔥 重啟代謝引擎", content: "休息日後，身體的代謝需要重新啟動。今天可以稍微增加一點運動量。", tips: "增加10分鐘的有氧運動，幫助身體進入燃脂狀態。", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=400" },
-            17: { title: "🥦 多彩蔬果的力量", content: "不同顏色的蔬果含有不同的植化素，能幫助身體抗氧化、抗發炎。", tips: "今天至少吃三種不同顏色的蔬菜水果！", img: "https://images.unsplash.com/photo-1540420828642-fca2c5c18abb?auto=format&fit=crop&w=400" },
-            18: { title: "💪 肌肉記憶效應", content: "第二期減重通常會比第一期更快，因為身體已經有「肌肉記憶」。", tips: "保持一致性，你的身體會記得該如何有效燃脂！", img: "https://images.unsplash.com/photo-1534367507877-0edd93bd013b?auto=format&fit=crop&w=400" },
-            19: { title: "🧠 心理建設日", content: "減重不只是身體的事，更是心理的挑戰。培養正面思考對長期成功至關重要。", tips: "每天寫下一個感恩或成就，培養正向心態。", img: "https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&w=400" },
-            20: { title: "⏰ 時間點的重要性", content: "進食的時間點對減重有重要影響。早餐吃得好，晚餐吃得早，能幫助身體調節代謝。", tips: "嘗試在晚上7點前完成晚餐。", img: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=400" },
-            21: { title: "🔄 彈性與堅持", content: "偶爾的放鬆不會毀掉你的進度，重要的是能馬上回到正軌。", tips: "如果昨天放縱了，今天立即回歸正常飲食就是成功！", img: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=400" }
+            10: { title: "🎉 第一期完成！", content: "恭喜完成10天挑戰！無論結果如何，你都建立了更健康的習慣，這是無價的資產。", tips: "給自己一個小獎勵，並準備好迎接下一期的挑戰！", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=400" }
         };
 
         // --- 修正的天數計算邏輯 ---
@@ -225,49 +215,76 @@
             
             // 計算本期開始日（每個月1號和16號）
             let sessionStart;
-            if (day >= 1 && day <= 15) {
-                // 本期從本月1號開始
+            let sessionNumber;
+            let dayInSession;
+            
+            // 判斷今天是屬於哪一期
+            if (day >= 1 && day <= 10) {
+                // 屬於1號開始的這一期
                 sessionStart = new Date(year, month - 1, 1);
-            } else {
-                // 本期從本月16號開始
+                dayInSession = day; // 1號是第1天
+                // 計算期數：每個月有2期，從2026年1月開始
+                const baseYear = 2026;
+                const baseMonth = 1;
+                const monthsSinceBase = (year - baseYear) * 12 + (month - baseMonth);
+                sessionNumber = monthsSinceBase * 2; // 每月的第一期
+            } else if (day >= 11 && day <= 15) {
+                // 這5天是間隔期，沒有挑戰
+                return {
+                    isOffPeriod: true,
+                    currentDate: today,
+                    dayInSession: 0,
+                    message: "間隔期，無挑戰"
+                };
+            } else if (day >= 16 && day <= 25) {
+                // 屬於16號開始的這一期
                 sessionStart = new Date(year, month - 1, 16);
+                dayInSession = day - 15; // 16號是第1天，所以17號是第2天，21號是第6天
+                const baseYear = 2026;
+                const baseMonth = 1;
+                const monthsSinceBase = (year - baseYear) * 12 + (month - baseMonth);
+                sessionNumber = monthsSinceBase * 2 + 1; // 每月的第二期
+            } else if (day >= 26 && day <= 31) {
+                // 這幾天是間隔期，沒有挑戰
+                return {
+                    isOffPeriod: true,
+                    currentDate: today,
+                    dayInSession: 0,
+                    message: "間隔期，無挑戰"
+                };
             }
             
-            // 計算本期結束日（開始日+13天）
+            // 計算本期結束日（開始日+9天）
             const sessionEnd = new Date(sessionStart);
-            sessionEnd.setDate(sessionStart.getDate() + 13);
+            sessionEnd.setDate(sessionStart.getDate() + 9);
             
             // 計算下期開始日
             let nextSessionStart;
-            if (day >= 1 && day <= 15) {
-                // 下期從本月16號開始
+            if (sessionStart.getDate() === 1) {
+                // 如果本期是1號開始，下期就是16號
                 nextSessionStart = new Date(year, month - 1, 16);
             } else {
-                // 下期從下個月1號開始
-                nextSessionStart = new Date(year, month, 1);
+                // 如果本期是16號開始，下期就是下個月1號
+                if (month === 12) {
+                    nextSessionStart = new Date(year + 1, 0, 1);
+                } else {
+                    nextSessionStart = new Date(year, month, 1);
+                }
             }
             
-            // 計算今天是本期的第幾天
-            const diffTime = today - sessionStart;
-            const dayInSession = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            
-            // 計算期數（從2026年開始計算）
-            const startYear = 2026;
-            const monthsSinceStart = (year - startYear) * 12 + month;
-            const sessionNumber = monthsSinceStart * 2 + (day >= 16 ? 1 : 0) - 1;
-            
-            // 檢查是否為休息日（第7天和第14天）
-            const isRestDay = dayInSession === 7 || dayInSession === 14;
-            const isLastDay = dayInSession === 14;
+            // 檢查是否為休息日（第7天）
+            const isRestDay = dayInSession === 7;
+            const isLastDay = dayInSession === 10;
             
             return {
-                dayInSession: Math.min(Math.max(dayInSession, 1), 14),
+                dayInSession: dayInSession,
                 sessionNumber: sessionNumber,
                 sessionStart: sessionStart,
                 sessionEnd: sessionEnd,
                 nextSessionStart: nextSessionStart,
                 isRestDay: isRestDay,
                 isLastDay: isLastDay,
+                isOffPeriod: false,
                 currentDate: today
             };
         }
@@ -283,6 +300,35 @@
             const sessionStartDateElement = document.getElementById('sessionStartDate');
             const sessionEndDateElement = document.getElementById('sessionEndDate');
             const nextSessionStartElement = document.getElementById('nextSessionStart');
+            
+            // 如果是間隔期，顯示特殊訊息
+            if (challengeInfo.isOffPeriod) {
+                dayElement.textContent = '--';
+                totalDaysElement.textContent = `/ ${CHALLENGE_DURATION} 天`;
+                badgeElement.textContent = "間隔期";
+                badgeElement.className = "text-xs px-3 py-1 rounded-full font-bold bg-gray-100 text-gray-800";
+                messageElement.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500">⏸️</span>
+                        <span>當前是間隔期，好好休息，下期再戰！</span>
+                    </div>
+                `;
+                sessionBadgeElement.textContent = "間隔期";
+                sessionStartDateElement.textContent = "--";
+                sessionEndDateElement.textContent = "--";
+                nextSessionStartElement.textContent = "--";
+                
+                // 禁用輸入框和按鈕
+                document.getElementById('currentWeight').disabled = true;
+                document.getElementById('btnSubmit').disabled = true;
+                document.getElementById('btnSubmit').innerText = "間隔期";
+                return;
+            }
+            
+            // 啟用輸入框和按鈕
+            document.getElementById('currentWeight').disabled = false;
+            document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('btnSubmit').innerText = "送出數據並看知識";
             
             // 更新天數顯示
             dayElement.textContent = challengeInfo.dayInSession;
@@ -344,6 +390,12 @@
         // --- 彈窗控制 ---
         function openModal() {
             const challengeInfo = getChallengeInfo();
+            
+            // 如果是間隔期，不顯示知識彈窗
+            if (challengeInfo.isOffPeriod) {
+                return;
+            }
+            
             const dayInSession = challengeInfo.dayInSession;
             const data = DAILY_CONTENT[dayInSession] || { 
                 title: "持續加油！", 
@@ -389,7 +441,7 @@
         }
         setInterval(updateCountdown, 1000);
 
-        // --- 送出體重（休息日也可以上傳）---
+        // --- 送出體重（休息日和間隔期也可以上傳）---
         async function submitWeight() {
             const weightVal = document.getElementById('currentWeight').value;
             if (!weightVal) {
@@ -418,9 +470,9 @@
                 // 通知其他成員（透過即時訂閱會自動更新）
                 showRealtimeAlert("你的體重數據已更新！");
                 
-                // 只有在非休息日顯示知識彈窗
+                // 只有在挑戰期且非休息日顯示知識彈窗
                 const challengeInfo = getChallengeInfo();
-                if (!challengeInfo.isRestDay) {
+                if (!challengeInfo.isOffPeriod && !challengeInfo.isRestDay) {
                     setTimeout(openModal, 500);
                 }
             } catch (error) {
@@ -446,6 +498,10 @@
         // --- 提醒隊友 ---
         async function sendReminder(targetId, btnElement) {
             const challengeInfo = getChallengeInfo();
+            if (challengeInfo.isOffPeriod) {
+                alert("當前是間隔期，讓隊友好好休息吧！");
+                return;
+            }
             
             btnElement.classList.add('bell-active');
             btnElement.innerText = "⌛...";
@@ -646,7 +702,7 @@
                     const todayWeight = todayWeightMap[member.id];
                     const yesterdayWeight = yesterdayWeightMap[member.id];
                     
-                    // 休息日也可以上傳，所以只要今天有上傳就算
+                    // 只要有上傳就算，無論是否在挑戰期
                     const hasReportedToday = todayWeight !== undefined;
                     const latestWeight = hasReportedToday ? todayWeight?.weight : null;
                     const previousWeight = yesterdayWeight?.weight || null;
@@ -674,7 +730,9 @@
                 document.getElementById('progressText').innerText = `${reportCount} / ${members.length}`;
                 
                 // 更新格言
-                if (challengeInfo.isRestDay) {
+                if (challengeInfo.isOffPeriod) {
+                    document.getElementById('progressMotto').textContent = "⏸️ 間隔期，保持記錄習慣！";
+                } else if (challengeInfo.isRestDay) {
                     document.getElementById('progressMotto').textContent = "🏖️ 休息日也要記得記錄體重喔！";
                 } else if (progressPercent >= 80) {
                     document.getElementById('progressMotto').textContent = "🔥 團隊力量大，快完成了！";
@@ -690,7 +748,7 @@
                     const isMe = member.id === userId;
                     let diffHtml = '';
                     
-                    // 狀態顏色 - 休息日也顯示綠色（如果有上傳）
+                    // 狀態顏色 - 只要有上傳就顯示綠色
                     const statusColor = member.hasReportedToday ? 'bg-green-500' : 'bg-red-500 status-pulse';
                     
                     const avatarBorder = member.hasReportedToday ? 'border-blue-400 shadow-blue-100' : 'border-gray-300 opacity-70';
@@ -709,7 +767,8 @@
                             diffHtml = `<span class="text-blue-400 text-[10px] font-bold">START</span>`;
                         }
                     } else {
-                        if (!isMe) {
+                        // 如果不是間隔期且不是自己，才顯示提醒按鈕
+                        if (!challengeInfo.isOffPeriod && !isMe) {
                             diffHtml = `<button onclick="sendReminder('${member.id}', this)" class="mt-1 bg-white text-gray-600 text-[10px] px-2 py-1 rounded-lg border border-gray-200 shadow-sm font-bold active:scale-90 transition-all">🔔 催一下</button>`;
                         } else {
                             diffHtml = `<span class="text-[10px] text-gray-400 font-bold">等待中</span>`;
@@ -813,8 +872,8 @@
             const todayStr = new Date().toISOString().split('T')[0];
             const lastSeen = localStorage.getItem('last_seen_info_date');
             
-            // 非休息日且今天還沒看過知識彈窗時顯示
-            if (lastSeen !== todayStr && !challengeInfo.isRestDay) {
+            // 只有在挑戰期且非休息日，且今天還沒看過知識彈窗時顯示
+            if (!challengeInfo.isOffPeriod && !challengeInfo.isRestDay && lastSeen !== todayStr) {
                 localStorage.setItem('last_seen_info_date', todayStr);
                 setTimeout(openModal, 1500);
             }
