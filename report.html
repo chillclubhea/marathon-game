@@ -4,39 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>馬拉松每日報磅</title>
-    <!-- Tailwind CSS 輕量版 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background: #f3f4f6;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-        .grid-cell {
-            transition: all 0.2s ease;
-        }
-        .grid-cell:active {
-            transform: scale(0.98);
-        }
-        @keyframes gentle-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-        .pending-pulse {
-            animation: gentle-pulse 1.5s infinite;
-        }
-        .rest-day-badge {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-        }
+        body { background: #f3f4f6; font-family: 'Inter', system-ui, sans-serif; }
+        .grid-cell { transition: all 0.2s ease; }
+        .grid-cell:active { transform: scale(0.98); }
+        @keyframes gentle-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .pending-pulse { animation: gentle-pulse 1.5s infinite; }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
-    <!-- 主要容器 -->
     <div class="max-w-md mx-auto px-4 pt-6">
-
-        <!-- 標題與日期資訊卡片 -->
+        <!-- 日期資訊卡片 -->
         <div class="bg-white rounded-3xl shadow-lg p-5 mb-5 border border-blue-50">
             <div class="flex justify-between items-center mb-2">
                 <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -47,13 +28,7 @@
                     即時同步
                 </div>
             </div>
-
-            <!-- 動態天數顯示區塊 -->
-            <div id="dayInfoCard" class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-inner">
-                <!-- 由 JavaScript 動態填入 -->
-            </div>
-
-            <!-- 進度條與口號 -->
+            <div id="dayInfoCard" class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-4 text-white shadow-inner"></div>
             <div class="mt-4">
                 <div class="flex justify-between text-xs text-gray-500 mb-1">
                     <span>今日報磅進度</span>
@@ -66,7 +41,7 @@
             </div>
         </div>
 
-        <!-- 報磅表單卡片 -->
+        <!-- 報磅表單 -->
         <div class="bg-white rounded-3xl shadow-lg p-5 mb-5 border border-blue-50">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
@@ -77,13 +52,11 @@
                     <div id="displayName" class="text-lg font-bold text-gray-800">載入中...</div>
                 </div>
             </div>
-
             <div class="relative mb-4">
                 <input type="number" id="weightInput" step="0.1" placeholder="請輸入今日體重 (kg)" 
                        class="w-full border-2 border-gray-200 rounded-xl py-4 px-5 text-2xl font-bold text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-100 outline-none transition">
                 <span class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 font-medium">kg</span>
             </div>
-
             <button id="submitBtn" onclick="submitWeight()" 
                     class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-200 active:scale-95 transition transform">
                 📝 今日報磅
@@ -91,7 +64,7 @@
             <div id="submitStatus" class="mt-3 text-center text-sm text-green-600"></div>
         </div>
 
-        <!-- 小組戰報：九宮格顯示成員報磅狀態 -->
+        <!-- 小組九宮格 -->
         <div class="bg-white rounded-3xl shadow-lg p-5 border border-blue-50">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -100,13 +73,9 @@
                 </h2>
                 <span id="groupName" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold"></span>
             </div>
-
-            <!-- 九宮格容器 (3x3) -->
             <div id="gridContainer" class="grid grid-cols-3 gap-3">
-                <!-- 會由 JS 動態產生卡片 -->
                 <div class="col-span-3 text-center py-10 text-gray-400">載入小組資料...</div>
             </div>
-
             <div class="mt-4 text-xs text-gray-400 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-green-500 rounded-full"></span> 已報
@@ -119,7 +88,7 @@
             </div>
         </div>
 
-        <!-- 轉介紹簡易入口 (可選) -->
+        <!-- 轉介紹入口（已修正邀請碼顯示） -->
         <div class="mt-5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-4 border border-purple-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -134,7 +103,7 @@
         </div>
     </div>
 
-    <!-- 簡易邀請碼浮層 (Modal) -->
+    <!-- 邀請碼浮層 (Modal) -->
     <div id="inviteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden transition">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 relative">
             <button onclick="closeInviteModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
@@ -151,63 +120,35 @@
     </div>
 
     <script>
-        // ---------- Supabase 初始化 ----------
+        // Supabase 初始化
         const SUPABASE_URL = 'https://sdloakutxcsbshcqpxwn.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkbG9ha3V0eGNzYnNoY3FweHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxMTE4MjYsImV4cCI6MjA4MTY4NzgyNn0.5OBQQAinARnZQ6VSCrPl60NWmcSG-QiFMmVIJRW7g-0';
         const { createClient } = supabase;
         const _client = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 從 localStorage 取得用戶資料（需先從 index.html 登記）
         const userId = localStorage.getItem('my_user_id');
         const groupCode = localStorage.getItem('my_group_code') || '未分組';
         let myUsername = '我';
 
-        // ---------- 天數計算邏輯 (每月1號和15號開始，每期10天) ----------
+        // ---------- 天數計算 (每月1日、15日開始，每期10天) ----------
         function getChallengeInfo() {
-            const today = new Date(); // 假設今天是 2026-03-02
-            // 為確保計算正確，可手動指定測試日期，但正式用實際日期
-            // 若要測試 2026-03-02，可取消下一行註解：
-            // const today = new Date('2026-03-02T12:00:00');
-
+            const today = new Date(); // 正式使用實際日期，若要測試可改為 new Date('2026-03-02')
             const year = today.getFullYear();
-            const month = today.getMonth(); // 0-11
+            const month = today.getMonth();
             const day = today.getDate();
 
-            // 判斷當前所屬週期開始日
-            let sessionStartDay;
             if (day <= 10) {
-                sessionStartDay = 1;                // 1號開始
+                return { isOffPeriod: false, sessionStartDay: 1, dayInSession: day, sessionStartDate: new Date(year, month, 1) };
             } else if (day <= 14) {
-                // 11~14號為間隔期
-                return { isOffPeriod: true, type: 'interval', nextStart: 15 };
+                return { isOffPeriod: true, nextStart: 15 };
             } else if (day <= 24) {
-                sessionStartDay = 15;               // 15號開始
+                return { isOffPeriod: false, sessionStartDay: 15, dayInSession: day - 14, sessionStartDate: new Date(year, month, 15) };
             } else {
-                // 25~月底為間隔期
-                return { isOffPeriod: true, type: 'interval', nextStart: 1 }; // 下個月1號
+                return { isOffPeriod: true, nextStart: 1 }; // 下月1號
             }
-
-            const sessionStartDate = new Date(year, month, sessionStartDay);
-            const dayInSession = day - sessionStartDay + 1;  // 第幾天 (1-based)
-
-            // 計算期數 (從2026年1月1日開始算起)
-            const baseDate = new Date(2026, 0, 1); // 2026-01-01
-            const monthsDiff = (year - baseDate.getFullYear()) * 12 + (month - baseDate.getMonth());
-            let sessionNumber = monthsDiff * 2; // 每個月兩期
-            if (sessionStartDay === 15) sessionNumber += 1; // 如果是15號開始的那期，期數+1
-            else sessionNumber += 1; // 1號開始的那期，期數基數+1 (使第一期為1)
-
-            return {
-                isOffPeriod: false,
-                sessionNumber: sessionNumber,
-                dayInSession: dayInSession,
-                sessionStartDate: sessionStartDate,
-                sessionEndDate: new Date(year, month, sessionStartDay + 9),
-                nextSessionStart: sessionStartDay === 1 ? new Date(year, month, 15) : new Date(year, month + 1, 1)
-            };
         }
 
-        // ---------- 更新介面中的日期資訊 ----------
+        // 更新日期顯示
         function updateDayInfo() {
             const info = getChallengeInfo();
             const card = document.getElementById('dayInfoCard');
@@ -222,17 +163,19 @@
                     </div>
                     <div class="mt-2 text-xs opacity-80">間隔期仍可記錄體重，但無挑戰天數</div>
                 `;
-                // 隱藏挑戰相關標籤
                 document.getElementById('motto').innerText = '☕ 放鬆一下，準備下一期';
             } else {
+                const start = info.sessionStartDate;
+                const end = new Date(start);
+                end.setDate(start.getDate() + 9);
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-sm opacity-90">第 ${info.sessionNumber} 期 · Day ${info.dayInSession}</div>
+                            <div class="text-sm opacity-90">第 ${Math.floor((start.getMonth()+1)*2 + (start.getDate()===1?1:2))} 期 · Day ${info.dayInSession}</div>
                             <div class="text-4xl font-black mt-1">${info.dayInSession}</div>
                         </div>
                         <div class="bg-white/20 px-3 py-1 rounded-full text-sm">
-                            ${info.sessionStartDate.getMonth()+1}/${info.sessionStartDate.getDate()} - ${info.sessionEndDate.getMonth()+1}/${info.sessionEndDate.getDate()}
+                            ${start.getMonth()+1}/${start.getDate()} - ${end.getMonth()+1}/${end.getDate()}
                         </div>
                     </div>
                     <div class="mt-2 text-xs opacity-80">${info.dayInSession === 7 ? '🏖️ 今天是休息日' : '🔥 持續前進'}</div>
@@ -241,7 +184,7 @@
             }
         }
 
-        // ---------- 載入用戶名稱及頭像 ----------
+        // ---------- 載入用戶資料與邀請碼 ----------
         async function loadUserProfile() {
             if (!userId) {
                 alert('請先從首頁登記');
@@ -258,145 +201,122 @@
             document.getElementById('myAvatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(myUsername)}`;
             document.getElementById('groupName').innerText = `GROUP: ${groupCode}`;
 
-            // 若已有邀請碼，顯示在浮層
+            // 處理邀請碼：若資料庫有則存入 localStorage，否則生成一個
             if (data.invite_code) {
                 localStorage.setItem('my_invite_code', data.invite_code);
-                document.getElementById('inviteCodeDisplay').innerText = data.invite_code;
             } else {
-                // 若無邀請碼，產生一個 (可選)
-                generateInviteCodeForUser();
+                await generateInviteCodeForUser();
             }
         }
 
-        // 產生邀請碼 (簡單實作)
+        // 生成邀請碼並更新資料庫與 localStorage
         async function generateInviteCodeForUser() {
-            const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+            const code = Math.random().toString(36).substring(2, 10).toUpperCase(); // 8位數
             const { error } = await _client.from('profiles').update({ invite_code: code }).eq('id', userId);
             if (!error) {
                 localStorage.setItem('my_invite_code', code);
-                document.getElementById('inviteCodeDisplay').innerText = code;
+            } else {
+                console.error('生成邀請碼失敗', error);
             }
+            return code;
         }
 
         // ---------- 報磅功能 ----------
         async function submitWeight() {
             const weight = document.getElementById('weightInput').value;
-            if (!weight) {
-                alert('請輸入體重');
-                return;
-            }
+            if (!weight) { alert('請輸入體重'); return; }
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = '上傳中...';
-
-            const { error } = await _client.from('weight_logs').insert({
-                user_id: userId,
-                weight: parseFloat(weight)
-            });
-
-            btn.disabled = false;
-            btn.innerText = '📝 今日報磅';
-
+            btn.disabled = true; btn.innerText = '上傳中...';
+            const { error } = await _client.from('weight_logs').insert({ user_id: userId, weight: parseFloat(weight) });
+            btn.disabled = false; btn.innerText = '📝 今日報磅';
             if (error) {
                 console.error(error);
                 document.getElementById('submitStatus').innerHTML = '<span class="text-red-500">報磅失敗，請重試</span>';
             } else {
                 document.getElementById('submitStatus').innerHTML = '<span class="text-green-600">✅ 報磅成功！</span>';
                 document.getElementById('weightInput').value = '';
-                refreshGrid(); // 即時更新網格
+                refreshGrid();
                 setTimeout(() => document.getElementById('submitStatus').innerHTML = '', 3000);
             }
         }
 
-        // ---------- 刷新九宮格 (小組成員報磅狀態) ----------
+        // ---------- 刷新九宮格 ----------
         async function refreshGrid() {
             if (!groupCode) return;
-
-            // 取得同組成員
-            const { data: members, error } = await _client
-                .from('profiles')
-                .select('id, username')
-                .eq('group_code', groupCode);
-
-            if (error || !members) {
+            const { data: members, error } = await _client.from('profiles').select('id, username').eq('group_code', groupCode);
+            if (error || !members) { 
                 document.getElementById('gridContainer').innerHTML = '<div class="col-span-3 text-center py-10 text-red-400">讀取失敗</div>';
                 return;
             }
-
-            // 今天日期範圍
             const today = new Date();
-            const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
-            const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
-
-            // 取得所有成員今日的體重記錄 (一次性查詢)
-            const { data: logs } = await _client
-                .from('weight_logs')
-                .select('user_id')
-                .gte('created_at', startOfDay)
-                .lte('created_at', endOfDay)
-                .in('user_id', members.map(m => m.id));
-
+            const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+            const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59).toISOString();
+            const { data: logs } = await _client.from('weight_logs').select('user_id').gte('created_at', start).lte('created_at', end).in('user_id', members.map(m => m.id));
             const reportedToday = new Set(logs?.map(l => l.user_id) || []);
-
-            // 計算報磅人數與進度
             const reportedCount = members.filter(m => reportedToday.has(m.id)).length;
             const progress = members.length ? (reportedCount / members.length * 100).toFixed(0) : 0;
             document.getElementById('progressPercent').innerText = progress + '%';
             document.getElementById('progressBar').style.width = progress + '%';
 
-            // 渲染九宮格 (最多9個，超過也只顯示前9)
             const grid = document.getElementById('gridContainer');
             grid.innerHTML = '';
-
-            const displayMembers = members.slice(0, 9);
-            displayMembers.forEach(member => {
+            members.slice(0, 9).forEach(member => {
                 const isMe = member.id === userId;
                 const hasReported = reportedToday.has(member.id);
-
                 const card = document.createElement('div');
                 card.className = `grid-cell relative bg-white rounded-xl p-3 flex flex-col items-center border-2 transition-all ${isMe ? 'border-blue-400 shadow-md' : 'border-gray-100'}`;
-
-                // 頭像
-                const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.username)}`;
-
-                // 狀態圓點
+                const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(member.username)}`;
                 const dotColor = hasReported ? 'bg-green-500' : 'bg-red-300';
-
                 card.innerHTML = `
                     <div class="relative mb-2">
-                        <img src="${avatarUrl}" class="w-12 h-12 rounded-full bg-gray-100 border-2 border-white shadow">
+                        <img src="${avatar}" class="w-12 h-12 rounded-full bg-gray-100 border-2 border-white shadow">
                         <div class="absolute -bottom-1 -right-1 w-4 h-4 ${dotColor} rounded-full border-2 border-white"></div>
                     </div>
                     <div class="text-xs font-bold text-gray-700 truncate w-full text-center">${member.username}${isMe ? ' (我)' : ''}</div>
                     <div class="mt-1 text-[10px] ${hasReported ? 'text-green-600 font-bold' : 'text-gray-400'}">${hasReported ? '✅ 已報' : '⏳ 未報'}</div>
                 `;
-
                 grid.appendChild(card);
             });
-
-            // 若成員不足9個，補上空位
-            for (let i = displayMembers.length; i < 9; i++) {
-                const emptyCard = document.createElement('div');
-                emptyCard.className = 'grid-cell bg-gray-50 rounded-xl p-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-200';
-                emptyCard.innerHTML = `
-                    <div class="w-12 h-12 rounded-full bg-gray-200 mb-2 flex items-center justify-center text-gray-400 text-xl">+</div>
-                    <div class="text-xs text-gray-400">等待加入</div>
-                `;
-                grid.appendChild(emptyCard);
+            for (let i = members.length; i < 9; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'grid-cell bg-gray-50 rounded-xl p-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-200';
+                empty.innerHTML = `<div class="w-12 h-12 rounded-full bg-gray-200 mb-2 flex items-center justify-center text-gray-400 text-xl">+</div><div class="text-xs text-gray-400">等待加入</div>`;
+                grid.appendChild(empty);
             }
         }
 
-        // ---------- 邀請相關 ----------
-        function showInviteModal() {
+        // ---------- 邀請碼浮層處理（已修正顯示問題）----------
+        async function showInviteModal() {
+            // 從 localStorage 讀取邀請碼，若沒有則生成
+            let code = localStorage.getItem('my_invite_code');
+            if (!code) {
+                // 嘗試從資料庫取得（可能因某些原因遺失）
+                const { data } = await _client.from('profiles').select('invite_code').eq('id', userId).single();
+                if (data?.invite_code) {
+                    code = data.invite_code;
+                    localStorage.setItem('my_invite_code', code);
+                } else {
+                    // 生成新的
+                    code = await generateInviteCodeForUser();
+                }
+            }
+            document.getElementById('inviteCodeDisplay').innerText = code || '----';
             document.getElementById('inviteModal').classList.remove('hidden');
         }
+
         function closeInviteModal() {
             document.getElementById('inviteModal').classList.add('hidden');
         }
+
         function copyInviteCode() {
             const code = document.getElementById('inviteCodeDisplay').innerText;
-            navigator.clipboard?.writeText(code).then(() => alert('邀請碼已複製')).catch(() => alert('複製失敗'));
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(code).then(() => alert('邀請碼已複製'));
+            } else {
+                alert('複製失敗，請手動選取');
+            }
         }
+
         function shareInvite() {
             const code = document.getElementById('inviteCodeDisplay').innerText;
             const text = `一起加入馬拉松減重挑戰！使用我的邀請碼 ${code} 即可自動加入我的小組，每成功一位可獲$100獎金！`;
@@ -409,27 +329,16 @@
 
         // ---------- 初始化 ----------
         window.onload = async () => {
-            if (!userId) {
-                alert('請先完成登記');
-                window.location.href = 'index.html';
-                return;
-            }
-
+            if (!userId) { alert('請先完成登記'); window.location.href = 'index.html'; return; }
             await loadUserProfile();
             updateDayInfo();
             await refreshGrid();
 
-            // 可選：設定即時訂閱，當有新體重記錄時自動更新網格
-            const subscription = _client
-                .channel('weight-changes')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'weight_logs' }, 
-                    async (payload) => {
-                        // 檢查是否為同組成員 (簡單處理：刷新)
-                        refreshGrid();
-                    })
+            // 即時訂閱更新
+            _client.channel('weight-changes')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'weight_logs' }, () => refreshGrid())
                 .subscribe();
 
-            // 每分鐘自動刷新一次 (備用)
             setInterval(refreshGrid, 60000);
         };
     </script>
