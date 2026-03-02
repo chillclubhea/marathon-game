@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONE2FIT 個人化蛋白質計算機 | 康寶萊營養計劃</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf2 100%); }
+        .gradient-bg { background: linear-gradient(145deg, #1e3c72 0%, #2a5298 100%); }
+        .card-shadow { box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15); }
+        .plan-card { transition: all 0.3s ease; }
+        .plan-card:hover { transform: translateY(-5px); box-shadow: 0 30px 50px -20px rgba(0,0,0,0.25); }
+        .input-range { accent-color: #2563eb; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .protein-badge { background: linear-gradient(135deg, #10b981, #059669); }
+        .calorie-badge { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .expert-quote { background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-left: 5px solid #2563eb; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- 標題與專家資訊 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-800 mb-2">
+                ⚡ ONE2FIT 個人化蛋白質計算機
+            </h1>
+            <div class="flex items-center justify-center gap-3 text-sm text-gray-600 mb-3">
+                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">🏆 康寶萊官方營養工具</span>
+                <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full">📋 註冊營養師設計</span>
+            </div>
+            <div class="expert-quote p-4 rounded-xl max-w-3xl mx-auto text-left">
+                <div class="flex items-start gap-3">
+                    <div class="text-4xl">👩‍⚕️</div>
+                    <div>
+                        <p class="text-gray-700 text-sm md:text-base italic">「飲食計劃對任何健康飲食都至關重要，但有時很難準確地規劃每日均衡飲食。我們精心打造了簡單有效的飲食計劃，其中包含卡路里計算和其他輔助工具，幫助您輕鬆規劃膳食。」</p>
+                        <p class="text-xs text-gray-500 mt-2">— 蘇珊·鮑爾曼，理學碩士、註冊營養師、運動營養專家、美國營養與飲食學會會員，康寶萊全球營養教育與培訓高級總監，2024年1月</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步驟指示器 -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-2 mb-2 md:mb-0">
+                <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                <span class="font-medium text-gray-700">選擇計劃</span>
+                <div class="w-16 h-0.5 bg-gray-300 mx-2 hidden md:block"></div>
+            </div>
+            <div class="flex items-center gap-2 mb-2 md:mb-0">
+                <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">2</div>
+                <span class="font-medium text-gray-500">查看建議</span>
+                <div class="w-16 h-0.5 bg-gray-300 mx-2 hidden md:block"></div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">3</div>
+                <span class="font-medium text-gray-500">建立餐單</span>
+            </div>
+        </div>
+
+        <!-- 主要內容：第一步 + 第二步 -->
+        <div class="grid md:grid-cols-5 gap-6 mb-8">
+            <!-- 左側：個人資料輸入 (佔2/5) -->
+            <div class="md:col-span-2 bg-white rounded-3xl p-6 card-shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                    第一步：輸入你的資料
+                </h2>
+                
+                <div class="space-y-5">
+                    <!-- 性別 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">性別</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="gender" value="male" checked class="w-4 h-4 text-blue-600">
+                                <span>男性</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="gender" value="female" class="w-4 h-4 text-blue-600">
+                                <span>女性</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 體重 + 身高 (滑桿與數字輸入) -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700">體重 (公斤)</label>
+                            <span id="weightValue" class="text-2xl font-bold text-blue-700">70</span>
+                        </div>
+                        <input type="range" id="weightSlider" min="40" max="120" value="70" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer input-range">
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>40kg</span>
+                            <span>80kg</span>
+                            <span>120kg</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-sm font-medium text-gray-700">身高 (公分)</label>
+                            <span id="heightValue" class="text-2xl font-bold text-blue-700">170</span>
+                        </div>
+                        <input type="range" id="heightSlider" min="140" max="200" value="170" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer input-range">
+                        <div class="flex justify-between text-xs text-gray-400 mt-1">
+                            <span>140cm</span>
+                            <span>170cm</span>
+                            <span>200cm</span>
+                        </div>
+                    </div>
+
+                    <!-- 活動量 (新增) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">日常活動量</label>
+                        <select id="activityLevel" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
+                            <option value="sedentary">久坐 (辦公室工作，少運動)</option>
+                            <option value="light" selected>輕度活動 (每週運動1-2次)</option>
+                            <option value="moderate">中度活動 (每週運動3-5次)</option>
+                            <option value="active">高度活動 (每週運動6-7次)</option>
+                            <option value="veryActive">非常高強度 (體力勞動/每天訓練)</option>
+                        </select>
+                    </div>
+
+                    <!-- 目標 -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">你的主要目標</label>
+                        <select id="goalSelect" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
+                            <option value="maintain">⚖️ 維持體重 / 每日營養</option>
+                            <option value="weightLoss" selected>🔥 減重 (減少體脂)</option>
+                            <option value="weightGain">💪 健康增重 (增加肌肉)</option>
+                        </select>
+                    </div>
+
+                    <button id="calculateBtn" class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] active:scale-[0.98]">
+                        🔍 計算我的個人化計劃
+                    </button>
+
+                    <!-- 即時蛋白質計算結果 -->
+                    <div class="bg-blue-50 rounded-xl p-4 text-center">
+                        <div class="text-sm text-blue-700 mb-1">每日蛋白質建議攝取量</div>
+                        <div class="text-3xl font-black text-blue-800" id="proteinResult">105<span class="text-lg ml-1">克</span></div>
+                        <div class="text-xs text-blue-600 mt-1">根據你的體重與目標計算</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：計劃選擇卡 (佔3/5) -->
+            <div class="md:col-span-3 bg-white rounded-3xl p-6 card-shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-green-600 rounded-full"></span>
+                    第二步：你的康寶萊飲食計劃 (A/B/C/D)
+                </h2>
+
+                <!-- 性別/體重/身高 對應表 (動態) -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-xl">
+                    <p class="text-sm text-gray-600 mb-2">根據你的性別、體重與身高，建議的計劃是：</p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-2xl font-black" id="planLetterDisplay">C</span>
+                            <span class="text-gray-500 ml-2">計劃</span>
+                        </div>
+                        <div class="text-sm text-gray-500" id="planDescription">適合中等體型，體重正常至過重</div>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2 rounded-full mt-3">
+                        <div class="bg-green-500 h-2 rounded-full" id="planBar" style="width: 75%"></div>
+                    </div>
+                </div>
+
+                <!-- 三種目標選項卡 (維持/減重/增重) -->
+                <div class="grid md:grid-cals-3 gap-3 mb-6">
+                    <div class="border-2 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="maintain" onclick="selectGoalCard('maintain')">
+                        <div class="text-2xl mb-2">⚖️</div>
+                        <div class="font-bold">每日營養</div>
+                        <div class="text-xs text-gray-500">體重維持</div>
+                    </div>
+                    <div class="border-2 border-blue-400 bg-blue-50 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="weightLoss" onclick="selectGoalCard('weightLoss')">
+                        <div class="text-2xl mb-2">🔥</div>
+                        <div class="font-bold text-blue-700">減重</div>
+                        <div class="text-xs text-gray-500">減少體脂</div>
+                    </div>
+                    <div class="border-2 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="weightGain" onclick="selectGoalCard('weightGain')">
+                        <div class="text-2xl mb-2">💪</div>
+                        <div class="font-bold">健康增重</div>
+                        <div class="text-xs text-gray-500">增加肌肉</div>
+                    </div>
+                </div>
+
+                <!-- 顯示具體的每日飲食建議 -->
+                <div id="dietPlanDisplay" class="space-y-4">
+                    <!-- 會由 JavaScript 動態填入 -->
+                </div>
+
+                <!-- 下載工具連結 -->
+                <div class="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3 justify-center">
+                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">📥 下載膳食計劃選擇工具</a>
+                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">📥 下載膳食計劃表 (A/B/C/D)</a>
+                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">🥗 下載素食餐單搭配</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三步：膳食產生器 (Meal Builder) -->
+        <div class="bg-white rounded-3xl p-6 card-shadow mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-purple-600 rounded-full"></span>
+                第三步：膳食產生器 — 建立你的健康餐單
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">根據你的計劃，選擇以下類別的食物，組合成均衡的一餐。</p>
+
+            <!-- 餐點類型切換: 25g蛋白質/400卡 or 40g蛋白質/600卡 -->
+            <div class="flex gap-4 mb-6">
+                <button id="mealType400" class="flex-1 py-3 rounded-xl font-bold border-2 border-blue-600 bg-blue-600 text-white transition">🍽️ 25g蛋白質 / 400卡</button>
+                <button id="mealType600" class="flex-1 py-3 rounded-xl font-bold border-2 border-gray-300 text-gray-600 hover:bg-gray-50 transition">🥗 40g蛋白質 / 600卡</button>
+            </div>
+
+            <!-- 五大類食物選擇 (網格式) -->
+            <div class="grid md:grid-cols-5 gap-4 mb-6">
+                <!-- 蛋白質 -->
+                <div class="border rounded-xl p-3">
+                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-full"></span> 蛋白質</div>
+                    <select id="proteinSelect" class="w-full text-sm border rounded-lg p-2">
+                        <option value="0">-- 選擇 --</option>
+                        <option value="chicken">雞胸肉 100g (31g蛋白)</option>
+                        <option value="fish">魚柳 150g (35g蛋白)</option>
+                        <option value="egg">雞蛋 3隻 (18g蛋白)</option>
+                        <option value="tofu">硬豆腐 200g (18g蛋白)</option>
+                        <option value="beef">瘦牛肉 120g (30g蛋白)</option>
+                    </select>
+                </div>
+                <!-- 蔬菜 -->
+                <div class="border rounded-xl p-3">
+                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> 蔬菜</div>
+                    <select id="vegSelect" class="w-full text-sm border rounded-lg p-2">
+                        <option value="0">-- 選擇 --</option>
+                        <option value="broccoli">西蘭花 1碗 (5g纖維)</option>
+                        <option value="spinach">菠菜 2碗 (低碳)</option>
+                        <option value="peppers">甜椒 1碗 (維生素C)</option>
+                        <option value="mixed">雜菜沙律 隨意</option>
+                    </select>
+                </div>
+                <!-- 健康碳水化合物 -->
+                <div class="border rounded-xl p-3">
+                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> 健康碳水</div>
+                    <select id="carbSelect" class="w-full text-sm border rounded-lg p-2">
+                        <option value="0">-- 選擇 --</option>
+                        <option value="rice">糙米飯 1碗 (45g碳水)</option>
+                        <option value="sweetpotato">蕃薯 1個 (27g碳水)</option>
+                        <option value="oats">燕麥 半碗 (27g碳水)</option>
+                        <option value="quinoa">藜麥 半碗 (20g碳水)</option>
+                    </select>
+                </div>
+                <!-- 健康脂肪 -->
+                <div class="border rounded-xl p-3">
+                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> 健康脂肪</div>
+                    <select id="fatSelect" class="w-full text-sm border rounded-lg p-2">
+                        <option value="0">-- 選擇 --</option>
+                        <option value="avocado">牛油果 半個 (15g脂肪)</option>
+                        <option value="nuts">杏仁 30g (15g脂肪)</option>
+                        <option value="olive">橄欖油 1湯匙 (14g脂肪)</option>
+                    </select>
+                </div>
+                <!-- 調味料 -->
+                <div class="border rounded-xl p-3">
+                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-gray-500 rounded-full"></span> 調味料</div>
+                    <select id="seasoningSelect" class="w-full text-sm border rounded-lg p-2">
+                        <option value="0">-- 選擇 --</option>
+                        <option value="salsa">莎莎醬 2湯匙 (10卡)</option>
+                        <option value="vinegar">黑醋 1湯匙 (5卡)</option>
+                        <option value="herbs">香草/香料 隨意</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="buildMealBtn" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition">🔨 組合我的餐單</button>
+                <button id="resetMealBtn" class="border border-gray-300 px-6 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">↺ 重置</button>
+            </div>
+
+            <!-- 組合結果顯示 -->
+            <div id="mealResult" class="mt-4 p-4 bg-green-50 rounded-xl hidden">
+                <h3 class="font-bold text-green-800 mb-2">🍽️ 你的個人化餐單</h3>
+                <div id="mealDetail" class="text-sm text-gray-700"></div>
+                <div class="mt-2 text-xs text-gray-500">*此為建議組合，實際營養素取決於具體份量與品牌。</div>
+            </div>
+        </div>
+
+        <!-- 1500卡路里範例 (參考官方) -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-6 card-shadow">
+            <h3 class="text-lg font-bold text-gray-800 mb-3">📋 範例：1500卡路里減重計劃 (C計劃 - 減重)</h3>
+            <div class="grid md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-white p-3 rounded-xl">
+                    <div class="font-bold text-blue-700">🌅 早餐</div>
+                    <div>綠夢奇異果蛋白奶昔</div>
+                    <div class="text-xs text-gray-500">300卡 | 27g蛋白質</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl">
+                    <div class="font-bold text-blue-700">☀️ 午餐</div>
+                    <div>香蕉冰鎮蛋白奶昔</div>
+                    <div class="text-xs text-gray-500">330卡 | 28g蛋白質</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl">
+                    <div class="font-bold text-blue-700">🌙 晚餐</div>
+                    <div>西南烤雞沙拉</div>
+                    <div class="text-xs text-gray-500">600卡 | 40g蛋白質</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1">
+                    <div class="font-bold text-blue-700">上午加餐</div>
+                    <div>檸檬蛋白棒</div>
+                    <div class="text-xs text-gray-500">140卡 | 10g蛋白質</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1">
+                    <div class="font-bold text-blue-700">下午加餐</div>
+                    <div>火雞胸全麥餅乾</div>
+                    <div class="text-xs text-gray-500">145卡 | 18g蛋白質</div>
+                </div>
+                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1 flex items-center justify-center">
+                    <span class="text-xl font-black text-blue-800">每日總計 ≈1500卡 | 123g蛋白質</span>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-3 text-center">*此範例由康寶萊註冊營養師設計，僅供參考。</p>
+        </div>
+
+        <!-- 聯絡分銷商 -->
+        <div class="mt-6 text-center text-xs text-gray-400">
+            <p>© 2026 Herbalife. All rights reserved. 此工具由註冊營養師設計，僅適用於康寶萊分銷商與顧客。</p>
+            <p class="mt-1">Contact your local Distributor for more information and tips.</p>
+        </div>
+    </div>
+
+    <script>
+        // ---------- 核心計算邏輯 (根據蘇珊·鮑爾曼營養師的指引) ----------
+        const activityMultiplier = {
+            sedentary: 1.2,
+            light: 1.375,
+            moderate: 1.55,
+            active: 1.725,
+            veryActive: 1.9
+        };
+
+        // 蛋白質需求計算 (克/每公斤體重)
+        const proteinFactor = {
+            maintain: 0.8,
+            weightLoss: 1.5,
+            weightGain: 1.8
+        };
+
+        // 計劃對應表 (A/B/C/D) 簡化版本 (依據體重與身高)
+        function determinePlan(gender, weightKg, heightCm) {
+            const bmi = weightKg / ((heightCm/100) ** 2);
+            if (bmi < 18.5) return { letter: 'A', desc: '體重過輕，建議增重', barWidth: 25 };
+            if (bmi >= 18.5 && bmi < 24) return { letter: 'B', desc: '健康體重，維持或適度增肌', barWidth: 50 };
+            if (bmi >= 24 && bmi < 27) return { letter: 'C', desc: '體重過重，建議減重', barWidth: 75 };
+            return { letter: 'D', desc: '肥胖，需要積極減重', barWidth: 100 };
+        }
+
+        // 目標卡片選中樣式
+        function selectGoalCard(goal) {
+            document.querySelectorAll('[data-goal]').forEach(card => {
+                card.classList.remove('border-blue-400', 'bg-blue-50');
+                card.classList.add('border-gray-200');
+            });
+            const selected = document.querySelector(`[data-goal="${goal}"]`);
+            selected.classList.remove('border-gray-200');
+            selected.classList.add('border-blue-400', 'bg-blue-50');
+            
+            document.getElementById('goalSelect').value = goal;
+            updateAllCalculations();
+        }
+
+        // 更新所有顯示
+        function updateAllCalculations() {
+            const weight = parseFloat(document.getElementById('weightSlider').value);
+            const height = parseFloat(document.getElementById('heightSlider').value);
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const activity = document.getElementById('activityLevel').value;
+            const goal = document.getElementById('goalSelect').value;
+
+            // 更新滑桿旁的數字
+            document.getElementById('weightValue').innerText = weight;
+            document.getElementById('heightValue').innerText = height;
+
+            // 計算蛋白質需求
+            const proteinPerKg = proteinFactor[goal] || 1.5;
+            const proteinNeeded = Math.round(weight * proteinPerKg);
+            document.getElementById('proteinResult').innerHTML = `${proteinNeeded}<span class="text-lg ml-1">克</span>`;
+
+            // 計算計劃
+            const plan = determinePlan(gender, weight, height);
+            document.getElementById('planLetterDisplay').innerText = plan.letter;
+            document.getElementById('planDescription').innerText = plan.desc;
+            document.getElementById('planBar').style.width = plan.barWidth + '%';
+
+            // 產生飲食建議 (第二步顯示)
+            generateDietPlan(goal, plan.letter, proteinNeeded, weight);
+        }
+
+        // 產生飲食建議文字
+        function generateDietPlan(goal, planLetter, proteinNeeded, weight) {
+            const container = document.getElementById('dietPlanDisplay');
+            let title = '', shakes = '', snacks = '', meals = '';
+
+            if (goal === 'weightLoss') {
+                title = '🔥 減重計劃';
+                shakes = '每天 2 次 Formula 1 奶昔 (代替早餐與午餐)';
+                snacks = '2 次蛋白質點心 (每次約10-15g蛋白質，150卡)';
+                meals = '晚餐：均衡餐 (約40g蛋白質，600卡)';
+            } else if (goal === 'maintain') {
+                title = '⚖️ 每日營養 / 體重維持';
+                shakes = '每天 1 次 Formula 1 奶昔 (代替早餐)';
+                snacks = '1-2 次健康點心';
+                meals = '午餐與晚餐：均衡餐 (每餐約25-30g蛋白質)';
+            } else {
+                title = '💪 健康增重';
+                shakes = '每天 2-3 次 Formula 1 奶昔 + 蛋白粉';
+                snacks = '2-3 次高蛋白點心 (蛋白棒、果仁)';
+                meals = '三餐均衡飲食 + 額外蛋白質';
+            }
+
+            container.innerHTML = `
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-lg">${title} (計劃 ${planLetter})</h3>
+                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">每日蛋白質目標 ${proteinNeeded}g</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-start gap-2"><span class="text-blue-500">🥤</span> ${shakes}</div>
+                        <div class="flex items-start gap-2"><span class="text-yellow-500">🍫</span> ${snacks}</div>
+                        <div class="flex items-start gap-2"><span class="text-green-500">🍽️</span> ${meals}</div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">💡 可添加 2 湯匙個人化蛋白粉到每杯奶昔中，增加蛋白質攝取。</p>
+                </div>
+            `;
+        }
+
+        // 膳食產生器 (第三步)
+        document.getElementById('buildMealBtn').addEventListener('click', function() {
+            const protein = document.getElementById('proteinSelect').value;
+            const veg = document.getElementById('vegSelect').value;
+            const carb = document.getElementById('carbSelect').value;
+            const fat = document.getElementById('fatSelect').value;
+            const seasoning = document.getElementById('seasoningSelect').value;
+
+            let mealText = '';
+            if (protein !== '0') mealText += '🥩 蛋白質：' + document.getElementById('proteinSelect').selectedOptions[0].text + '<br>';
+            if (veg !== '0') mealText += '🥬 蔬菜：' + document.getElementById('vegSelect').selectedOptions[0].text + '<br>';
+            if (carb !== '0') mealText += '🍚 健康碳水：' + document.getElementById('carbSelect').selectedOptions[0].text + '<br>';
+            if (fat !== '0') mealText += '🥑 健康脂肪：' + document.getElementById('fatSelect').selectedOptions[0].text + '<br>';
+            if (seasoning !== '0') mealText += '🧂 調味料：' + document.getElementById('seasoningSelect').selectedOptions[0].text + '<br>';
+
+            if (mealText === '') mealText = '請至少選擇一項食物類別。';
+
+            document.getElementById('mealDetail').innerHTML = mealText;
+            document.getElementById('mealResult').classList.remove('hidden');
+        });
+
+        document.getElementById('resetMealBtn').addEventListener('click', function() {
+            document.getElementById('proteinSelect').value = '0';
+            document.getElementById('vegSelect').value = '0';
+            document.getElementById('carbSelect').value = '0';
+            document.getElementById('fatSelect').value = '0';
+            document.getElementById('seasoningSelect').value = '0';
+            document.getElementById('mealResult').classList.add('hidden');
+        });
+
+        // 400/600 卡切換 (僅UI)
+        document.getElementById('mealType400').addEventListener('click', function() {
+            this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
+            this.classList.add('border-blue-600', 'bg-blue-600', 'text-white');
+            document.getElementById('mealType600').classList.remove('border-blue-600', 'bg-blue-600', 'text-white');
+            document.getElementById('mealType600').classList.add('border-gray-300', 'text-gray-600', 'bg-white');
+        });
+        document.getElementById('mealType600').addEventListener('click', function() {
+            this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
+            this.classList.add('border-blue-600', 'bg-blue-600', 'text-white');
+            document.getElementById('mealType400').classList.remove('border-blue-600', 'bg-blue-600', 'text-white');
+            document.getElementById('mealType400').classList.add('border-gray-300', 'text-gray-600', 'bg-white');
+        });
+
+        // 綁定所有輸入事件
+        document.getElementById('weightSlider').addEventListener('input', updateAllCalculations);
+        document.getElementById('heightSlider').addEventListener('input', updateAllCalculations);
+        document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener('change', updateAllCalculations));
+        document.getElementById('activityLevel').addEventListener('change', updateAllCalculations);
+        document.getElementById('goalSelect').addEventListener('change', function(e) {
+            selectGoalCard(e.target.value);
+            updateAllCalculations();
+        });
+        document.getElementById('calculateBtn').addEventListener('click', updateAllCalculations);
+
+        // 初始化
+        window.onload = function() {
+            updateAllCalculations();
+        };
+    </script>
+</body>
+</html>
