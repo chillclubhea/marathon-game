@@ -2,325 +2,189 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONE2FIT 個人化蛋白質計算機 | 康寶萊營養計劃</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>ONE2FIT 港式個人化蛋白質＋卡路里計劃</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecf2 100%); }
-        .gradient-bg { background: linear-gradient(145deg, #1e3c72 0%, #2a5298 100%); }
-        .card-shadow { box-shadow: 0 20px 40px -15px rgba(0,0,0,0.15); }
-        .plan-card { transition: all 0.3s ease; }
-        .plan-card:hover { transform: translateY(-5px); box-shadow: 0 30px 50px -20px rgba(0,0,0,0.25); }
-        .input-range { accent-color: #2563eb; }
-        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
-        .protein-badge { background: linear-gradient(135deg, #10b981, #059669); }
-        .calorie-badge { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .expert-quote { background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-left: 5px solid #2563eb; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .plan-card { transition: all 0.2s ease; cursor: pointer; }
+        .plan-card:hover { transform: translateY(-3px); box-shadow: 0 12px 25px -8px rgba(0,0,0,0.1); }
+        .plan-active { border: 2px solid #2563eb; background: #eff6ff; }
+        .kcal-badge { background: #fee2e2; color: #b91c1c; }
+        .protein-badge { background: #dcfce7; color: #166534; }
+        .food-grid { max-height: 500px; overflow-y: auto; }
+        .sticky-tabs { position: sticky; top: 0; background: white; z-index: 10; }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-6">
+<body class="p-4 pb-10">
 
     <div class="max-w-6xl mx-auto">
-        <!-- 標題與專家資訊 -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-800 mb-2">
-                ⚡ ONE2FIT 個人化蛋白質計算機
+        <!-- 標題 -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-indigo-800">
+                🥢 ONE2FIT 港式營養計劃
             </h1>
-            <div class="flex items-center justify-center gap-3 text-sm text-gray-600 mb-3">
-                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">🏆 康寶萊官方營養工具</span>
-                <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full">📋 註冊營養師設計</span>
-            </div>
-            <div class="expert-quote p-4 rounded-xl max-w-3xl mx-auto text-left">
-                <div class="flex items-start gap-3">
-                    <div class="text-4xl">👩‍⚕️</div>
-                    <div>
-                        <p class="text-gray-700 text-sm md:text-base italic">「飲食計劃對任何健康飲食都至關重要，但有時很難準確地規劃每日均衡飲食。我們精心打造了簡單有效的飲食計劃，其中包含卡路里計算和其他輔助工具，幫助您輕鬆規劃膳食。」</p>
-                        <p class="text-xs text-gray-500 mt-2">— 蘇珊·鮑爾曼，理學碩士、註冊營養師、運動營養專家、美國營養與飲食學會會員，康寶萊全球營養教育與培訓高級總監，2024年1月</p>
-                    </div>
-                </div>
-            </div>
+            <p class="text-gray-500 mt-2">體重・蛋白質・卡路里・港式飲食一覽</p>
         </div>
 
-        <!-- 步驟指示器 -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center gap-2 mb-2 md:mb-0">
-                <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
-                <span class="font-medium text-gray-700">選擇計劃</span>
-                <div class="w-16 h-0.5 bg-gray-300 mx-2 hidden md:block"></div>
-            </div>
-            <div class="flex items-center gap-2 mb-2 md:mb-0">
-                <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">2</div>
-                <span class="font-medium text-gray-500">查看建議</span>
-                <div class="w-16 h-0.5 bg-gray-300 mx-2 hidden md:block"></div>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center font-bold">3</div>
-                <span class="font-medium text-gray-500">建立餐單</span>
-            </div>
-        </div>
-
-        <!-- 主要內容：第一步 + 第二步 -->
+        <!-- 主要內容：左計算機 + 右食物庫 -->
         <div class="grid md:grid-cols-5 gap-6 mb-8">
-            <!-- 左側：個人資料輸入 (佔2/5) -->
-            <div class="md:col-span-2 bg-white rounded-3xl p-6 card-shadow">
+            <!-- 左：蛋白質計算機 -->
+            <div class="md:col-span-2 bg-white rounded-3xl p-6 shadow-lg">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                    第一步：輸入你的資料
+                    <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span> ① 個人蛋白質計算
                 </h2>
-                
-                <div class="space-y-5">
-                    <!-- 性別 -->
+                <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">性別</label>
                         <div class="flex gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="gender" value="male" checked class="w-4 h-4 text-blue-600">
-                                <span>男性</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="gender" value="female" class="w-4 h-4 text-blue-600">
-                                <span>女性</span>
-                            </label>
+                            <label class="flex items-center gap-2"><input type="radio" name="gender" value="male" checked class="w-4 h-4 text-blue-600"> 男</label>
+                            <label class="flex items-center gap-2"><input type="radio" name="gender" value="female" class="w-4 h-4 text-blue-600"> 女</label>
                         </div>
                     </div>
-
-                    <!-- 體重 + 身高 (滑桿與數字輸入) -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-sm font-medium text-gray-700">體重 (公斤)</label>
-                            <span id="weightValue" class="text-2xl font-bold text-blue-700">70</span>
+                            <label class="text-sm font-medium text-gray-700">體重 (kg)</label>
+                            <span id="weightValue" class="text-2xl font-bold text-blue-700">65</span>
                         </div>
-                        <input type="range" id="weightSlider" min="40" max="120" value="70" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer input-range">
-                        <div class="flex justify-between text-xs text-gray-400 mt-1">
-                            <span>40kg</span>
-                            <span>80kg</span>
-                            <span>120kg</span>
-                        </div>
+                        <input type="range" id="weightSlider" min="40" max="120" value="65" step="0.5" class="w-full h-2 bg-gray-200 rounded-lg accent-blue-600">
                     </div>
-
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="block text-sm font-medium text-gray-700">身高 (公分)</label>
-                            <span id="heightValue" class="text-2xl font-bold text-blue-700">170</span>
+                            <label class="text-sm font-medium text-gray-700">身高 (cm)</label>
+                            <span id="heightValue" class="text-2xl font-bold text-blue-700">165</span>
                         </div>
-                        <input type="range" id="heightSlider" min="140" max="200" value="170" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer input-range">
-                        <div class="flex justify-between text-xs text-gray-400 mt-1">
-                            <span>140cm</span>
-                            <span>170cm</span>
-                            <span>200cm</span>
-                        </div>
+                        <input type="range" id="heightSlider" min="140" max="200" value="165" step="1" class="w-full h-2 bg-gray-200 rounded-lg accent-blue-600">
                     </div>
-
-                    <!-- 活動量 (新增) -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">日常活動量</label>
-                        <select id="activityLevel" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
-                            <option value="sedentary">久坐 (辦公室工作，少運動)</option>
-                            <option value="light" selected>輕度活動 (每週運動1-2次)</option>
-                            <option value="moderate">中度活動 (每週運動3-5次)</option>
-                            <option value="active">高度活動 (每週運動6-7次)</option>
-                            <option value="veryActive">非常高強度 (體力勞動/每天訓練)</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">活動量</label>
+                        <select id="activityLevel" class="w-full border border-gray-300 rounded-xl p-3">
+                            <option value="1.2">久坐 (辦公室工作)</option>
+                            <option value="1.375" selected>輕度活動 (運動1-2次/週)</option>
+                            <option value="1.55">中度活動 (運動3-5次/週)</option>
+                            <option value="1.725">高度活動 (運動6-7次/週)</option>
+                            <option value="1.9">非常高強度 (體力勞動/每天訓練)</option>
                         </select>
                     </div>
-
-                    <!-- 目標 -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">你的主要目標</label>
-                        <select id="goalSelect" class="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-blue-200 focus:border-blue-400 outline-none">
-                            <option value="maintain">⚖️ 維持體重 / 每日營養</option>
-                            <option value="weightLoss" selected>🔥 減重 (減少體脂)</option>
-                            <option value="weightGain">💪 健康增重 (增加肌肉)</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">目標</label>
+                        <select id="goalSelect" class="w-full border border-gray-300 rounded-xl p-3">
+                            <option value="0.8">⚖️ 維持體重</option>
+                            <option value="1.5" selected>🔥 減重</option>
+                            <option value="1.8">💪 增肌</option>
                         </select>
                     </div>
-
-                    <button id="calculateBtn" class="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition transform hover:scale-[1.02] active:scale-[0.98]">
-                        🔍 計算我的個人化計劃
+                    <button id="calcBtn" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition">
+                        更新計算
                     </button>
-
-                    <!-- 即時蛋白質計算結果 -->
                     <div class="bg-blue-50 rounded-xl p-4 text-center">
-                        <div class="text-sm text-blue-700 mb-1">每日蛋白質建議攝取量</div>
-                        <div class="text-3xl font-black text-blue-800" id="proteinResult">105<span class="text-lg ml-1">克</span></div>
-                        <div class="text-xs text-blue-600 mt-1">根據你的體重與目標計算</div>
+                        <div class="text-sm text-blue-700 mb-1">每日蛋白質建議</div>
+                        <div class="text-3xl font-black text-blue-800" id="proteinResult">98<span class="text-lg ml-1">克</span></div>
+                        <div class="text-xs text-blue-600 mt-1" id="calorieEstimate">每日熱量：約 1950 kcal</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 右側：計劃選擇卡 (佔3/5) -->
-            <div class="md:col-span-3 bg-white rounded-3xl p-6 card-shadow">
+            <!-- 右：港式食物熱量資料庫 (整合所有截圖資料) -->
+            <div class="md:col-span-3 bg-white rounded-3xl p-6 shadow-lg">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <span class="w-1.5 h-6 bg-green-600 rounded-full"></span>
-                    第二步：你的康寶萊飲食計劃 (A/B/C/D)
+                    <span class="w-1.5 h-6 bg-green-600 rounded-full"></span> ② 港式食物熱量庫
                 </h2>
-
-                <!-- 性別/體重/身高 對應表 (動態) -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-xl">
-                    <p class="text-sm text-gray-600 mb-2">根據你的性別、體重與身高，建議的計劃是：</p>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-2xl font-black" id="planLetterDisplay">C</span>
-                            <span class="text-gray-500 ml-2">計劃</span>
-                        </div>
-                        <div class="text-sm text-gray-500" id="planDescription">適合中等體型，體重正常至過重</div>
-                    </div>
-                    <div class="w-full bg-gray-200 h-2 rounded-full mt-3">
-                        <div class="bg-green-500 h-2 rounded-full" id="planBar" style="width: 75%"></div>
-                    </div>
+                <!-- 分類標籤 -->
+                <div class="sticky-tabs pb-2 mb-3 flex flex-wrap gap-2 border-b">
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-medium" data-cat="all">全部</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="茶餐廳">茶餐廳</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="粥粉麵飯">粥粉麵飯</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="點心">點心</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="燒味">燒味</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="壽司">壽司/卷物</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="火鍋">火鍋配料</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="街頭小食">街頭小食</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="飲品">飲品/糖水</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="麵包">麵包/多士</button>
                 </div>
-
-                <!-- 三種目標選項卡 (維持/減重/增重) -->
-                <div class="grid md:grid-cals-3 gap-3 mb-6">
-                    <div class="border-2 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="maintain" onclick="selectGoalCard('maintain')">
-                        <div class="text-2xl mb-2">⚖️</div>
-                        <div class="font-bold">每日營養</div>
-                        <div class="text-xs text-gray-500">體重維持</div>
-                    </div>
-                    <div class="border-2 border-blue-400 bg-blue-50 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="weightLoss" onclick="selectGoalCard('weightLoss')">
-                        <div class="text-2xl mb-2">🔥</div>
-                        <div class="font-bold text-blue-700">減重</div>
-                        <div class="text-xs text-gray-500">減少體脂</div>
-                    </div>
-                    <div class="border-2 rounded-xl p-4 cursor-pointer transition plan-card" data-goal="weightGain" onclick="selectGoalCard('weightGain')">
-                        <div class="text-2xl mb-2">💪</div>
-                        <div class="font-bold">健康增重</div>
-                        <div class="text-xs text-gray-500">增加肌肉</div>
-                    </div>
+                <!-- 食物網格 -->
+                <div id="foodGrid" class="food-grid grid grid-cols-2 md:grid-cols-3 gap-3 pr-1">
+                    <!-- JS 動態載入 -->
                 </div>
-
-                <!-- 顯示具體的每日飲食建議 -->
-                <div id="dietPlanDisplay" class="space-y-4">
-                    <!-- 會由 JavaScript 動態填入 -->
-                </div>
-
-                <!-- 下載工具連結 -->
-                <div class="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3 justify-center">
-                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">📥 下載膳食計劃選擇工具</a>
-                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">📥 下載膳食計劃表 (A/B/C/D)</a>
-                    <a href="#" class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-200 transition">🥗 下載素食餐單搭配</a>
-                </div>
+                <p class="text-xs text-gray-400 mt-3">*資料整合自「跟住Evelyn食」系列及香港食物安全中心，熱量僅供參考。</p>
             </div>
         </div>
 
-        <!-- 第三步：膳食產生器 (Meal Builder) -->
-        <div class="bg-white rounded-3xl p-6 card-shadow mb-8">
+        <!-- ③ 港式卡路里飲食計劃 (六個等級，可點擊) -->
+        <div class="bg-white rounded-3xl p-6 shadow-lg mb-8">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-1.5 h-6 bg-purple-600 rounded-full"></span>
-                第三步：膳食產生器 — 建立你的健康餐單
+                <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span> ③ 港式卡路里飲食計劃（適合香港人口味）
             </h2>
-            <p class="text-sm text-gray-500 mb-4">根據你的計劃，選擇以下類別的食物，組合成均衡的一餐。</p>
+            <p class="text-sm text-gray-500 mb-4">根據你的每日總熱量，推薦最接近嘅計劃。點擊卡片睇詳細餐單👇</p>
 
-            <!-- 餐點類型切換: 25g蛋白質/400卡 or 40g蛋白質/600卡 -->
-            <div class="flex gap-4 mb-6">
-                <button id="mealType400" class="flex-1 py-3 rounded-xl font-bold border-2 border-blue-600 bg-blue-600 text-white transition">🍽️ 25g蛋白質 / 400卡</button>
-                <button id="mealType600" class="flex-1 py-3 rounded-xl font-bold border-2 border-gray-300 text-gray-600 hover:bg-gray-50 transition">🥗 40g蛋白質 / 600卡</button>
-            </div>
-
-            <!-- 五大類食物選擇 (網格式) -->
-            <div class="grid md:grid-cols-5 gap-4 mb-6">
-                <!-- 蛋白質 -->
-                <div class="border rounded-xl p-3">
-                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-red-500 rounded-full"></span> 蛋白質</div>
-                    <select id="proteinSelect" class="w-full text-sm border rounded-lg p-2">
-                        <option value="0">-- 選擇 --</option>
-                        <option value="chicken">雞胸肉 100g (31g蛋白)</option>
-                        <option value="fish">魚柳 150g (35g蛋白)</option>
-                        <option value="egg">雞蛋 3隻 (18g蛋白)</option>
-                        <option value="tofu">硬豆腐 200g (18g蛋白)</option>
-                        <option value="beef">瘦牛肉 120g (30g蛋白)</option>
-                    </select>
+            <!-- 計劃選擇卡 (6個等級) -->
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6" id="planTabs">
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="1200">
+                    <div class="font-bold text-lg">1200</div>
+                    <div class="text-xs text-gray-500">kcal</div>
                 </div>
-                <!-- 蔬菜 -->
-                <div class="border rounded-xl p-3">
-                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-green-500 rounded-full"></span> 蔬菜</div>
-                    <select id="vegSelect" class="w-full text-sm border rounded-lg p-2">
-                        <option value="0">-- 選擇 --</option>
-                        <option value="broccoli">西蘭花 1碗 (5g纖維)</option>
-                        <option value="spinach">菠菜 2碗 (低碳)</option>
-                        <option value="peppers">甜椒 1碗 (維生素C)</option>
-                        <option value="mixed">雜菜沙律 隨意</option>
-                    </select>
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="1500">
+                    <div class="font-bold text-lg">1500</div>
+                    <div class="text-xs text-gray-500">kcal</div>
                 </div>
-                <!-- 健康碳水化合物 -->
-                <div class="border rounded-xl p-3">
-                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-yellow-500 rounded-full"></span> 健康碳水</div>
-                    <select id="carbSelect" class="w-full text-sm border rounded-lg p-2">
-                        <option value="0">-- 選擇 --</option>
-                        <option value="rice">糙米飯 1碗 (45g碳水)</option>
-                        <option value="sweetpotato">蕃薯 1個 (27g碳水)</option>
-                        <option value="oats">燕麥 半碗 (27g碳水)</option>
-                        <option value="quinoa">藜麥 半碗 (20g碳水)</option>
-                    </select>
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="1800">
+                    <div class="font-bold text-lg">1800</div>
+                    <div class="text-xs text-gray-500">kcal</div>
                 </div>
-                <!-- 健康脂肪 -->
-                <div class="border rounded-xl p-3">
-                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-orange-500 rounded-full"></span> 健康脂肪</div>
-                    <select id="fatSelect" class="w-full text-sm border rounded-lg p-2">
-                        <option value="0">-- 選擇 --</option>
-                        <option value="avocado">牛油果 半個 (15g脂肪)</option>
-                        <option value="nuts">杏仁 30g (15g脂肪)</option>
-                        <option value="olive">橄欖油 1湯匙 (14g脂肪)</option>
-                    </select>
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="2000">
+                    <div class="font-bold text-lg">2000</div>
+                    <div class="text-xs text-gray-500">kcal</div>
                 </div>
-                <!-- 調味料 -->
-                <div class="border rounded-xl p-3">
-                    <div class="font-bold text-sm mb-2 flex items-center gap-1"><span class="w-2 h-2 bg-gray-500 rounded-full"></span> 調味料</div>
-                    <select id="seasoningSelect" class="w-full text-sm border rounded-lg p-2">
-                        <option value="0">-- 選擇 --</option>
-                        <option value="salsa">莎莎醬 2湯匙 (10卡)</option>
-                        <option value="vinegar">黑醋 1湯匙 (5卡)</option>
-                        <option value="herbs">香草/香料 隨意</option>
-                    </select>
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="2200">
+                    <div class="font-bold text-lg">2200</div>
+                    <div class="text-xs text-gray-500">kcal</div>
+                </div>
+                <div class="plan-card p-3 text-center rounded-xl border-2 border-gray-200 bg-white" data-plan="2500">
+                    <div class="font-bold text-lg">2500</div>
+                    <div class="text-xs text-gray-500">kcal</div>
                 </div>
             </div>
 
-            <div class="flex gap-3">
-                <button id="buildMealBtn" class="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-purple-700 transition">🔨 組合我的餐單</button>
-                <button id="resetMealBtn" class="border border-gray-300 px-6 py-3 rounded-xl font-bold text-gray-600 hover:bg-gray-50 transition">↺ 重置</button>
+            <!-- 詳細餐單顯示區 -->
+            <div id="planDetailCard" class="bg-orange-50 rounded-xl p-5">
+                <!-- 會由 JavaScript 動態填充 -->
             </div>
 
-            <!-- 組合結果顯示 -->
-            <div id="mealResult" class="mt-4 p-4 bg-green-50 rounded-xl hidden">
-                <h3 class="font-bold text-green-800 mb-2">🍽️ 你的個人化餐單</h3>
-                <div id="mealDetail" class="text-sm text-gray-700"></div>
-                <div class="mt-2 text-xs text-gray-500">*此為建議組合，實際營養素取決於具體份量與品牌。</div>
+            <p class="text-xs text-gray-400 mt-3">*計劃為營養師設計範例，可根據實際食物份量微調。如需個人化建議，請諮詢康寶萊教練。</p>
+        </div>
+
+        <!-- 下載工具與官方範例 (保留) -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl p-5 shadow-md">
+                <div class="font-bold text-lg mb-2">📥 下載膳食計劃選擇工具</div>
+                <p class="text-xs text-gray-500 mb-3">PDF 表格，幫你快速揀選適合嘅計劃</p>
+                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-md">
+                <div class="font-bold text-lg mb-2">📥 下載膳食計劃表 (A/B/C/D)</div>
+                <p class="text-xs text-gray-500 mb-3">詳細餐單範例，跟住食就得</p>
+                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
+            </div>
+            <div class="bg-white rounded-2xl p-5 shadow-md">
+                <div class="font-bold text-lg mb-2">🥗 下載素食餐單搭配</div>
+                <p class="text-xs text-gray-500 mb-3">素食者專用，補充蛋白質無難度</p>
+                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
             </div>
         </div>
 
-        <!-- 1500卡路里範例 (參考官方) -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-6 card-shadow">
-            <h3 class="text-lg font-bold text-gray-800 mb-3">📋 範例：1500卡路里減重計劃 (C計劃 - 減重)</h3>
-            <div class="grid md:grid-cols-3 gap-4 text-sm">
-                <div class="bg-white p-3 rounded-xl">
-                    <div class="font-bold text-blue-700">🌅 早餐</div>
-                    <div>綠夢奇異果蛋白奶昔</div>
-                    <div class="text-xs text-gray-500">300卡 | 27g蛋白質</div>
-                </div>
-                <div class="bg-white p-3 rounded-xl">
-                    <div class="font-bold text-blue-700">☀️ 午餐</div>
-                    <div>香蕉冰鎮蛋白奶昔</div>
-                    <div class="text-xs text-gray-500">330卡 | 28g蛋白質</div>
-                </div>
-                <div class="bg-white p-3 rounded-xl">
-                    <div class="font-bold text-blue-700">🌙 晚餐</div>
-                    <div>西南烤雞沙拉</div>
-                    <div class="text-xs text-gray-500">600卡 | 40g蛋白質</div>
-                </div>
-                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1">
-                    <div class="font-bold text-blue-700">上午加餐</div>
-                    <div>檸檬蛋白棒</div>
-                    <div class="text-xs text-gray-500">140卡 | 10g蛋白質</div>
-                </div>
-                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1">
-                    <div class="font-bold text-blue-700">下午加餐</div>
-                    <div>火雞胸全麥餅乾</div>
-                    <div class="text-xs text-gray-500">145卡 | 18g蛋白質</div>
-                </div>
-                <div class="bg-white p-3 rounded-xl col-span-3 md:col-span-1 flex items-center justify-center">
-                    <span class="text-xl font-black text-blue-800">每日總計 ≈1500卡 | 123g蛋白質</span>
-                </div>
+        <!-- 1500卡路里官方範例 (僅參考) -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-6 shadow-lg">
+            <h3 class="text-lg font-bold text-gray-800 mb-3">📋 官方範例：1500卡路里減重計劃 (C計劃)</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                <div class="bg-white p-3 rounded-xl"><span class="font-bold text-blue-700">🌅 早餐</span> 綠夢奇異果蛋白奶昔 (300卡,27g蛋白)</div>
+                <div class="bg-white p-3 rounded-xl"><span class="font-bold text-blue-700">上午加餐</span> 檸檬蛋白棒 (140卡,10g蛋白)</div>
+                <div class="bg-white p-3 rounded-xl"><span class="font-bold text-blue-700">☀️ 午餐</span> 香蕉冰鎮蛋白奶昔 (330卡,28g蛋白)</div>
+                <div class="bg-white p-3 rounded-xl"><span class="font-bold text-blue-700">下午加餐</span> 火雞胸全麥餅乾 (145卡,18g蛋白)</div>
+                <div class="bg-white p-3 rounded-xl"><span class="font-bold text-blue-700">🌙 晚餐</span> 西南烤雞沙拉 (600卡,40g蛋白)</div>
             </div>
-            <p class="text-xs text-gray-400 mt-3 text-center">*此範例由康寶萊註冊營養師設計，僅供參考。</p>
+            <p class="text-xs text-gray-400 mt-3 text-center">每日總計 ≈1500卡 | 123g蛋白質 (設計：蘇珊·鮑爾曼，註冊營養師)</p>
         </div>
 
         <!-- 聯絡分銷商 -->
@@ -331,169 +195,335 @@
     </div>
 
     <script>
-        // ---------- 核心計算邏輯 (根據蘇珊·鮑爾曼營養師的指引) ----------
-        const activityMultiplier = {
-            sedentary: 1.2,
-            light: 1.375,
-            moderate: 1.55,
-            active: 1.725,
-            veryActive: 1.9
-        };
+        // ---------- 1. 食物資料庫 (整合所有截圖數據) ----------
+        const foodDatabase = [
+            // 茶餐廳類
+            { name: "餐蛋公仔麵", cat: "茶餐廳", kcal: 743, protein: 22, note: "一碗" },
+            { name: "炸雞脾配薯條", cat: "茶餐廳", kcal: 713, protein: 25, note: "一碟" },
+            { name: "公司三文治", cat: "茶餐廳", kcal: 600, protein: 24, note: "一份" },
+            { name: "奶醬厚多士", cat: "茶餐廳", kcal: 529, protein: 10, note: "一份" },
+            { name: "西多士", cat: "茶餐廳", kcal: 522, protein: 12, note: "一份" },
+            { name: "豬扒包", cat: "茶餐廳", kcal: 481, protein: 20, note: "一個" },
+            { name: "火腿蛋三文治", cat: "茶餐廳", kcal: 480, protein: 18, note: "一份" },
+            { name: "菠蘿油", cat: "茶餐廳", kcal: 449, protein: 6, note: "一個" },
+            { name: "炸雞翼 (2隻)", cat: "茶餐廳", kcal: 402, protein: 16, note: "2隻" },
+            { name: "迷你叉燒飯", cat: "茶餐廳", kcal: 360, protein: 18, note: "一碗" },
+            { name: "雪菜肉絲米粉", cat: "茶餐廳", kcal: 350, protein: 14, note: "一碗" },
+            { name: "奶油豬", cat: "茶餐廳", kcal: 330, protein: 8, note: "一個" },
+            // 粥粉麵飯類
+            { name: "枝竹火腩飯", cat: "粥粉麵飯", kcal: 1450, protein: 45, note: "一碟" },
+            { name: "粟米肉粒飯", cat: "粥粉麵飯", kcal: 650, protein: 28, note: "一碟" },
+            { name: "咖喱牛腩飯", cat: "粥粉麵飯", kcal: 1300, protein: 40, note: "一碟" },
+            { name: "鮮茄牛肉飯 (少飯)", cat: "粥粉麵飯", kcal: 650, protein: 30, note: "一碟" },
+            { name: "番茄焗豬扒飯", cat: "粥粉麵飯", kcal: 1300, protein: 42, note: "一碟" },
+            { name: "番茄牛肉通粉", cat: "粥粉麵飯", kcal: 380, protein: 18, note: "一碗" },
+            { name: "乾炒牛河", cat: "粥粉麵飯", kcal: 970, protein: 30, note: "一碟" },
+            { name: "星洲炒米", cat: "粥粉麵飯", kcal: 1100, protein: 25, note: "一碟" },
+            { name: "鼓椒排骨炒麵", cat: "粥粉麵飯", kcal: 1500, protein: 38, note: "一碟" },
+            { name: "福建炒飯", cat: "粥粉麵飯", kcal: 1400, protein: 35, note: "一碟" },
+            { name: "楊州炒飯", cat: "粥粉麵飯", kcal: 1200, protein: 32, note: "一碟" },
+            { name: "豬扒炒公仔麵", cat: "粥粉麵飯", kcal: 1500, protein: 30, note: "一碟" },
+            { name: "雪菜肉絲炊米粉", cat: "粥粉麵飯", kcal: 1000, protein: 25, note: "一碟" },
+            { name: "沙牛肉麵", cat: "粥粉麵飯", kcal: 667, protein: 28, note: "一碗" },
+            { name: "叉燒通粉", cat: "粥粉麵飯", kcal: 360, protein: 16, note: "一碗" },
+            { name: "艇仔粥", cat: "粥粉麵飯", kcal: 320, protein: 18, note: "一碗" },
+            { name: "及第粥", cat: "粥粉麵飯", kcal: 310, protein: 20, note: "一碗" },
+            { name: "皮蛋瘦肉粥", cat: "粥粉麵飯", kcal: 260, protein: 15, note: "一碗" },
+            { name: "白粥", cat: "粥粉麵飯", kcal: 160, protein: 4, note: "一碗" },
+            { name: "豉油王炒麵", cat: "粥粉麵飯", kcal: 640, protein: 16, note: "一碟" },
+            { name: "油炸鬼", cat: "粥粉麵飯", kcal: 517, protein: 10, note: "一條" },
+            // 點心類
+            { name: "馬拉糕", cat: "點心", kcal: 350, protein: 5, note: "一件" },
+            { name: "珍珠雞", cat: "點心", kcal: 200, protein: 8, note: "一件" },
+            { name: "叉燒酥", cat: "點心", kcal: 198, protein: 4, note: "一件" },
+            { name: "蝦餃", cat: "點心", kcal: 170, protein: 7, note: "一件" },
+            { name: "四寶雞扎", cat: "點心", kcal: 165, protein: 10, note: "一件" },
+            { name: "鮮蝦腐皮卷", cat: "點心", kcal: 144, protein: 8, note: "一件" },
+            { name: "叉燒包", cat: "點心", kcal: 131, protein: 5, note: "一個" },
+            { name: "奶皇包", cat: "點心", kcal: 120, protein: 4, note: "一個" },
+            { name: "山竹牛肉球", cat: "點心", kcal: 100, protein: 8, note: "一粒" },
+            { name: "燒賣", cat: "點心", kcal: 61, protein: 4, note: "一粒" },
+            { name: "豉汁蒸鳳爪", cat: "點心", kcal: 58, protein: 5, note: "一碟" },
+            { name: "唐記糯米雞", cat: "點心", kcal: 400, protein: 15, note: "一份" },
+            { name: "唐記山竹牛肉", cat: "點心", kcal: 94, protein: 8, note: "一粒" },
+            { name: "唐記燒賣", cat: "點心", kcal: 42, protein: 3, note: "一粒" },
+            // 燒味類
+            { name: "燒腩仔 (100g)", cat: "燒味", kcal: 547, protein: 20, note: "每100g" },
+            { name: "乳豬 (100g)", cat: "燒味", kcal: 360, protein: 25, note: "每100g" },
+            { name: "燒鴨連皮 (100g)", cat: "燒味", kcal: 337, protein: 18, note: "每100g" },
+            { name: "燒鵝連皮 (100g)", cat: "燒味", kcal: 306, protein: 19, note: "每100g" },
+            { name: "叉燒 (100g)", cat: "燒味", kcal: 279, protein: 22, note: "每100g" },
+            { name: "白切雞 (100g)", cat: "燒味", kcal: 148, protein: 25, note: "每100g" },
+            // 壽司/卷物
+            { name: "三文魚腩壽司", cat: "壽司", kcal: 95, protein: 6, note: "一件" },
+            { name: "大拖羅壽司", cat: "壽司", kcal: 90, protein: 5, note: "一件" },
+            { name: "蒲燒鰻魚壽司", cat: "壽司", kcal: 85, protein: 4, note: "一件" },
+            { name: "三文魚壽司", cat: "壽司", kcal: 53, protein: 5, note: "一件" },
+            { name: "帶子壽司", cat: "壽司", kcal: 41, protein: 5, note: "一件" },
+            { name: "北寄貝壽司", cat: "壽司", kcal: 41, protein: 4, note: "一件" },
+            { name: "墨魚壽司", cat: "壽司", kcal: 42, protein: 4, note: "一件" },
+            { name: "花之戀", cat: "壽司", kcal: 245, protein: 8, note: "一件" },
+            { name: "加州卷 (三文魚)", cat: "壽司", kcal: 42, protein: 2, note: "一件" },
+            { name: "青瓜卷", cat: "壽司", kcal: 14, protein: 1, note: "一件" },
+            // 火鍋配料
+            { name: "炸響鈴 (100g)", cat: "火鍋", kcal: 752, protein: 8, note: "每100g" },
+            { name: "炸魚皮 (100g)", cat: "火鍋", kcal: 600, protein: 20, note: "每100g" },
+            { name: "生根 (100g)", cat: "火鍋", kcal: 493, protein: 5, note: "每100g" },
+            { name: "即食麵 (100g)", cat: "火鍋", kcal: 452, protein: 10, note: "每100g" },
+            { name: "肥牛 (100g)", cat: "火鍋", kcal: 210, protein: 18, note: "每100g" },
+            { name: "牛丸 (100g)", cat: "火鍋", kcal: 175, protein: 15, note: "每100g" },
+            { name: "墨魚丸 (100g)", cat: "火鍋", kcal: 166, protein: 12, note: "每100g" },
+            { name: "魚皮餃 (100g)", cat: "火鍋", kcal: 180, protein: 10, note: "每100g" },
+            { name: "蟹柳 (100g)", cat: "火鍋", kcal: 113, protein: 8, note: "每100g" },
+            { name: "豆腐 (100g)", cat: "火鍋", kcal: 60, protein: 6, note: "每100g" },
+            { name: "鴨血 (100g)", cat: "火鍋", kcal: 24, protein: 3, note: "每100g" },
+            { name: "芋絲 (100g)", cat: "火鍋", kcal: 2, protein: 0.5, note: "每100g" },
+            // 街頭小食
+            { name: "章魚小丸子 (6粒)", cat: "街頭小食", kcal: 774, protein: 15, note: "6粒" },
+            { name: "格仔餅 (1底)", cat: "街頭小食", kcal: 440, protein: 8, note: "一底" },
+            { name: "雞蛋仔 (1底)", cat: "街頭小食", kcal: 389, protein: 10, note: "一底" },
+            { name: "魚肉燒賣 (6粒)", cat: "街頭小食", kcal: 294, protein: 8, note: "6粒" },
+            { name: "臭豆腐 (1件)", cat: "街頭小食", kcal: 174, protein: 6, note: "一件" },
+            { name: "生菜魚肉 (1碗)", cat: "街頭小食", kcal: 118, protein: 10, note: "一碗" },
+            { name: "煎釀三寶 (3件)", cat: "街頭小食", kcal: 110, protein: 5, note: "3件" },
+            { name: "咖喱魚蛋 (6粒)", cat: "街頭小食", kcal: 76, protein: 4, note: "6粒" },
+            { name: "茶葉蛋 (1隻)", cat: "街頭小食", kcal: 73, protein: 6, note: "一隻" },
+            // 飲品/糖水
+            { name: "珍珠手炒黑糖鮮奶", cat: "飲品", kcal: 452, protein: 8, note: "一杯" },
+            { name: "芋頭鮮奶", cat: "飲品", kcal: 343, protein: 10, note: "一杯" },
+            { name: "珍珠伯爵紅茶拿鐵", cat: "飲品", kcal: 315, protein: 6, note: "一杯" },
+            { name: "法芙娜可可鮮奶", cat: "飲品", kcal: 312, protein: 9, note: "一杯" },
+            { name: "養樂多綠茶", cat: "飲品", kcal: 276, protein: 2, note: "一杯" },
+            { name: "柳丁綠茶", cat: "飲品", kcal: 251, protein: 0, note: "一杯" },
+            { name: "冬瓜青茶", cat: "飲品", kcal: 249, protein: 0, note: "一杯" },
+            { name: "高峰烏龍茶", cat: "飲品", kcal: 128, protein: 0, note: "一杯" },
+            { name: "合桃露", cat: "糖水", kcal: 395, protein: 10, note: "一碗" },
+            { name: "芝麻糊", cat: "糖水", kcal: 280, protein: 8, note: "一碗" },
+            { name: "紅豆沙", cat: "糖水", kcal: 220, protein: 6, note: "一碗" },
+            { name: "豆腐花", cat: "糖水", kcal: 190, protein: 8, note: "一碗" },
+            { name: "楊枝甘露", cat: "糖水", kcal: 254, protein: 2, note: "一碗" },
+            // 麵包/多士
+            { name: "千層多士", cat: "麵包", kcal: 883, protein: 15, note: "一份" },
+            { name: "炒麵麵包", cat: "麵包", kcal: 600, protein: 18, note: "一個" },
+            { name: "提子合桃包", cat: "麵包", kcal: 512, protein: 12, note: "一個" },
+            { name: "法式布丁包", cat: "麵包", kcal: 480, protein: 10, note: "一個" },
+            { name: "香蒜多士", cat: "麵包", kcal: 389, protein: 8, note: "一份" },
+            { name: "鮮油多", cat: "麵包", kcal: 375, protein: 5, note: "一份" },
+            { name: "椰絲奶油包", cat: "麵包", kcal: 390, protein: 6, note: "一個" },
+            { name: "菠蘿包", cat: "麵包", kcal: 376, protein: 7, note: "一個" },
+            { name: "腸仔包", cat: "麵包", kcal: 255, protein: 9, note: "一個" },
+            { name: "腿蛋包", cat: "麵包", kcal: 250, protein: 10, note: "一個" },
+            { name: "吞拿魚包", cat: "麵包", kcal: 270, protein: 12, note: "一個" },
+            { name: "甜餐包", cat: "麵包", kcal: 261, protein: 8, note: "一個" },
+        ];
 
-        // 蛋白質需求計算 (克/每公斤體重)
-        const proteinFactor = {
-            maintain: 0.8,
-            weightLoss: 1.5,
-            weightGain: 1.8
-        };
+        // ---------- 2. 食物網格渲染 ----------
+        const foodGrid = document.getElementById('foodGrid');
+        const tabBtns = document.querySelectorAll('.tab-btn');
 
-        // 計劃對應表 (A/B/C/D) 簡化版本 (依據體重與身高)
-        function determinePlan(gender, weightKg, heightCm) {
-            const bmi = weightKg / ((heightCm/100) ** 2);
-            if (bmi < 18.5) return { letter: 'A', desc: '體重過輕，建議增重', barWidth: 25 };
-            if (bmi >= 18.5 && bmi < 24) return { letter: 'B', desc: '健康體重，維持或適度增肌', barWidth: 50 };
-            if (bmi >= 24 && bmi < 27) return { letter: 'C', desc: '體重過重，建議減重', barWidth: 75 };
-            return { letter: 'D', desc: '肥胖，需要積極減重', barWidth: 100 };
-        }
-
-        // 目標卡片選中樣式
-        function selectGoalCard(goal) {
-            document.querySelectorAll('[data-goal]').forEach(card => {
-                card.classList.remove('border-blue-400', 'bg-blue-50');
-                card.classList.add('border-gray-200');
+        function renderFood(category) {
+            const filtered = category === 'all' ? foodDatabase : foodDatabase.filter(f => f.cat === category);
+            foodGrid.innerHTML = '';
+            filtered.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md transition';
+                card.innerHTML = `
+                    <div class="font-bold text-gray-800 text-sm">${item.name}</div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span class="text-xs text-gray-500">${item.note || ''}</span>
+                        <span class="text-xs font-bold kcal-badge px-2 py-0.5 rounded-full">${item.kcal} kcal</span>
+                    </div>
+                    ${item.protein ? `<div class="text-xs text-green-700 mt-1">💪 蛋白質 ~${item.protein}g</div>` : ''}
+                `;
+                foodGrid.appendChild(card);
             });
-            const selected = document.querySelector(`[data-goal="${goal}"]`);
-            selected.classList.remove('border-gray-200');
-            selected.classList.add('border-blue-400', 'bg-blue-50');
-            
-            document.getElementById('goalSelect').value = goal;
-            updateAllCalculations();
-        }
-
-        // 更新所有顯示
-        function updateAllCalculations() {
-            const weight = parseFloat(document.getElementById('weightSlider').value);
-            const height = parseFloat(document.getElementById('heightSlider').value);
-            const gender = document.querySelector('input[name="gender"]:checked').value;
-            const activity = document.getElementById('activityLevel').value;
-            const goal = document.getElementById('goalSelect').value;
-
-            // 更新滑桿旁的數字
-            document.getElementById('weightValue').innerText = weight;
-            document.getElementById('heightValue').innerText = height;
-
-            // 計算蛋白質需求
-            const proteinPerKg = proteinFactor[goal] || 1.5;
-            const proteinNeeded = Math.round(weight * proteinPerKg);
-            document.getElementById('proteinResult').innerHTML = `${proteinNeeded}<span class="text-lg ml-1">克</span>`;
-
-            // 計算計劃
-            const plan = determinePlan(gender, weight, height);
-            document.getElementById('planLetterDisplay').innerText = plan.letter;
-            document.getElementById('planDescription').innerText = plan.desc;
-            document.getElementById('planBar').style.width = plan.barWidth + '%';
-
-            // 產生飲食建議 (第二步顯示)
-            generateDietPlan(goal, plan.letter, proteinNeeded, weight);
-        }
-
-        // 產生飲食建議文字
-        function generateDietPlan(goal, planLetter, proteinNeeded, weight) {
-            const container = document.getElementById('dietPlanDisplay');
-            let title = '', shakes = '', snacks = '', meals = '';
-
-            if (goal === 'weightLoss') {
-                title = '🔥 減重計劃';
-                shakes = '每天 2 次 Formula 1 奶昔 (代替早餐與午餐)';
-                snacks = '2 次蛋白質點心 (每次約10-15g蛋白質，150卡)';
-                meals = '晚餐：均衡餐 (約40g蛋白質，600卡)';
-            } else if (goal === 'maintain') {
-                title = '⚖️ 每日營養 / 體重維持';
-                shakes = '每天 1 次 Formula 1 奶昔 (代替早餐)';
-                snacks = '1-2 次健康點心';
-                meals = '午餐與晚餐：均衡餐 (每餐約25-30g蛋白質)';
-            } else {
-                title = '💪 健康增重';
-                shakes = '每天 2-3 次 Formula 1 奶昔 + 蛋白粉';
-                snacks = '2-3 次高蛋白點心 (蛋白棒、果仁)';
-                meals = '三餐均衡飲食 + 額外蛋白質';
+            if (filtered.length === 0) {
+                foodGrid.innerHTML = '<div class="col-span-3 text-center text-gray-400 py-10">暫無此分類食物</div>';
             }
-
-            container.innerHTML = `
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-bold text-lg">${title} (計劃 ${planLetter})</h3>
-                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">每日蛋白質目標 ${proteinNeeded}g</span>
-                    </div>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-start gap-2"><span class="text-blue-500">🥤</span> ${shakes}</div>
-                        <div class="flex items-start gap-2"><span class="text-yellow-500">🍫</span> ${snacks}</div>
-                        <div class="flex items-start gap-2"><span class="text-green-500">🍽️</span> ${meals}</div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-3">💡 可添加 2 湯匙個人化蛋白粉到每杯奶昔中，增加蛋白質攝取。</p>
-                </div>
-            `;
         }
 
-        // 膳食產生器 (第三步)
-        document.getElementById('buildMealBtn').addEventListener('click', function() {
-            const protein = document.getElementById('proteinSelect').value;
-            const veg = document.getElementById('vegSelect').value;
-            const carb = document.getElementById('carbSelect').value;
-            const fat = document.getElementById('fatSelect').value;
-            const seasoning = document.getElementById('seasoningSelect').value;
-
-            let mealText = '';
-            if (protein !== '0') mealText += '🥩 蛋白質：' + document.getElementById('proteinSelect').selectedOptions[0].text + '<br>';
-            if (veg !== '0') mealText += '🥬 蔬菜：' + document.getElementById('vegSelect').selectedOptions[0].text + '<br>';
-            if (carb !== '0') mealText += '🍚 健康碳水：' + document.getElementById('carbSelect').selectedOptions[0].text + '<br>';
-            if (fat !== '0') mealText += '🥑 健康脂肪：' + document.getElementById('fatSelect').selectedOptions[0].text + '<br>';
-            if (seasoning !== '0') mealText += '🧂 調味料：' + document.getElementById('seasoningSelect').selectedOptions[0].text + '<br>';
-
-            if (mealText === '') mealText = '請至少選擇一項食物類別。';
-
-            document.getElementById('mealDetail').innerHTML = mealText;
-            document.getElementById('mealResult').classList.remove('hidden');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => {
+                    b.classList.remove('bg-blue-100', 'text-blue-700');
+                    b.classList.add('bg-gray-100', 'text-gray-600');
+                });
+                btn.classList.add('bg-blue-100', 'text-blue-700');
+                renderFood(btn.dataset.cat);
+            });
         });
+        // 預設顯示全部
+        renderFood('all');
 
-        document.getElementById('resetMealBtn').addEventListener('click', function() {
-            document.getElementById('proteinSelect').value = '0';
-            document.getElementById('vegSelect').value = '0';
-            document.getElementById('carbSelect').value = '0';
-            document.getElementById('fatSelect').value = '0';
-            document.getElementById('seasoningSelect').value = '0';
-            document.getElementById('mealResult').classList.add('hidden');
-        });
+        // ---------- 3. 蛋白質計算與TDEE ----------
+        const weightSlider = document.getElementById('weightSlider');
+        const heightSlider = document.getElementById('heightSlider');
+        const weightValue = document.getElementById('weightValue');
+        const heightValue = document.getElementById('heightValue');
+        const activitySelect = document.getElementById('activityLevel');
+        const goalSelect = document.getElementById('goalSelect');
+        const proteinResult = document.getElementById('proteinResult');
+        const calorieEstimate = document.getElementById('calorieEstimate');
 
-        // 400/600 卡切換 (僅UI)
-        document.getElementById('mealType400').addEventListener('click', function() {
-            this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
-            this.classList.add('border-blue-600', 'bg-blue-600', 'text-white');
-            document.getElementById('mealType600').classList.remove('border-blue-600', 'bg-blue-600', 'text-white');
-            document.getElementById('mealType600').classList.add('border-gray-300', 'text-gray-600', 'bg-white');
-        });
-        document.getElementById('mealType600').addEventListener('click', function() {
-            this.classList.remove('border-gray-300', 'text-gray-600', 'bg-white');
-            this.classList.add('border-blue-600', 'bg-blue-600', 'text-white');
-            document.getElementById('mealType400').classList.remove('border-blue-600', 'bg-blue-600', 'text-white');
-            document.getElementById('mealType400').classList.add('border-gray-300', 'text-gray-600', 'bg-white');
-        });
+        function updateProteinAndTDEE() {
+            const weight = parseFloat(weightSlider.value);
+            const height = parseFloat(heightSlider.value);
+            const activity = parseFloat(activitySelect.value);
+            const proteinFactor = parseFloat(goalSelect.value);
+            const protein = Math.round(weight * proteinFactor);
+            proteinResult.innerText = protein + '克';
 
-        // 綁定所有輸入事件
-        document.getElementById('weightSlider').addEventListener('input', updateAllCalculations);
-        document.getElementById('heightSlider').addEventListener('input', updateAllCalculations);
-        document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener('change', updateAllCalculations));
-        document.getElementById('activityLevel').addEventListener('change', updateAllCalculations);
-        document.getElementById('goalSelect').addEventListener('change', function(e) {
-            selectGoalCard(e.target.value);
-            updateAllCalculations();
-        });
-        document.getElementById('calculateBtn').addEventListener('click', updateAllCalculations);
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            let bmr;
+            if (gender === 'male') {
+                bmr = 10 * weight + 6.25 * height - 5 * 30 + 5;
+            } else {
+                bmr = 10 * weight + 6.25 * height - 5 * 30 - 161;
+            }
+            const tdee = Math.round(bmr * activity);
+            calorieEstimate.innerText = `每日熱量：約 ${tdee} kcal`;
 
-        // 初始化
-        window.onload = function() {
-            updateAllCalculations();
+            // 推薦計劃
+            recommendPlanByTDEE(tdee);
+        }
+
+        weightSlider.addEventListener('input', () => { weightValue.innerText = weightSlider.value; updateProteinAndTDEE(); });
+        heightSlider.addEventListener('input', () => { heightValue.innerText = heightSlider.value; updateProteinAndTDEE(); });
+        activitySelect.addEventListener('change', updateProteinAndTDEE);
+        goalSelect.addEventListener('change', updateProteinAndTDEE);
+        document.querySelectorAll('input[name="gender"]').forEach(r => r.addEventListener('change', updateProteinAndTDEE));
+        document.getElementById('calcBtn').addEventListener('click', updateProteinAndTDEE);
+        updateProteinAndTDEE();
+
+        // ---------- 4. 港式卡路里飲食計劃 ----------
+        const mealPlans = {
+            1200: {
+                kcal: 1200,
+                protein: 65,
+                meals: [
+                    { type: '早餐', items: ['火腿通粉 (1碗) 320kcal', '無糖奶茶 120kcal'], kcal: 440, protein: 16 },
+                    { type: '午餐', items: ['切雞飯 (去皮, 半份) 400kcal', '灼菜 (走油) 50kcal'], kcal: 450, protein: 25 },
+                    { type: '晚餐', items: ['蒸水蛋 (2蛋) 140kcal', '蒜蓉炒西蘭花 100kcal', '細碗白飯 160kcal'], kcal: 400, protein: 16 },
+                    { type: '小食', items: ['蘋果 (1個) 80kcal'], kcal: 80, protein: 0 }
+                ]
+            },
+            1500: {
+                kcal: 1500,
+                protein: 80,
+                meals: [
+                    { type: '早餐', items: ['餐蛋麵 (少油) 450kcal', '熱檸茶 40kcal'], kcal: 490, protein: 18 },
+                    { type: '午餐', items: ['鮮茄牛肉飯 (少飯) 650kcal', '灼菜 50kcal'], kcal: 700, protein: 32 },
+                    { type: '晚餐', items: ['清蒸鯇魚 (150g) 180kcal', '炒雜菜 100kcal', '中碗白飯 220kcal'], kcal: 500, protein: 28 },
+                    { type: '小食', items: ['脫脂奶 90kcal', '香蕉 100kcal'], kcal: 190, protein: 8 }
+                ]
+            },
+            1800: {
+                kcal: 1800,
+                protein: 95,
+                meals: [
+                    { type: '早餐', items: ['沙爹牛肉麵 550kcal', '凍檸茶少甜 100kcal'], kcal: 650, protein: 25 },
+                    { type: '午餐', items: ['燒味雙拼飯 (瘦叉燒+切雞, 少飯) 700kcal'], kcal: 700, protein: 40 },
+                    { type: '晚餐', items: ['蝦仁炒蛋 250kcal', '炒時蔬 100kcal', '白飯 220kcal', '例湯 80kcal'], kcal: 650, protein: 28 },
+                    { type: '小食', items: ['希臘乳酪 120kcal', '腰果 (15g) 90kcal'], kcal: 210, protein: 10 }
+                ]
+            },
+            2000: {
+                kcal: 2000,
+                protein: 110,
+                meals: [
+                    { type: '早餐', items: ['腿蛋治 (烘底) 480kcal', '鮮奶咖啡 150kcal'], kcal: 630, protein: 24 },
+                    { type: '午餐', items: ['海南雞飯 (去骨, 油飯半份) 750kcal', '灼菜 50kcal'], kcal: 800, protein: 38 },
+                    { type: '晚餐', items: ['煎牛扒 (150g) 400kcal', '焗薯 200kcal', '西蘭花 100kcal'], kcal: 700, protein: 40 },
+                    { type: '小食', items: ['蛋白粉奶昔 150kcal', '蘋果 80kcal'], kcal: 230, protein: 20 }
+                ]
+            },
+            2200: {
+                kcal: 2200,
+                protein: 125,
+                meals: [
+                    { type: '早餐', items: ['公司三文治 600kcal', '橙汁 120kcal'], kcal: 720, protein: 28 },
+                    { type: '午餐', items: ['豬扒炒公仔麵 900kcal (可減油)'], kcal: 900, protein: 30 },
+                    { type: '晚餐', items: ['烤雞腿 (去皮) 350kcal', '薯蓉 200kcal', '雜菜 100kcal'], kcal: 650, protein: 45 },
+                    { type: '小食', items: ['香蕉 100kcal', '乳酪 120kcal', '能量棒 150kcal'], kcal: 370, protein: 15 }
+                ]
+            },
+            2500: {
+                kcal: 2500,
+                protein: 150,
+                meals: [
+                    { type: '早餐', items: ['叉燒湯意粉 600kcal', '奶茶 120kcal'], kcal: 720, protein: 28 },
+                    { type: '午餐', items: ['咖喱牛腩飯 (少汁) 1000kcal'], kcal: 1000, protein: 40 },
+                    { type: '晚餐', items: ['西冷牛扒 (200g) 500kcal', '焗薯 250kcal', '炒雜菌 150kcal'], kcal: 900, protein: 55 },
+                    { type: '小食', items: ['蛋白粉奶昔 200kcal', '花生醬多士 200kcal'], kcal: 400, protein: 25 }
+                ]
+            }
         };
+
+        function renderPlan(planKcal) {
+            const plan = mealPlans[planKcal];
+            if (!plan) return;
+            let html = `<h3 class="font-bold text-lg mb-3">🍽️ ${plan.kcal} kcal 飲食計劃 (約 ${plan.protein}g 蛋白質)</h3>`;
+            html += '<div class="grid gap-3">';
+            plan.meals.forEach(meal => {
+                html += `
+                    <div class="bg-white p-3 rounded-lg border-l-4 border-orange-400">
+                        <div class="font-medium text-orange-700">${meal.type}</div>
+                        <div class="text-sm text-gray-700 mt-1">${meal.items.join(' · ')}</div>
+                        <div class="flex gap-3 mt-1 text-xs">
+                            <span class="kcal-badge px-2 py-0.5 rounded-full">🔥 ${meal.kcal} kcal</span>
+                            <span class="protein-badge px-2 py-0.5 rounded-full">💪 ${meal.protein}g 蛋白質</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('planDetailCard').innerHTML = html;
+        }
+
+        function recommendPlanByTDEE(tdee) {
+            const levels = [1200,1500,1800,2000,2200,2500];
+            let recommended = 1500; // 預設
+            for (let i = 0; i < levels.length; i++) {
+                if (tdee <= levels[i] + 100) {
+                    recommended = levels[i];
+                    break;
+                }
+                recommended = levels[i];
+            }
+            // 高亮卡片
+            document.querySelectorAll('.plan-card').forEach(card => {
+                card.classList.remove('plan-active', 'border-blue-600', 'bg-blue-50');
+                card.classList.add('border-gray-200');
+                if (parseInt(card.dataset.plan) === recommended) {
+                    card.classList.add('plan-active', 'border-blue-600', 'bg-blue-50');
+                }
+            });
+            renderPlan(recommended);
+        }
+
+        // 點擊卡片切換計劃 (確保事件綁定在動態載入後)
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const kcal = parseInt(this.dataset.plan);
+                document.querySelectorAll('.plan-card').forEach(c => {
+                    c.classList.remove('plan-active', 'border-blue-600', 'bg-blue-50');
+                    c.classList.add('border-gray-200');
+                });
+                this.classList.add('plan-active', 'border-blue-600', 'bg-blue-50');
+                renderPlan(kcal);
+            });
+        });
+
+        // 初始化推薦
+        setTimeout(() => {
+            const weight = parseFloat(weightSlider.value);
+            const height = parseFloat(heightSlider.value);
+            const activity = parseFloat(activitySelect.value);
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            let bmr = gender === 'male' ? 10*weight + 6.25*height - 5*30 + 5 : 10*weight + 6.25*height - 5*30 - 161;
+            const tdee = Math.round(bmr * activity);
+            recommendPlanByTDEE(tdee);
+        }, 100);
     </script>
 </body>
 </html>
