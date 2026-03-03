@@ -155,24 +155,7 @@
             <p class="text-xs text-gray-400 mt-3">*計劃為營養師設計範例，可根據實際食物份量微調。如需個人化建議，請諮詢康寶萊教練。</p>
         </div>
 
-        <!-- 下載工具與官方範例 (保留) -->
-        <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-2xl p-5 shadow-md">
-                <div class="font-bold text-lg mb-2">📥 下載膳食計劃選擇工具</div>
-                <p class="text-xs text-gray-500 mb-3">PDF 表格，幫你快速揀選適合嘅計劃</p>
-                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
-            </div>
-            <div class="bg-white rounded-2xl p-5 shadow-md">
-                <div class="font-bold text-lg mb-2">📥 下載膳食計劃表 (A/B/C/D)</div>
-                <p class="text-xs text-gray-500 mb-3">詳細餐單範例，跟住食就得</p>
-                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
-            </div>
-            <div class="bg-white rounded-2xl p-5 shadow-md">
-                <div class="font-bold text-lg mb-2">🥗 下載素食餐單搭配</div>
-                <p class="text-xs text-gray-500 mb-3">素食者專用，補充蛋白質無難度</p>
-                <a href="#" class="text-blue-600 underline text-sm">立即下載 (PDF)</a>
-            </div>
-        </div>
+     
 
         <!-- 1500卡路里官方範例 (僅參考) -->
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-3xl p-6 shadow-lg">
@@ -196,71 +179,82 @@
 
     <script>
         // ---------- 0. 定義 mealPlans 在最前面 ----------
-        const mealPlans = {
+        // ---------- 康寶萊化港式飲食計劃 ----------
+const mealPlans = {
     1200: {
         kcal: 1200,
-        protein: 70,
+        protein: 75,
+        tag: '🔥 減重2代餐',
         meals: [
-            { type: '早餐 (代餐)', items: ['Formula 1 奶昔 (朱古力味) 2勺 + 脫脂奶 250ml (約220 kcal, 20g蛋白)'], kcal: 220, protein: 20 },
-            { type: '午餐 (均衡)', items: ['切雞飯 (去皮, 半份) 400kcal', '灼菜 (走油) 50kcal'], kcal: 450, protein: 25 },
-            { type: '晚餐 (代餐)', items: ['Formula 1 奶昔 (雲呢拿味) 2勺 + 水 (170 kcal, 18g蛋白)'], kcal: 170, protein: 18 },
-            { type: '小食', items: ['蘋果 (1個) 80kcal'], kcal: 80, protein: 0 }
+            { type: '早餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (朱古力味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '午餐 (均衡)', items: ['切雞飯 (去皮, 少飯) 約450kcal', '灼菜 (走油)'], kcal: 450, protein: 25 },
+            { type: '晚餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (雲呢拿味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '小食1', items: ['康寶萊蛋白棒 1條'], kcal: 140, protein: 10 },
+            { type: '小食2', items: ['蘋果 1個'], kcal: 80, protein: 0 }
         ]
     },
     1500: {
         kcal: 1500,
-        protein: 85,
+        protein: 90,
+        tag: '🔥 減重2代餐',
         meals: [
-            { type: '早餐 (代餐)', items: ['Formula 1 奶昔 (士多啤梨味) 2勺 + 脫脂奶 250ml (220 kcal, 20g蛋白)'], kcal: 220, protein: 20 },
-            { type: '午餐 (均衡)', items: ['鮮茄牛肉飯 (少飯) 650kcal', '灼菜 50kcal'], kcal: 700, protein: 32 },
-            { type: '晚餐 (均衡)', items: ['清蒸鯇魚 (150g) 180kcal', '炒雜菜 100kcal', '中碗白飯 220kcal'], kcal: 500, protein: 28 },
-            { type: '小食 (加餐)', items: ['蛋白棒 1條 (140 kcal, 10g蛋白)', '香蕉 100kcal'], kcal: 240, protein: 10 }
+            { type: '早餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (士多啤梨味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '午餐 (均衡)', items: ['鮮茄牛肉飯 (少飯) 約600kcal', '灼菜'], kcal: 600, protein: 32 },
+            { type: '晚餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (朱古力味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '小食1', items: ['康寶萊蛋白棒 1條'], kcal: 140, protein: 10 },
+            { type: '小食2', items: ['香蕉 1隻 + 脫脂奶 200ml'], kcal: 190, protein: 8 }
         ]
     },
     1800: {
         kcal: 1800,
-        protein: 100,
+        protein: 105,
+        tag: '🔥 減重2代餐',
         meals: [
-            { type: '早餐 (代餐)', items: ['Formula 1 奶昔 (朱古力味) 2勺 + 脫脂奶 250ml (220 kcal, 20g蛋白)'], kcal: 220, protein: 20 },
-            { type: '午餐 (均衡)', items: ['燒味雙拼飯 (瘦叉燒+切雞, 少飯) 700kcal'], kcal: 700, protein: 40 },
-            { type: '晚餐 (均衡)', items: ['蝦仁炒蛋 250kcal', '炒時蔬 100kcal', '白飯 220kcal', '例湯 80kcal'], kcal: 650, protein: 28 },
-            { type: '小食 (加餐)', items: ['希臘乳酪 120kcal', '腰果 (15g) 90kcal', '蛋白粉奶昔 1勺 (40 kcal, 8g蛋白)'], kcal: 250, protein: 12 }
+            { type: '早餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (曲奇味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '午餐 (均衡)', items: ['燒味雙拼飯 (瘦叉燒+切雞, 少飯) 約700kcal'], kcal: 700, protein: 40 },
+            { type: '晚餐 (康寶萊代餐)', items: ['Formula 1 營養奶昔 (雲呢拿味) 2勺 + 脫脂奶 250ml'], kcal: 220, protein: 20 },
+            { type: '小食1', items: ['康寶萊蛋白棒 1條'], kcal: 140, protein: 10 },
+            { type: '小食2', items: ['希臘乳酪 150g + 腰果 15g'], kcal: 210, protein: 12 }
         ]
     },
     2000: {
         kcal: 2000,
-        protein: 115,
+        protein: 110,
+        tag: '💪 增肌2加餐',
         meals: [
-            { type: '早餐 (均衡)', items: ['腿蛋治 (烘底) 480kcal', '鮮奶咖啡 150kcal'], kcal: 630, protein: 24 },
-            { type: '午餐 (均衡)', items: ['海南雞飯 (去骨, 油飯半份) 750kcal', '灼菜 50kcal'], kcal: 800, protein: 38 },
-            { type: '晚餐 (均衡)', items: ['煎牛扒 (150g) 400kcal', '焗薯 200kcal', '西蘭花 100kcal'], kcal: 700, protein: 40 },
-            { type: '加餐1', items: ['蛋白棒 1條 (140 kcal, 10g蛋白)'], kcal: 140, protein: 10 },
-            { type: '加餐2', items: ['蘋果 80kcal', '脫脂奶 90kcal'], kcal: 170, protein: 8 }
+            { type: '早餐', items: ['腿蛋治 (烘底) 480kcal', '鮮奶咖啡 150kcal'], kcal: 630, protein: 24 },
+            { type: '午餐', items: ['海南雞飯 (去骨, 油飯半份) 750kcal', '灼菜'], kcal: 750, protein: 38 },
+            { type: '晚餐', items: ['煎牛扒 (150g) 400kcal', '焗薯 200kcal', '西蘭花'], kcal: 600, protein: 40 },
+            { type: '康寶萊加餐1', items: ['蛋白粉奶昔 1勺 (水沖) 約40kcal, 8g蛋白'], kcal: 40, protein: 8 },
+            { type: '康寶萊加餐2', items: ['康寶萊蛋白棒 1條'], kcal: 140, protein: 10 }
         ]
     },
     2200: {
         kcal: 2200,
         protein: 130,
+        tag: '💪 增肌2加餐',
         meals: [
-            { type: '早餐 (均衡)', items: ['公司三文治 600kcal', '橙汁 120kcal'], kcal: 720, protein: 28 },
-            { type: '午餐 (均衡)', items: ['豬扒炒公仔麵 (少油) 900kcal'], kcal: 900, protein: 30 },
-            { type: '晚餐 (均衡)', items: ['烤雞腿 (去皮) 350kcal', '薯蓉 200kcal', '雜菜 100kcal'], kcal: 650, protein: 45 },
-            { type: '加餐1', items: ['香蕉 100kcal', '乳酪 120kcal'], kcal: 220, protein: 8 },
-            { type: '加餐2', items: ['能量棒 150kcal', '蛋白粉奶昔 1勺 (40 kcal, 8g蛋白)'], kcal: 190, protein: 12 }
+            { type: '早餐', items: ['公司三文治 600kcal', '橙汁 120kcal'], kcal: 720, protein: 28 },
+            { type: '午餐', items: ['豬扒炒公仔麵 (少油) 850kcal'], kcal: 850, protein: 30 },
+            { type: '晚餐', items: ['烤雞腿 (去皮) 350kcal', '薯蓉 200kcal', '雜菜'], kcal: 550, protein: 45 },
+            { type: '康寶萊加餐1', items: ['康寶萊蛋白棒 1條 + 香蕉 1隻'], kcal: 240, protein: 12 },
+            { type: '康寶萊加餐2', items: ['蛋白粉奶昔 2勺 (脫脂奶) 約220kcal, 20g蛋白'], kcal: 220, protein: 20 }
         ]
     },
     2500: {
         kcal: 2500,
-        protein: 150,
+        protein: 155,
+        tag: '💪 增肌2加餐',
         meals: [
-            { type: '早餐 (均衡+蛋白)', items: ['叉燒湯意粉 600kcal', '奶茶 120kcal', '蛋白粉1勺 (40 kcal, 8g蛋白)'], kcal: 760, protein: 36 },
-            { type: '午餐 (均衡)', items: ['咖喱牛腩飯 (少汁) 1000kcal'], kcal: 1000, protein: 40 },
-            { type: '晚餐 (均衡)', items: ['西冷牛扒 (200g) 500kcal', '焗薯 250kcal', '炒雜菌 150kcal'], kcal: 900, protein: 55 },
-            { type: '加餐1', items: ['蛋白棒 2條 (280 kcal, 20g蛋白)'], kcal: 280, protein: 20 },
-            { type: '加餐2', items: ['花生醬多士 200kcal', '脫脂奶 90kcal'], kcal: 290, protein: 12 }
+            { type: '早餐', items: ['叉燒湯意粉 600kcal', '奶茶 120kcal', '蛋白粉1勺'], kcal: 760, protein: 36 },
+            { type: '午餐', items: ['咖喱牛腩飯 (少汁) 950kcal'], kcal: 950, protein: 40 },
+            { type: '晚餐', items: ['西冷牛扒 (200g) 500kcal', '焗薯 250kcal', '炒雜菌'], kcal: 750, protein: 55 },
+            { type: '康寶萊加餐1', items: ['康寶萊蛋白棒 2條'], kcal: 280, protein: 20 },
+            { type: '康寶萊加餐2', items: ['蛋白粉奶昔 2勺 (脫脂奶) + 花生醬多士 1份'], kcal: 420, protein: 25 }
         ]
     }
 };
+        
 
         // ---------- 1. 食物資料庫 (整合所有截圖數據) ----------
         const foodDatabase = [
@@ -466,7 +460,7 @@
         function renderPlan(planKcal) {
             const plan = mealPlans[planKcal];
             if (!plan) return;
-            let html = `<h3 class="font-bold text-lg mb-3">🍽️ ${plan.kcal} kcal 飲食計劃 (約 ${plan.protein}g 蛋白質)</h3>`;
+            let html = `<h3 class="font-bold text-lg mb-3">${plan.tag} · ${plan.kcal} kcal (約 ${plan.protein}g 蛋白質)</h3>`;
             html += '<div class="grid gap-3">';
             plan.meals.forEach(meal => {
                 html += `
