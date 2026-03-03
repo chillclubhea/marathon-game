@@ -15,6 +15,7 @@
         .protein-badge { background: #dcfce7; color: #166534; }
         .food-grid { max-height: 500px; overflow-y: auto; }
         .sticky-tabs { position: sticky; top: 0; background: white; z-index: 10; }
+        .shop-card { background: #f9fafb; border-radius: 1rem; padding: 1rem; border: 1px solid #e5e7eb; }
     </style>
 </head>
 <body class="p-4 pb-10">
@@ -86,7 +87,7 @@
                 </div>
             </div>
 
-            <!-- 右：港式食物熱量資料庫 -->
+            <!-- 右：港式食物熱量資料庫 (已擴充) -->
             <div class="md:col-span-3 bg-white rounded-3xl p-6 shadow-lg">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <span class="w-1.5 h-6 bg-green-600 rounded-full"></span> ② 港式食物熱量庫
@@ -102,6 +103,8 @@
                     <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="街頭小食">街頭小食</button>
                     <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="飲品">飲品/糖水</button>
                     <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="麵包">麵包/多士</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="便利店">便利店/華御結</button>
+                    <button class="tab-btn text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-600" data-cat="外食">外食精選</button>
                 </div>
                 <div id="foodGrid" class="food-grid grid grid-cols-2 md:grid-cols-3 gap-3 pr-1"></div>
                 <p class="text-xs text-gray-400 mt-3">*資料整合自「跟住Evelyn食」系列及香港食物安全中心，熱量僅供參考。</p>
@@ -131,12 +134,12 @@
         <!-- ④ 30天港式餐單建議 + 飲食小習慣 -->
         <div class="bg-white rounded-3xl p-6 shadow-lg mb-8">
             <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span class="w-1.5 h-6 bg-pink-500 rounded-full"></span> ④ 30天港式餐單建議＋飲食小習慣
+                <span class="w-1.5 h-6 bg-pink-500 rounded-full"></span> ④ 30天港式餐單建議（多樣化外食選項）
             </h2>
-            <p class="text-sm text-gray-500 mb-4">以下為隨機生成嘅30日餐單，你可以按「生成新餐單」重新組合。每餐食物均來自港式食物庫，可自由配搭。</p>
+            <p class="text-sm text-gray-500 mb-4">以下為隨機生成嘅30日餐單，包含茶餐廳、華御結、壽司、火鍋等外食選擇，點擊「生成新嘅30日餐單」可重新組合。</p>
             <div class="flex justify-between items-center mb-4">
                 <button id="generate30Btn" class="bg-pink-500 text-white px-5 py-2 rounded-xl font-bold hover:bg-pink-600 transition">🔄 生成新嘅30日餐單</button>
-                <span class="text-xs text-gray-400">點擊可刷新全部30日</span>
+                <span class="text-xs text-gray-400">每餐熱量及蛋白質已估算</span>
             </div>
             <div id="meal30Container" class="max-h-96 overflow-y-auto border rounded-xl p-3 bg-gray-50"></div>
 
@@ -148,6 +151,7 @@
                         <li>先飲湯/水，再食蔬菜，然後蛋白質，最後先食碳水化合物。</li>
                         <li>早餐要有蛋白質，幫助穩定血糖，減少 cravings。</li>
                         <li>晚餐盡量早食，睡前3小時唔好再食嘢。</li>
+                        <li>茶碗蒸（約90-150kcal）係高蛋白低熱量嘅好選擇，可以作為小食。</li>
                     </ul>
                 </div>
                 <div class="bg-green-50 p-4 rounded-xl">
@@ -157,9 +161,87 @@
                         <li>茶餐廳可以選擇「轉菜底」(生菜代替麵底) 或者「少油」。</li>
                         <li>食燒味可以要求「去皮」，即刻減去好多脂肪。</li>
                         <li>點心可以揀蒸嘅代替炸嘅，例如蝦餃、腸粉。</li>
+                        <li>華御結嘅御結（約150-250kcal）係方便嘅外食選擇，配無糖豆漿或野菜湯就均衡。</li>
                     </ul>
                 </div>
             </div>
+        </div>
+
+        <!-- ⑤ 6大外食店家飲食攻略 (康寶萊營養師) -->
+        <div class="bg-white rounded-3xl p-6 shadow-lg mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span class="w-1.5 h-6 bg-teal-500 rounded-full"></span> ⑤ 6大外食店家飲食攻略（營養師推薦）
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">根據康寶萊營養師建議，外食族可以參考以下搭配，均衡攝取營養。</p>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- 火鍋店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-red-600 mb-2">🔥 火鍋店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>烏龍麵</li>
+                        <li><span class="font-medium">蛋白質：</span>低脂海鮮</li>
+                        <li><span class="font-medium">配菜：</span>菜盤</li>
+                        <li><span class="font-medium">飲品/湯：</span>昆布湯底</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">避免沾醬，湯底勿喝完，少選麻辣鍋。</p>
+                </div>
+                <!-- 麵店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-yellow-600 mb-2">🍜 麵店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>陽春湯麵</li>
+                        <li><span class="font-medium">蛋白質：</span>涼拌豆腐</li>
+                        <li><span class="font-medium">配菜：</span>海帶</li>
+                        <li><span class="font-medium">飲品/湯：</span>無糖紅茶</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">燙青菜走肉燥，湯品選紫菜蛋花湯。</p>
+                </div>
+                <!-- 壽司店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-green-600 mb-2">🍣 壽司店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>鮭魚壽司</li>
+                        <li><span class="font-medium">蛋白質：</span>茶碗蒸</li>
+                        <li><span class="font-medium">配菜：</span>涼拌小菜</li>
+                        <li><span class="font-medium">飲品/湯：</span>無糖抹茶</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">避免炙燒、焦糖口味，茶碗蒸係高蛋白低熱量點心。</p>
+                </div>
+                <!-- 便當店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-blue-600 mb-2">🍱 便當店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>糙米飯</li>
+                        <li><span class="font-medium">蛋白質：</span>滷雞腿</li>
+                        <li><span class="font-medium">配菜：</span>三格便當菜</li>
+                        <li><span class="font-medium">飲品/湯：</span>紫菜湯</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">選蒸煮滷烤，先菜再肉後飯。</p>
+                </div>
+                <!-- 速食店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-orange-600 mb-2">🍔 速食店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>嫩煎雞腿堡</li>
+                        <li><span class="font-medium">蛋白質：</span>加蛋</li>
+                        <li><span class="font-medium">配菜：</span>和風沙拉</li>
+                        <li><span class="font-medium">飲品/湯：</span>鮮奶</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">走醬，沙拉醬另放，取代薯條。</p>
+                </div>
+                <!-- 牛肉麵店 -->
+                <div class="shop-card">
+                    <h3 class="font-bold text-lg text-purple-600 mb-2">🥩 牛肉麵店</h3>
+                    <ul class="text-sm space-y-1">
+                        <li><span class="font-medium">主食：</span>麵條</li>
+                        <li><span class="font-medium">蛋白質：</span>清燉牛肉</li>
+                        <li><span class="font-medium">配菜：</span>涼拌小黃瓜</li>
+                        <li><span class="font-medium">飲品/湯：</span>清燉湯底</li>
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">選粗麵、牛腱，少喝湯。</p>
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-4">資料來源：康寶萊營養師。用餐原則：以原型食物為主，避免加工油炸。</p>
         </div>
 
         <!-- 下載工具與官方範例 (保留) -->
@@ -269,9 +351,9 @@
             }
         };
 
-        // ---------- 1. 食物資料庫 (整合所有截圖數據) ----------
+        // ---------- 1. 食物資料庫 (新增華御結、外食選項) ----------
         const foodDatabase = [
-            // 茶餐廳類
+            // 原有茶餐廳類
             { name: "餐蛋公仔麵", cat: "茶餐廳", kcal: 743, protein: 22, note: "一碗" },
             { name: "炸雞脾配薯條", cat: "茶餐廳", kcal: 713, protein: 25, note: "一碟" },
             { name: "公司三文治", cat: "茶餐廳", kcal: 600, protein: 24, note: "一份" },
@@ -321,6 +403,7 @@
             { name: "唐記糯米雞", cat: "點心", kcal: 400, protein: 15, note: "一份" },
             { name: "唐記山竹牛肉", cat: "點心", kcal: 94, protein: 8, note: "一粒" },
             { name: "唐記燒賣", cat: "點心", kcal: 42, protein: 3, note: "一粒" },
+            { name: "茶碗蒸", cat: "點心", kcal: 120, protein: 8, note: "一杯" }, // 新增
             // 燒味類
             { name: "燒腩仔 (100g)", cat: "燒味", kcal: 547, protein: 20, note: "每100g" },
             { name: "乳豬 (100g)", cat: "燒味", kcal: 360, protein: 25, note: "每100g" },
@@ -371,6 +454,8 @@
             { name: "柳丁綠茶", cat: "飲品", kcal: 251, protein: 0, note: "一杯" },
             { name: "冬瓜青茶", cat: "飲品", kcal: 249, protein: 0, note: "一杯" },
             { name: "高峰烏龍茶", cat: "飲品", kcal: 128, protein: 0, note: "一杯" },
+            { name: "無糖豆漿", cat: "飲品", kcal: 130, protein: 12, note: "一杯" }, // 新增
+            { name: "脫脂奶", cat: "飲品", kcal: 90, protein: 9, note: "一杯" },
             { name: "合桃露", cat: "糖水", kcal: 395, protein: 10, note: "一碗" },
             { name: "芝麻糊", cat: "糖水", kcal: 280, protein: 8, note: "一碗" },
             { name: "紅豆沙", cat: "糖水", kcal: 220, protein: 6, note: "一碗" },
@@ -389,6 +474,30 @@
             { name: "腿蛋包", cat: "麵包", kcal: 250, protein: 10, note: "一個" },
             { name: "吞拿魚包", cat: "麵包", kcal: 270, protein: 12, note: "一個" },
             { name: "甜餐包", cat: "麵包", kcal: 261, protein: 8, note: "一個" },
+            // 新增便利店/華御結類
+            { name: "流心濃香蛋黃御結", cat: "便利店", kcal: 220, protein: 7, note: "一個" },
+            { name: "明太子沙律御結", cat: "便利店", kcal: 210, protein: 6, note: "一個" },
+            { name: "北海道秋鮭三文魚御結", cat: "便利店", kcal: 230, protein: 8, note: "一個" },
+            { name: "本格和風燒牛肉御結", cat: "便利店", kcal: 240, protein: 9, note: "一個" },
+            { name: "金平牛旁御結", cat: "便利店", kcal: 190, protein: 5, note: "一個" },
+            { name: "無核梅乾御結", cat: "便利店", kcal: 170, protein: 4, note: "一個" },
+            { name: "厚切一口玉子燒", cat: "便利店", kcal: 150, protein: 8, note: "一份" },
+            { name: "香烤日本甜薯", cat: "便利店", kcal: 180, protein: 2, note: "一條" },
+            { name: "和風骨膠原雞丸豆乳湯", cat: "便利店", kcal: 120, protein: 10, note: "一碗" },
+            { name: "六種野菜盤番茄濃湯", cat: "便利店", kcal: 90, protein: 3, note: "一碗" },
+            { name: "和風粟米牛乳濃湯", cat: "便利店", kcal: 150, protein: 5, note: "一碗" },
+            { name: "九州大地沙律雞胸肉", cat: "便利店", kcal: 130, protein: 25, note: "一份" },
+            { name: "煎雞腿肉", cat: "便利店", kcal: 200, protein: 22, note: "一份" },
+            { name: "胡麻菠菜", cat: "便利店", kcal: 80, protein: 3, note: "一份" },
+            // 新增外食精選類 (來自第二張圖)
+            { name: "魚蛋米", cat: "外食", kcal: 150, protein: 8, note: "一碗" },
+            { name: "生牛河", cat: "外食", kcal: 260, protein: 18, note: "一碗" },
+            { name: "茄牛通", cat: "外食", kcal: 300, protein: 16, note: "一碗" },
+            { name: "焗薯", cat: "外食", kcal: 200, protein: 5, note: "一個" },
+            { name: "薯仔沙律", cat: "外食", kcal: 350, protein: 4, note: "一份" },
+            { name: "板燒雞腿包 (走醬)", cat: "外食", kcal: 270, protein: 22, note: "一個" },
+            { name: "野菜扒飯", cat: "外食", kcal: 550, protein: 12, note: "一碟" },
+            { name: "魚生飯", cat: "外食", kcal: 575, protein: 25, note: "一碟" },
         ];
 
         // ---------- 2. 食物網格渲染 ----------
@@ -456,7 +565,6 @@
             const tdee = Math.round(bmr * activity);
             calorieEstimate.innerText = `每日熱量：約 ${tdee} kcal`;
 
-            // 推薦計劃
             recommendPlanByTDEE(tdee);
         }
 
@@ -522,22 +630,34 @@
             });
         });
 
-        // ---------- 5. 生成30天隨機餐單 ----------
+        // ---------- 5. 生成30天隨機餐單 (使用豐富食物庫) ----------
         function generate30DayMeals() {
             const container = document.getElementById('meal30Container');
             let html = '<div class="space-y-2">';
+            // 定義各餐可選的食物池（從食物庫過濾）
+            const breakfastPool = foodDatabase.filter(f => 
+                ['茶餐廳','麵包','飲品','便利店'].includes(f.cat) && f.kcal < 500
+            );
+            const lunchPool = foodDatabase.filter(f => 
+                ['粥粉麵飯','燒味','點心','外食','便利店'].includes(f.cat) && f.kcal > 300 && f.kcal < 800
+            );
+            const dinnerPool = foodDatabase.filter(f => 
+                ['粥粉麵飯','火鍋','外食','燒味'].includes(f.cat) && f.kcal < 700
+            );
+            const snackPool = foodDatabase.filter(f => 
+                ['街頭小食','飲品','糖水','點心','便利店'].includes(f.cat) && f.kcal < 250
+            );
+
+            const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
             for (let day = 1; day <= 30; day++) {
-                const breakfastOptions = foodDatabase.filter(f => f.cat === '茶餐廳' || f.cat === '麵包' || f.cat === '飲品');
-                const lunchOptions = foodDatabase.filter(f => f.cat === '粥粉麵飯' || f.cat === '燒味' || f.cat === '點心');
-                const dinnerOptions = foodDatabase.filter(f => f.cat === '粥粉麵飯' || f.cat === '火鍋' || f.cat === '其他');
-                const snackOptions = foodDatabase.filter(f => f.cat === '街頭小食' || f.cat === '飲品' || f.cat === '糖水');
+                const breakfast = randomItem(breakfastPool) || { name: '餐蛋麵', kcal: 743, protein: 22 };
+                const lunch = randomItem(lunchPool) || { name: '叉燒飯', kcal: 650, protein: 25 };
+                const dinner = randomItem(dinnerPool) || { name: '蒸魚', kcal: 400, protein: 30 };
+                const snack = randomItem(snackPool) || { name: '咖喱魚蛋', kcal: 76, protein: 4 };
 
-                const randomItem = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-                const breakfast = randomItem(breakfastOptions) || { name: '餐蛋麵', kcal: 743 };
-                const lunch = randomItem(lunchOptions) || { name: '叉燒飯', kcal: 650 };
-                const dinner = randomItem(dinnerOptions) || { name: '蒸魚', kcal: 400 };
-                const snack = randomItem(snackOptions) || { name: '咖喱魚蛋', kcal: 76 };
+                const totalKcal = breakfast.kcal + lunch.kcal + dinner.kcal + snack.kcal;
+                const totalProtein = (breakfast.protein || 0) + (lunch.protein || 0) + (dinner.protein || 0) + (snack.protein || 0);
 
                 html += `
                     <div class="bg-white p-3 rounded-lg border-l-4 border-pink-300 text-sm">
@@ -548,6 +668,7 @@
                             <div>🌙 ${dinner.name} (${dinner.kcal} kcal)</div>
                             <div>🍫 ${snack.name} (${snack.kcal} kcal)</div>
                         </div>
+                        <div class="text-right text-xs text-gray-500 mt-1">合計約 ${totalKcal} kcal | 蛋白質 ${Math.round(totalProtein)}g</div>
                     </div>
                 `;
             }
